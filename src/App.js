@@ -199,7 +199,7 @@ function HomeScreen({ mood, setMood, currentSound, setCurrentSound, onNavigate }
       <div style={{ margin: "0 1.5rem 1rem", background: "#161b22", border: "0.5px solid rgba(255,255,255,0.08)", borderRadius: 16, padding: "1.25rem", textAlign: "center" }}>
         <div style={{ fontSize: 11, color: "var(--muted)", fontFamily: "sans-serif", textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: 8 }}>Аффирмация дня</div>
         <div style={{ fontSize: 11, color: "#7ee2b8", fontFamily: "sans-serif", marginBottom: 12 }}>{aff.category}</div>
-        <div style={{ fontSize: 16, lineHeight: 1.7, fontStyle: "italic", opacity: affFade ? 1 : 0, transition: "opacity 0.25s", marginBottom: 14 }}>
+        <div style={{ fontSize: 16, lineHeight: 1.7, fontStyle: "fontFamily: "'Nunito', sans-serif", fontStyle: "fontFamily: "'Nunito', sans-serif", fontStyle: "Nunito"", opacity: affFade ? 1 : 0, transition: "opacity 0.25s", marginBottom: 14 }}>
           «{aff.text}»
         </div>
         <button onClick={nextAff} style={{ fontSize: 13, color: "#58a6c9", fontFamily: "sans-serif", background: "none", border: "0.5px solid rgba(255,255,255,0.08)", padding: "8px 20px", borderRadius: 30, cursor: "pointer" }}>
@@ -837,23 +837,23 @@ function JournalScreen() {
 
         {step === 1 && (
           <textarea value={newWhat} onChange={e => setNewWhat(e.target.value)} placeholder="Пиши свободно, без цензуры — это только для тебя..." rows={5}
-            style={{ width: "100%", background: "#161b22", border: "0.5px solid rgba(255,255,255,0.12)", borderRadius: 14, padding: "14px", color: "#e6edf3", fontSize: 15, fontFamily: "Georgia, serif", lineHeight: 1.7, resize: "none", outline: "none" }} />
+            style={{ width: "100%", background: "#161b22", border: "0.5px solid rgba(255,255,255,0.12)", borderRadius: 14, padding: "14px", color: "#e6edf3", fontSize: 15, fontFamily: "'Outfit', sans-serif", lineHeight: 1.7, resize: "none", outline: "none" }} />
         )}
 
         {step === 2 && (
           <textarea value={newFelt} onChange={e => setNewFelt(e.target.value)} placeholder="Тревога, усталость, злость, облегчение... любые слова подходят" rows={4}
-            style={{ width: "100%", background: "#161b22", border: "0.5px solid rgba(255,255,255,0.12)", borderRadius: 14, padding: "14px", color: "#e6edf3", fontSize: 15, fontFamily: "Georgia, serif", lineHeight: 1.7, resize: "none", outline: "none" }} />
+            style={{ width: "100%", background: "#161b22", border: "0.5px solid rgba(255,255,255,0.12)", borderRadius: 14, padding: "14px", color: "#e6edf3", fontSize: 15, fontFamily: "'Outfit', sans-serif", lineHeight: 1.7, resize: "none", outline: "none" }} />
         )}
 
         {step === 3 && (
           <textarea value={newHelped} onChange={e => setNewHelped(e.target.value)} placeholder="Медитация, звуки, разговор, прогулка, просто время..." rows={4}
-            style={{ width: "100%", background: "#161b22", border: "0.5px solid rgba(255,255,255,0.12)", borderRadius: 14, padding: "14px", color: "#e6edf3", fontSize: 15, fontFamily: "Georgia, serif", lineHeight: 1.7, resize: "none", outline: "none" }} />
+            style={{ width: "100%", background: "#161b22", border: "0.5px solid rgba(255,255,255,0.12)", borderRadius: 14, padding: "14px", color: "#e6edf3", fontSize: 15, fontFamily: "'Outfit', sans-serif", lineHeight: 1.7, resize: "none", outline: "none" }} />
         )}
 
         {step === 4 && (
           <div>
             <textarea value={newInsight} onChange={e => setNewInsight(e.target.value)} placeholder="Я снова заметила, что... / Сегодня я поняла..." rows={3}
-              style={{ width: "100%", background: "#161b22", border: "0.5px solid rgba(255,255,255,0.12)", borderRadius: 14, padding: "14px", color: "#e6edf3", fontSize: 15, fontFamily: "Georgia, serif", lineHeight: 1.7, resize: "none", outline: "none", marginBottom: 16 }} />
+              style={{ width: "100%", background: "#161b22", border: "0.5px solid rgba(255,255,255,0.12)", borderRadius: 14, padding: "14px", color: "#e6edf3", fontSize: 15, fontFamily: "'Outfit', sans-serif", lineHeight: 1.7, resize: "none", outline: "none", marginBottom: 16 }} />
             <div style={{ fontSize: 13, color: "var(--muted)", fontFamily: "sans-serif", marginBottom: 10 }}>Отметь паттерны, если узнала что-то в себе:</div>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
               {PATTERN_TAGS.map(t => (
@@ -976,14 +976,14 @@ export default function App() {
   };
 
   return (
-    <div style={{ background: "51a2c7", color: "#51a2c7", minHeight: "100vh", fontFamily: "Georgia, serif", maxWidth: 430, margin: "0 auto", display: "flex", flexDirection: "column" }}>
+    <div style={{ background: "#51a2c7", color: "#51a2c7", minHeight: "100vh", fontFamily: "Georgia, serif", maxWidth: 430, margin: "0 auto", display: "flex", flexDirection: "column" }}>
       <style>{`
         :root { --muted: #7d8590; --text: #e6edf3; }
         * { box-sizing: border-box; margin: 0; padding: 0; }
         button { color: inherit; }
         input[type=range] { cursor: pointer; }
         textarea:focus { border-color: rgba(88,166,201,0.5) !important; }
-        @keyframes wave { 0%,100% { height: 3px } 50% { height: 12px } }
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500&family=Nunito:ital,wght@0,400;1,400&display=swap');@keyframes wave { 0%,100% { height: 3px } 50% { height: 12px } }
         ::-webkit-scrollbar { display: none; }
       `}</style>
 
