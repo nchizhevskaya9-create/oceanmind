@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 
-// ─── Data ──────────────────────────────────────────────────────────────────────
-
+// ─── Data ──────────────────────────────────────────────────────────────────
 const SOUNDS = [
   { id: "rain",      emoji: "🌧️", name: "Дождь",          category: "Природа",    duration: 2160, tag: "sleep" },
   { id: "fire",      emoji: "🔥", name: "Камин",           category: "Уют",        duration: 2700, tag: "relax" },
