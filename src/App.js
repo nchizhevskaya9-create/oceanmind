@@ -1007,7 +1007,7 @@ export default function App() {
       </div>
 
       {/* Bottom nav */}
-      <div style={{ display: "flex", justifyContent: "space-around", padding: "10px 0 12px", borderTop: "0.5px solid rgba(255,255,255,0.08)", flexShrink: 0, background: "#0d1117" }}>
+      <div style={{ display: "flex", justifyContent: "space-around", padding: "10px 0 12px", borderTop: "0.5px solid rgba(255,255,255,0.08)", flexShrink: 0, background: "#db91cb" }}>
         {NAV.map(n => (
           <button key={n.id} onClick={() => setScreen(n.id)}
             style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 3, fontSize: 10, fontFamily: "sans-serif", color: screen === n.id ? "#58a6c9" : "var(--muted)", background: "none", border: "none", cursor: "pointer", padding: "2px 6px", transition: "color 0.2s" }}>
