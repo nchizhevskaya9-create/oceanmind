@@ -976,7 +976,7 @@ export default function App() {
   };
 
   return (
-    <div style={{ background: "#0d1117", color: "#e6edf3", minHeight: "100vh", fontFamily: "Georgia, serif", maxWidth: 430, margin: "0 auto", display: "flex", flexDirection: "column" }}>
+    <div style={{ background: "51a2c7", color: "#e6edf3", minHeight: "100vh", fontFamily: "Georgia, serif", maxWidth: 430, margin: "0 auto", display: "flex", flexDirection: "column" }}>
       <style>{`
         :root { --muted: #7d8590; --text: #e6edf3; }
         * { box-sizing: border-box; margin: 0; padding: 0; }
