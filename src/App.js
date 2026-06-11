@@ -162,7 +162,7 @@ function SplashScreen({ onStart }) {
   return (
     <div style={{ position: "fixed", inset: 0, zIndex: 100, display: "flex", flexDirection: "column", justifyContent: "flex-end" }}>
       <img
-        src="https://images.unsplash.com/photo-1505118380757-91f5f5632de0?w=800&q=80"
+        src="/splash.jpg"
         alt="ocean"
         style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }}
       />
