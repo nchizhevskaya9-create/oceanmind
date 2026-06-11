@@ -169,10 +169,10 @@ function SplashScreen({ onStart }) {
       <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.5) 100%)" }} />
       <div style={{ position: "relative", padding: "2rem 2rem 3rem" }}>
         <div style={{ fontSize: 38, fontWeight: 300, color: "#fff", lineHeight: 1.2, marginBottom: 12 }}>
-          Музыка для сна<br />и расслабления
+          <OCEANMIND></OCEANMIND><br />
         </div>
         <div style={{ fontSize: 15, color: "rgba(255,255,255,0.75)", marginBottom: 40, fontWeight: 300 }}>
-          Позволь себе отдохнуть
+          Пространство для твоей глубины
         </div>
         <button onClick={onStart} style={{
           width: "100%", padding: "18px", borderRadius: 50,
