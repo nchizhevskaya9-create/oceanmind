@@ -168,7 +168,7 @@ function SplashScreen({ onStart }) {
       />
       <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.5) 100%)" }} />
       <div style={{ position: "relative", padding: "2rem 2rem 3rem" }}>
-       fontSize: 38, fontWeight: 300, color: "#fff", fontFamily: "'Nunito', sans-serif", lineHeight: 1.2, marginBottom: 12
+        <div style={{ fontSize: 38, fontWeight: 300, color: "#fff", lineHeight: 1.2, marginBottom: 12 }}>
           OceanMind<br />
         </div>
         <div style={{ fontSize: 15, color: "rgba(255,255,255,0.75)", marginBottom: 40, fontWeight: 300 }}>
