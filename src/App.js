@@ -137,7 +137,7 @@ const C = {
   text:     "#2c2c2c",
   muted:    "#787470",
   accent:   "#7a9e9f",
-  accent2:  "#90877c",
+  accent2:  "#fefaf4",
   dark:     "rgba(0,0,0,0.55)",
 };
 
@@ -177,8 +177,8 @@ function SplashScreen({ onStart }) {
         <button onClick={onStart} style={{
           width: "100%", padding: "18px", borderRadius: 50,
           background: "rgba(255,255,255,0.25)", backdropFilter: "blur(10px)",
-          border: "1px solid rgba(255,255,255,0.4)", color: "#fff",
-          fontSize: 17, fontFamily: "'Outfit', sans-serif", cursor: "pointer", letterSpacing: "0.02em"
+          border: "1px solid rgba(255,255,255,0.4)", color: "#e4e4e4",
+          fontSize: 17, fontFamily: "'nunito", cursor: "pointer", letterSpacing: "0.02em"
         }}>
           Начать
         </button>
