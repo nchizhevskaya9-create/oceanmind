@@ -131,13 +131,13 @@ function formatEntryDate(date) {
 
 const C = {
   bg:       "rgb(109, 155, 183)",
-  surface:  "rgba(132, 199, 245, 0.7)",
-  surface2: "rgba(133, 205, 235, 0.38)",
+  surface:  "rgba(186, 224, 249, 0.7)",
+  surface2: "rgba(167, 216, 238, 0.38)",
   border:   "rgba(0,0,0,0.07)",
   text:     "#2c2c2c",
-  muted:    "#8a8580",
+  muted:    "#e9e0d8",
   accent:   "#7a9e9f",
-  accent2:  "#b5a99a",
+  accent2:  "#d2c4b3",
   dark:     "rgba(0,0,0,0.55)",
 };
 
