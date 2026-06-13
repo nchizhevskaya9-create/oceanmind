@@ -130,9 +130,9 @@ function formatEntryDate(date) {
 // ─── Design tokens ─────────────────────────────────────────────────────────────
 
 const C = {
-  bg:       "rgb(95, 142, 171)",
-  surface:  "rgba(255,255,255,0.7)",
-  surface2: "rgba(255,255,255,0.5)",
+  bg:       "rgb(109, 155, 183)",
+  surface:  "rgba(132, 199, 245, 0.7)",
+  surface2: "rgba(133, 205, 235, 0.38)",
   border:   "rgba(0,0,0,0.07)",
   text:     "#2c2c2c",
   muted:    "#8a8580",
