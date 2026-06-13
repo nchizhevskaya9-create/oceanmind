@@ -137,7 +137,7 @@ const C = {
   text:     "#2c2c2c",
   muted:    "#e9e0d8",
   accent:   "#7a9e9f",
-  accent2:  "#988f83",
+  accent2:  "#90877c",
   dark:     "rgba(0,0,0,0.55)",
 };
 
