@@ -134,7 +134,7 @@ const C = {
   surface:  "rgba(186, 224, 249, 0.7)",
   surface2: "rgba(167, 216, 238, 0.38)",
   border:   "rgba(0,0,0,0.07)",
-  text:     "#2c2c2c",
+  text:     "#626262",
   muted:    "#787470",
   accent:   "#7a9e9f",
   accent2:  "#fefaf4",
