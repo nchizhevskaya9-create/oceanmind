@@ -136,7 +136,7 @@ const C = {
   border:   "rgba(0,0,0,0.07)",
   text:     "#242424",
   muted:    "#787470",
-  accent:   "#7a9e9f",
+  accent:   "#a7d9db",
   accent2:  "#fefaf4",
   dark:     "rgba(0,0,0,0.55)",
 };
