@@ -281,7 +281,20 @@ function HomeScreen({ mood, setMood, currentSound, setCurrentSound, onNavigate }
 }
 
 // ─── Sounds Screen ─────────────────────────────────────────────────────────────
+const audioRef = useRef(null);
 
+function playSound(s) {
+  if (audioRef.current) {
+    audioRef.current.pause();
+    audioRef.current = null;
+  }
+  if (s.id === "rain") {
+    audioRef.current = new Audio("/audio/rain.mp3");
+    audioRef.current.loop = true;
+    audioRef.current.volume = volume / 100;
+    audioRef.current.play();
+  }
+}
 function SoundsScreen({ currentSound, setCurrentSound }) {
   const [playing, setPlaying] = useState(false);
   const [progress, setProgress] = useState(34);
