@@ -281,20 +281,7 @@ function HomeScreen({ mood, setMood, currentSound, setCurrentSound, onNavigate }
 }
 
 // ─── Sounds Screen ─────────────────────────────────────────────────────────────
-const audioRef = useRef(null);
 
-function playSound(s) {
-  if (audioRef.current) {
-    audioRef.current.pause();
-    audioRef.current = null;
-  }
-  if (s.id === "rain") {
-    audioRef.current = new Audio("/audio/rain.mp3");
-    audioRef.current.loop = true;
-    audioRef.current.volume = volume / 100;
-    audioRef.current.play();
-  }
-}
 function SoundsScreen({ currentSound, setCurrentSound }) {
   const [playing, setPlaying] = useState(false);
   const [progress, setProgress] = useState(34);
@@ -303,7 +290,38 @@ function SoundsScreen({ currentSound, setCurrentSound }) {
   const [elapsed, setElapsed] = useState(12 * 60 + 22);
   const [filter, setFilter] = useState("all");
   const timerRef = useRef(null);
+  const audioRef = useRef(null);
   const sound = currentSound || SOUNDS[0];
+
+  function playSound(s) {
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current = null;
+    }
+    if (s.id === "rain") {
+      audioRef.current = new Audio("/audio/rain.mp3");
+      audioRef.current.loop = true;
+      audioRef.current.volume = volume / 100;
+      audioRef.current.play();
+    }
+  }
+
+  // Держим громкость уже играющего звука синхронизированной со слайдером
+  useEffect(() => {
+    if (audioRef.current) {
+      audioRef.current.volume = volume / 100;
+    }
+  }, [volume]);
+
+  // Останавливаем звук при размонтировании экрана
+  useEffect(() => {
+    return () => {
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current = null;
+      }
+    };
+  }, []);
 
   const startTimer = useCallback((isPlaying) => {
     clearInterval(timerRef.current);
@@ -323,7 +341,7 @@ function SoundsScreen({ currentSound, setCurrentSound }) {
   function togglePlay() { setPlaying(p => { startTimer(!p); return !p; }); }
 
   function selectSound(s) {
-    if (s.premium) return;
+    if (s.premium) return; playSound(s);
     setCurrentSound(s); setProgress(0); setElapsed(0); setPlaying(true); startTimer(true);
   }
 
