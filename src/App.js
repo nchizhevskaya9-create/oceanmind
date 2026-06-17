@@ -1,7 +1,8 @@
+
 import { useState, useEffect, useRef, useCallback } from "react";
-
+ 
 // ─── Data ──────────────────────────────────────────────────────────────────────
-
+ 
 const SOUNDS = [
   { id: "rain",     name: "Дождь",        category: "Природа",   duration: 2160, tag: "sleep",   photo: "https://images.unsplash.com/photo-1515694346937-94d85e41e6f0?w=400&q=80" },
   { id: "fire",     name: "Камин",        category: "Уют",       duration: 2700, tag: "relax",   photo: "https://images.unsplash.com/photo-1543722530-d2c3201371e7?w=400&q=80" },
@@ -16,7 +17,7 @@ const SOUNDS = [
   { id: "thunder",  name: "Гроза",        category: "Природа",   duration: 2400, tag: "sleep",   photo: "https://images.unsplash.com/photo-1505672678657-cc7037095e60?w=400&q=80" },
   { id: "river",    name: "Горный ручей", category: "Природа",   duration: 2700, tag: "relax",   photo: "https://images.unsplash.com/photo-1455218873509-8097305ee378?w=400&q=80" },
 ];
-
+ 
 const MEDITATIONS = [
   { id: "m1", tag: "sleep",   title: "Погружение в тишину",     duration: "20 мин", level: "Начинающим",  desc: "Мягкое сканирование тела перед сном",               photo: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&q=80" },
   { id: "m2", tag: "stress",  title: "Освобождение от тревоги", duration: "15 мин", level: "Дыхание",      desc: "Техника 4-7-8 для успокоения нервной системы",      photo: "https://images.unsplash.com/photo-1518241353330-0f7941c2d9b5?w=400&q=80" },
@@ -25,7 +26,7 @@ const MEDITATIONS = [
   { id: "m5", tag: "stress",  title: "Земля под ногами",        duration: "12 мин", level: "Заземление",   desc: "Практика 5-4-3-2-1 при панике и тревоге",           photo: "https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=400&q=80" },
   { id: "m6", tag: "focus",   title: "Концентрация на дыхании", duration: "8 мин",  level: "Базовая",      desc: "Классическая медитация для развития внимания",      photo: "https://images.unsplash.com/photo-1470252649378-9c29740c9fa8?w=400&q=80" },
 ];
-
+ 
 const MORNING_PRACTICES = [
   { id: "p1", tag: "morning",   title: "Намерение дня",       duration: "5 мин",  desc: "Задайте тон всему дню через намерение" },
   { id: "p2", tag: "breath",    title: "Бодрящее дыхание",    duration: "8 мин",  desc: "Техника Вим Хофа для энергии с утра" },
@@ -33,7 +34,7 @@ const MORNING_PRACTICES = [
   { id: "p4", tag: "stretch",   title: "Утренняя растяжка",   duration: "10 мин", desc: "Мягкая йога для пробуждения тела", premium: true },
   { id: "p5", tag: "morning",   title: "Визуализация успеха", duration: "7 мин",  desc: "Представьте идеальную версию своего дня" },
 ];
-
+ 
 const AFFIRMATIONS = [
   { id: "a1", category: "Самопринятие",      text: "Я достаточна. Я делаю всё, что в моих силах, и этого хватает." },
   { id: "a2", category: "Покой",             text: "Покой живёт внутри меня. Я могу обратиться к нему в любой момент." },
@@ -44,7 +45,7 @@ const AFFIRMATIONS = [
   { id: "a7", category: "Безопасность",      text: "Прямо сейчас я в безопасности. Всё хорошо в этот момент." },
   { id: "a8", category: "Рост",              text: "Я расту каждый день, даже когда этого не замечаю." },
 ];
-
+ 
 const TUNE_INS = [
   { id: "t1", category: "Утренний настрой", icon: "🌅", title: "Начни день с намерения",   lines: ["Сегодня я выбираю спокойствие.", "Я открыта для хорошего.", "Моя энергия идёт туда, где мне важно."] },
   { id: "t2", category: "После работы",     icon: "🌆", title: "Перезагрузка после дня",   lines: ["Рабочий день окончен — я отпускаю его.", "Мои достижения сегодня реальны.", "Теперь время для себя."] },
@@ -53,10 +54,10 @@ const TUNE_INS = [
   { id: "t5", category: "Уверенность",      icon: "⚡", title: "Перед важным событием",    lines: ["Я готова. Я справлюсь.", "Мой опыт и знания со мной.", "Я делаю всё, что могу — и этого достаточно."] },
   { id: "t6", category: "Благодарность",    icon: "💛", title: "Практика благодарности",   lines: ["Три вещи, за которые я благодарна сегодня...", "Одна маленькая победа этого дня...", "Человек, которому я мысленно говорю спасибо..."] },
 ];
-
+ 
 const MOODS = ["😔", "😐", "🙂", "😊", "✨"];
 const MOOD_LABELS = ["Тяжело", "Нейтрально", "Неплохо", "Хорошо", "Отлично"];
-
+ 
 const TAG_COLORS = {
   sleep:    { bg: "rgba(100,140,160,0.15)", text: "#6a8fa0", label: "Сон" },
   relax:    { bg: "rgba(120,160,140,0.15)", text: "#78a08c", label: "Расслабление" },
@@ -68,7 +69,7 @@ const TAG_COLORS = {
   gratitude:{ bg: "rgba(160,150,100,0.15)", text: "#a09664", label: "Благодарность" },
   stretch:  { bg: "rgba(140,120,160,0.15)", text: "#8c78a0", label: "Растяжка" },
 };
-
+ 
 const REFLECTION_PROMPTS = [
   "Что сегодня было самым тяжёлым?",
   "Какой момент сегодня был хорошим, даже маленьким?",
@@ -78,27 +79,27 @@ const REFLECTION_PROMPTS = [
   "Что я хочу отпустить перед сном?",
   "За что я благодарна сегодня?",
 ];
-
+ 
 const PATTERN_TAGS = [
   "перфекционизм", "тревога о будущем", "угождение другим",
   "самокритика", "прокрастинация", "страх отказа",
   "усталость", "одиночество", "раздражение", "вина",
   "гордость собой", "спокойствие", "ресурс",
 ];
-
+ 
 const SEED_ENTRIES = [
   { id: "e1", date: new Date(Date.now() - 86400000*2), mood: 2, what_happened: "Поругалась с мамой по телефону. Снова почувствовала, что меня не слышат.", what_felt: "Злость, потом вина, потом усталость от этого круга.", what_helped: "Послушала звуки дождя 20 минут. Немного отпустило.", pattern_tags: ["угождение другим", "вина"], insight: "Заметила, что сначала злюсь, а потом сразу виню себя." },
   { id: "e2", date: new Date(Date.now() - 86400000), mood: 3, what_happened: "Сдала проект вовремя. Похвалили на работе.", what_felt: "Облегчение и немного удивление — не ожидала, что получится.", what_helped: "Утренний настрой помог сосредоточиться.", pattern_tags: ["перфекционизм", "гордость собой"], insight: "Снова убедилась: когда начинаю — становится легче." },
 ];
-
+ 
 // ─── Helpers ───────────────────────────────────────────────────────────────────
-
+ 
 function formatTime(sec) {
   if (!sec) return "∞";
   const m = Math.floor(sec / 60), s = sec % 60;
   return `${m}:${String(s).padStart(2, "0")}`;
 }
-
+ 
 function getGreeting() {
   const h = new Date().getHours();
   if (h < 6) return "Доброй ночи";
@@ -106,19 +107,19 @@ function getGreeting() {
   if (h < 18) return "Добрый день";
   return "Добрый вечер";
 }
-
+ 
 function getClockStr() {
   const now = new Date();
   return `${now.getHours()}:${String(now.getMinutes()).padStart(2, "0")}`;
 }
-
+ 
 function getDateStr() {
   const now = new Date();
   const days = ["Воскресенье","Понедельник","Вторник","Среда","Четверг","Пятница","Суббота"];
   const months = ["января","февраля","марта","апреля","мая","июня","июля","августа","сентября","октября","ноября","декабря"];
   return `${days[now.getDay()]}, ${now.getDate()} ${months[now.getMonth()]}`;
 }
-
+ 
 function formatEntryDate(date) {
   const diff = Math.floor((Date.now() - date) / 86400000);
   if (diff === 0) return "Сегодня";
@@ -126,9 +127,9 @@ function formatEntryDate(date) {
   const months = ["янв","фев","мар","апр","май","июн","июл","авг","сен","окт","ноя","дек"];
   return `${date.getDate()} ${months[date.getMonth()]}`;
 }
-
+ 
 // ─── Design tokens ─────────────────────────────────────────────────────────────
-
+ 
 const C = {
   bg:       "rgb(11, 18, 67)",
   surface:  "rgba(20, 15, 58, 0.7)",
@@ -140,9 +141,9 @@ const C = {
   accent2:  "#fefaf4",
   dark:     "rgba(0,0,0,0.55)",
 };
-
+ 
 // ─── Sub-components ────────────────────────────────────────────────────────────
-
+ 
 function Tag({ tag }) {
   const c = TAG_COLORS[tag] || TAG_COLORS.relax;
   return (
@@ -151,13 +152,13 @@ function Tag({ tag }) {
     </span>
   );
 }
-
+ 
 function PremiumBadge() {
   return <span style={{ background: "rgba(180,150,80,0.15)", color: "#a08840", fontSize: 10, padding: "2px 8px", borderRadius: 20, marginLeft: 6 }}>PRO</span>;
 }
-
+ 
 // ─── Splash Screen ─────────────────────────────────────────────────────────────
-
+ 
 function SplashScreen({ onStart }) {
   return (
     <div style={{ position: "fixed", inset: 0, zIndex: 100, display: "flex", flexDirection: "column", justifyContent: "flex-end" }}>
@@ -186,33 +187,33 @@ function SplashScreen({ onStart }) {
     </div>
   );
 }
-
+ 
 // ─── Home Screen ───────────────────────────────────────────────────────────────
-
+ 
 function HomeScreen({ mood, setMood, currentSound, setCurrentSound, onNavigate }) {
   const [clock, setClock] = useState(getClockStr());
   const [affIdx, setAffIdx] = useState(0);
   const [affFade, setAffFade] = useState(true);
-
+ 
   useEffect(() => {
     const t = setInterval(() => setClock(getClockStr()), 30000);
     return () => clearInterval(t);
   }, []);
-
+ 
   function nextAff() {
     setAffFade(false);
     setTimeout(() => { setAffIdx(i => (i + 1) % AFFIRMATIONS.length); setAffFade(true); }, 250);
   }
-
+ 
   const aff = AFFIRMATIONS[affIdx];
-
+ 
   return (
     <div style={{ padding: "0 0 1rem" }}>
       {/* Time */}
       <div style={{ padding: "0 1.5rem 1.5rem" }}>
         <div style={{ fontSize: 60, fontWeight: 300, color: C.text, letterSpacing: -2, lineHeight: 1, marginBottom: 4 }}>{clock}</div>
         <div style={{ fontSize: 14, color: C.muted, marginBottom: 1.5 + "rem" }}>{getDateStr()}</div>
-
+ 
         {/* Mood */}
         <div style={{ fontSize: 12, color: C.muted, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 10 }}>Как вы сейчас?</div>
         <div style={{ display: "flex", gap: 8 }}>
@@ -228,7 +229,7 @@ function HomeScreen({ mood, setMood, currentSound, setCurrentSound, onNavigate }
           ))}
         </div>
       </div>
-
+ 
       {/* Quick sounds */}
       <div style={{ padding: "0 1.5rem", marginBottom: "1.25rem" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
@@ -246,7 +247,7 @@ function HomeScreen({ mood, setMood, currentSound, setCurrentSound, onNavigate }
           ))}
         </div>
       </div>
-
+ 
       {/* Affirmation */}
       <div style={{ margin: "0 1.5rem 1.25rem", background: C.surface, border: `1px solid ${C.border}`, borderRadius: 20, padding: "1.5rem", textAlign: "center", backdropFilter: "blur(8px)" }}>
         <div style={{ fontSize: 11, color: C.muted, textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: 6 }}>Аффирмация дня</div>
@@ -258,7 +259,7 @@ function HomeScreen({ mood, setMood, currentSound, setCurrentSound, onNavigate }
           Следующая →
         </button>
       </div>
-
+ 
       {/* Tune-ins preview */}
       <div style={{ padding: "0 1.5rem" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
@@ -279,9 +280,9 @@ function HomeScreen({ mood, setMood, currentSound, setCurrentSound, onNavigate }
     </div>
   );
 }
-
+ 
 // ─── Sounds Screen ─────────────────────────────────────────────────────────────
-
+ 
 function SoundsScreen({ currentSound, setCurrentSound }) {
   const [playing, setPlaying] = useState(false);
   const [progress, setProgress] = useState(34);
@@ -292,7 +293,7 @@ function SoundsScreen({ currentSound, setCurrentSound }) {
   const timerRef = useRef(null);
   const audioRef = useRef(null);
   const sound = currentSound || SOUNDS[0];
-
+ 
   function playSound(s) {
     if (audioRef.current) {
       audioRef.current.pause();
@@ -305,14 +306,14 @@ function SoundsScreen({ currentSound, setCurrentSound }) {
       audioRef.current.play();
     }
   }
-
+ 
   // Держим громкость уже играющего звука синхронизированной со слайдером
   useEffect(() => {
     if (audioRef.current) {
       audioRef.current.volume = volume / 100;
     }
   }, [volume]);
-
+ 
   // Останавливаем звук при размонтировании экрана
   useEffect(() => {
     return () => {
@@ -322,7 +323,7 @@ function SoundsScreen({ currentSound, setCurrentSound }) {
       }
     };
   }, []);
-
+ 
   const startTimer = useCallback((isPlaying) => {
     clearInterval(timerRef.current);
     if (!isPlaying) return;
@@ -335,21 +336,21 @@ function SoundsScreen({ currentSound, setCurrentSound }) {
       });
     }, 1000);
   }, [sound]);
-
+ 
   useEffect(() => { startTimer(playing); return () => clearInterval(timerRef.current); }, [playing, startTimer]);
-
+ 
   function togglePlay() { setPlaying(p => { startTimer(!p); return !p; }); }
-
+ 
   function selectSound(s) {
     if (s.premium) return; playSound(s);
     setCurrentSound(s); setProgress(0); setElapsed(0); setPlaying(true); startTimer(true);
   }
-
+ 
   const filters = ["all","sleep","relax","focus","meditate"];
   const filterLabels = { all:"Все", sleep:"Сон", relax:"Расслабление", focus:"Фокус", meditate:"Медитация" };
   const filtered = filter === "all" ? SOUNDS : SOUNDS.filter(s => s.tag === filter);
   const total = sound.duration || 3600;
-
+ 
   return (
     <div style={{ padding: "0 0 1rem" }}>
       {/* Player */}
@@ -382,14 +383,14 @@ function SoundsScreen({ currentSound, setCurrentSound }) {
           </div>
         </div>
       </div>
-
+ 
       {/* Volume */}
       <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "0 1.5rem", marginBottom: 16 }}>
         <span style={{ fontSize: 14, color: C.muted }}>🔈</span>
         <input type="range" min={0} max={100} value={volume} onChange={e => setVolume(e.target.value)} style={{ flex: 1, accentColor: C.accent }} />
         <span style={{ fontSize: 12, color: C.muted, minWidth: 30 }}>{volume}%</span>
       </div>
-
+ 
       {/* Filters */}
       <div style={{ display: "flex", gap: 8, padding: "0 1.5rem", marginBottom: 14, overflowX: "auto", scrollbarWidth: "none" }}>
         {filters.map(f => (
@@ -404,7 +405,7 @@ function SoundsScreen({ currentSound, setCurrentSound }) {
           </button>
         ))}
       </div>
-
+ 
       {/* Sound grid */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(2,1fr)", gap: 12, padding: "0 1.5rem" }}>
         {filtered.map(s => (
@@ -423,12 +424,12 @@ function SoundsScreen({ currentSound, setCurrentSound }) {
     </div>
   );
 }
-
+ 
 // ─── Meditations Screen ────────────────────────────────────────────────────────
-
+ 
 function MeditationsScreen() {
   const [tab, setTab] = useState("meditations");
-
+ 
   return (
     <div style={{ padding: "0 0 1rem" }}>
       <div style={{ display: "flex", padding: "0 1.5rem", borderBottom: `1px solid ${C.border}`, marginBottom: 16 }}>
@@ -440,7 +441,7 @@ function MeditationsScreen() {
           }}>{label}</button>
         ))}
       </div>
-
+ 
       {tab === "meditations" && (
         <div style={{ display: "grid", gap: 12, padding: "0 1.5rem" }}>
           {MEDITATIONS.map(m => (
@@ -462,7 +463,7 @@ function MeditationsScreen() {
           ))}
         </div>
       )}
-
+ 
       {tab === "morning" && (
         <div style={{ display: "grid", gap: 10, padding: "0 1.5rem" }}>
           {MORNING_PRACTICES.map(p => (
@@ -483,21 +484,21 @@ function MeditationsScreen() {
     </div>
   );
 }
-
+ 
 // ─── Tune-ins Screen ───────────────────────────────────────────────────────────
-
+ 
 function TuneInsScreen() {
   const [selected, setSelected] = useState(null);
   const [lineIdx, setLineIdx] = useState(0);
   const [fade, setFade] = useState(true);
-
+ 
   function openTuneIn(t) { setSelected(t); setLineIdx(0); setFade(true); }
   function nextLine() {
     if (lineIdx < selected.lines.length - 1) {
       setFade(false); setTimeout(() => { setLineIdx(i => i + 1); setFade(true); }, 200);
     } else { setSelected(null); setLineIdx(0); }
   }
-
+ 
   if (selected) {
     return (
       <div style={{ padding: "2rem 1.5rem", minHeight: 400, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center" }}>
@@ -519,7 +520,7 @@ function TuneInsScreen() {
       </div>
     );
   }
-
+ 
   return (
     <div style={{ padding: "0 0 1rem" }}>
       <div style={{ padding: "0 1.5rem 1rem" }}>
@@ -542,21 +543,21 @@ function TuneInsScreen() {
     </div>
   );
 }
-
+ 
 // ─── Affirmations Screen ───────────────────────────────────────────────────────
-
+ 
 function AffirmationsScreen() {
   const [idx, setIdx] = useState(0);
   const [fade, setFade] = useState(true);
   const [liked, setLiked] = useState(new Set());
-
+ 
   function go(dir) {
     setFade(false);
     setTimeout(() => { setIdx(i => (i + dir + AFFIRMATIONS.length) % AFFIRMATIONS.length); setFade(true); }, 200);
   }
-
+ 
   const aff = AFFIRMATIONS[idx];
-
+ 
   return (
     <div style={{ padding: "2rem 1.5rem", display: "flex", flexDirection: "column", alignItems: "center" }}>
       <div style={{ fontSize: 12, color: C.muted, textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: 24 }}>{idx + 1} / {AFFIRMATIONS.length}</div>
@@ -586,9 +587,9 @@ function AffirmationsScreen() {
     </div>
   );
 }
-
+ 
 // ─── Journal Screen ────────────────────────────────────────────────────────────
-
+ 
 function JournalScreen() {
   const [view, setView] = useState("list");
   const [entries, setEntries] = useState(SEED_ENTRIES);
@@ -601,15 +602,15 @@ function JournalScreen() {
   const [newTags, setNewTags] = useState([]);
   const [promptIdx, setPromptIdx] = useState(0);
   const [step, setStep] = useState(0);
-
+ 
   function saveEntry() {
     const e = { id: "e" + Date.now(), date: new Date(), mood: newMood ?? 2, what_happened: newWhat, what_felt: newFelt, what_helped: newHelped, pattern_tags: newTags, insight: newInsight };
     setEntries(prev => [e, ...prev]);
     setView("list"); setStep(0); setNewMood(null); setNewWhat(""); setNewFelt(""); setNewHelped(""); setNewInsight(""); setNewTags([]);
   }
-
+ 
   function toggleTag(t) { setNewTags(ts => ts.includes(t) ? ts.filter(x => x !== t) : [...ts, t]); }
-
+ 
   const steps = [
     { title: "Как ты сейчас?" },
     { title: "Что произошло?", hint: REFLECTION_PROMPTS[promptIdx] },
@@ -617,7 +618,7 @@ function JournalScreen() {
     { title: "Что помогло?", hint: "Звук, практика, разговор, прогулка..." },
     { title: "Осознание и паттерны" },
   ];
-
+ 
   if (view === "new") {
     const current = steps[step];
     const canNext = step === 0 ? newMood !== null : true;
@@ -672,7 +673,7 @@ function JournalScreen() {
       </div>
     );
   }
-
+ 
   if (view === "entry" && selected) {
     const e = selected;
     return (
@@ -702,7 +703,7 @@ function JournalScreen() {
       </div>
     );
   }
-
+ 
   return (
     <div style={{ padding: "0 0 1.5rem" }}>
       <div style={{ padding: "0 1.5rem", marginBottom: 16, display: "flex", gap: 10 }}>
@@ -736,13 +737,13 @@ function JournalScreen() {
     </div>
   );
 }
-
+ 
 // ─── Progress Screen ───────────────────────────────────────────────────────────
-
+ 
 function ProgressScreen({ mood }) {
   const weekMoods = [2, 3, 4, 3, 4, 4, mood ?? 3];
   const maxBarH = 60;
-
+ 
   return (
     <div style={{ padding: "0 1.5rem 1.5rem" }}>
       <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 20, padding: "1.5rem", marginBottom: 12, textAlign: "center", backdropFilter: "blur(8px)" }}>
@@ -750,7 +751,7 @@ function ProgressScreen({ mood }) {
         <div style={{ fontSize: 36, fontWeight: 300, color: C.text, marginBottom: 4 }}>7</div>
         <div style={{ fontSize: 14, color: C.muted }}>дней подряд</div>
       </div>
-
+ 
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10, marginBottom: 12 }}>
         {[["23","сессии","этот месяц"],["4.2ч","среднее","в неделю"],["12","медит.","завершено"]].map(([val,label,sub],i) => (
           <div key={i} style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 16, padding: "14px 10px", textAlign: "center", backdropFilter: "blur(8px)" }}>
@@ -760,7 +761,7 @@ function ProgressScreen({ mood }) {
           </div>
         ))}
       </div>
-
+ 
       <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 20, padding: "1.25rem", marginBottom: 12, backdropFilter: "blur(8px)" }}>
         <div style={{ fontSize: 15, fontWeight: 500, color: C.text, marginBottom: 16 }}>Настроение за неделю</div>
         <div style={{ display: "flex", alignItems: "flex-end", gap: 8, height: maxBarH + 30 }}>
@@ -778,7 +779,7 @@ function ProgressScreen({ mood }) {
           })}
         </div>
       </div>
-
+ 
       <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 20, padding: "1.25rem", backdropFilter: "blur(8px)" }}>
         <div style={{ fontSize: 15, fontWeight: 500, color: C.text, marginBottom: 14 }}>Достижения</div>
         <div style={{ display: "grid", gap: 12 }}>
@@ -797,15 +798,15 @@ function ProgressScreen({ mood }) {
     </div>
   );
 }
-
+ 
 // ─── Shared styles ─────────────────────────────────────────────────────────────
-
+ 
 const wBtn = { background: "none", border: "none", color: "rgba(255,255,255,0.7)", cursor: "pointer", fontSize: 20, padding: 4 };
 const navBtn = { background: "none", border: `1px solid ${C.border}`, borderRadius: "50%", width: 48, height: 48, fontSize: 20, color: C.muted, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" };
 const taStyle = { width: "100%", background: C.surface, border: `1px solid ${C.border}`, borderRadius: 16, padding: "14px", color: C.text, fontSize: 15, fontFamily: "'Nunito', sans-serif", lineHeight: 1.7, resize: "none", outline: "none" };
-
+ 
 // ─── Nav ───────────────────────────────────────────────────────────────────────
-
+ 
 const NAV = [
   { id: "home",         icon: "🏠", label: "Главная" },
   { id: "sounds",       icon: "🎧", label: "Звуки" },
@@ -814,19 +815,19 @@ const NAV = [
   { id: "journal",      icon: "📓", label: "Дневник" },
   { id: "progress",     icon: "📈", label: "Прогресс" },
 ];
-
+ 
 // ─── App ───────────────────────────────────────────────────────────────────────
-
+ 
 export default function App() {
   const [splash, setSplash] = useState(true);
   const [screen, setScreen] = useState("home");
   const [mood, setMood] = useState(null);
   const [currentSound, setCurrentSound] = useState(SOUNDS[0]);
-
+ 
   const screenTitles = { home: getGreeting(), sounds: "Звуки", meditations: "Практики", tuneins: "Настрои", affirmations: "Аффирмации", journal: "Дневник", progress: "Прогресс" };
-
+ 
   if (splash) return <SplashScreen onStart={() => setSplash(false)} />;
-
+ 
   return (
     <div style={{ background: C.bg, color: C.text, minHeight: "100vh", fontFamily: "'Outfit', sans-serif", maxWidth: 430, margin: "0 auto", display: "flex", flexDirection: "column" }}>
       <style>{`
@@ -838,7 +839,7 @@ export default function App() {
         @keyframes wave { 0%,100% { height: 3px } 50% { height: 12px } }
         ::-webkit-scrollbar { display: none; }
       `}</style>
-
+ 
       {/* Header */}
       <div style={{ padding: "1.25rem 1.5rem 0.75rem", display: "flex", justifyContent: "space-between", alignItems: "center", flexShrink: 0 }}>
         <div style={{ fontSize: 22, fontWeight: 500, letterSpacing: "0.02em", color: C.text }}>
@@ -846,7 +847,7 @@ export default function App() {
         </div>
         <div style={{ fontSize: 13, color: C.muted }}>{screenTitles[screen]}</div>
       </div>
-
+ 
       {/* Screen */}
       <div style={{ flex: 1, overflowY: "auto" }}>
         {screen === "home"         && <HomeScreen mood={mood} setMood={setMood} currentSound={currentSound} setCurrentSound={setCurrentSound} onNavigate={setScreen} />}
@@ -857,7 +858,7 @@ export default function App() {
         {screen === "journal"      && <JournalScreen />}
         {screen === "progress"     && <ProgressScreen mood={mood} />}
       </div>
-
+ 
       {/* Bottom nav */}
       <div style={{ display: "flex", justifyContent: "space-around", padding: "10px 0 12px", borderTop: `1px solid ${C.border}`, flexShrink: 0, background: "rgba(240,237,232,0.9)", backdropFilter: "blur(10px)" }}>
         {NAV.map(n => (
@@ -871,3 +872,4 @@ export default function App() {
     </div>
   );
 }
+ 
