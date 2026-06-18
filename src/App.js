@@ -62,16 +62,16 @@ const MOOD_LABELS = ["Тяжело", "Нейтрально", "Неплохо", "
 // ─── Design tokens — глубокий приглушённый закат ───────────────────────────────
 
 const C = {
-  bg:       "#69676a", // глубокий сланцевый — фон приложения
-  surface:  "rgba(141,145,154,0.35)", // 8d919a — карточки
-  surface2: "rgba(151,147,162,0.28)", // 9793a2 — вложенные карточки
-  border:   "rgba(255,255,255,0.10)",
+  bg:       "#525d6b", // глубокий пыльно-голубой — фон приложения
+  surface:  "rgba(141,145,154,0.32)", // 8d919a — карточки, голубоватый налёт
+  surface2: "rgba(110,117,135,0.30)", // 6e7587 — вложенные карточки
+  border:   "rgba(214,224,235,0.12)",
   text:     "#f1eef2",
-  muted:    "#c7c2cb",
+  muted:    "#c3cbd4",
   accent:   "#b19ca3", // основной акцент — пыльная роза
   accent2:  "#9793a2", // вторичный — приглушённая лаванда
   accent3:  "#6e7587", // третий — грифельно-синий
-  dark:     "rgba(35,33,38,0.6)",
+  dark:     "rgba(28,34,42,0.6)",
 };
 
 const TAG_COLORS = {
@@ -192,13 +192,13 @@ function SplashScreen({ onStart }) {
         alt="ocean"
         style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }}
       />
-      <div style={{ position: "absolute", inset: 0, background: `linear-gradient(to bottom, rgba(35,33,38,0.15) 0%, ${C.dark} 100%)` }} />
+      <div style={{ position: "absolute", inset: 0, background: `linear-gradient(to bottom, rgba(28,34,42,0.15) 0%, ${C.dark} 100%)` }} />
       <div style={{ position: "relative", padding: "2rem 2rem 3rem" }}>
         <div style={{ fontSize: 38, fontWeight: 300, color: "#f1eef2", lineHeight: 1.2, marginBottom: 12, fontFamily: "'Nunito', sans-serif" }}>
-          Музыка для сна<br />и расслабления
+          Ocean<span style={{ color: "#d6cdd1" }}>Mind</span>
         </div>
         <div style={{ fontSize: 15, color: "rgba(241,238,242,0.75)", marginBottom: 40, fontWeight: 300, fontFamily: "'Nunito', sans-serif" }}>
-          Позволь себе отдохнуть
+          Пространство твоей глубины
         </div>
         <button onClick={onStart} style={{
           width: "100%", padding: "18px", borderRadius: 50,
@@ -263,7 +263,7 @@ function HomeScreen({ mood, setMood, currentSound, setCurrentSound, onNavigate }
             <button key={s.id} onClick={() => { setCurrentSound(s); onNavigate("sounds"); }}
               style={{ position: "relative", height: 100, borderRadius: 18, overflow: "hidden", border: `${currentSound?.id === s.id ? `2px solid ${C.accent}` : "none"}`, cursor: "pointer", padding: 0 }}>
               <img src={s.photo} alt={s.name} style={{ width: "100%", height: "100%", objectFit: "cover", filter: "saturate(0.75) brightness(0.85)" }} />
-              <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(35,33,38,0.7), transparent)" }} />
+              <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(28,34,42,0.7), transparent)" }} />
               <div style={{ position: "absolute", bottom: 8, left: 10, color: "#f1eef2", fontSize: 13, fontWeight: 500 }}>{s.name}</div>
             </button>
           ))}
@@ -381,7 +381,7 @@ function SoundsScreen({ currentSound, setCurrentSound }) {
     <div style={{ padding: "0 0 1rem" }}>
       <div style={{ margin: "0 1.5rem 1.25rem", borderRadius: 24, overflow: "hidden", position: "relative", height: 200 }}>
         <img src={sound.photo} alt={sound.name} style={{ width: "100%", height: "100%", objectFit: "cover", filter: "saturate(0.75) brightness(0.85)" }} />
-        <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(35,33,38,0.85) 0%, rgba(35,33,38,0.15) 100%)" }} />
+        <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(28,34,42,0.85) 0%, rgba(28,34,42,0.15) 100%)" }} />
         <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, padding: "1rem 1.25rem" }}>
           <div style={{ fontSize: 20, fontWeight: 500, color: "#f1eef2", marginBottom: 2 }}>{sound.name}</div>
           <div style={{ fontSize: 13, color: "rgba(241,238,242,0.7)", marginBottom: 12 }}>{sound.category}</div>
@@ -432,7 +432,7 @@ function SoundsScreen({ currentSound, setCurrentSound }) {
           <button key={s.id} onClick={() => selectSound(s)}
             style={{ position: "relative", height: 140, borderRadius: 20, overflow: "hidden", border: `${sound.id === s.id ? `2px solid ${C.accent}` : "none"}`, cursor: s.premium ? "not-allowed" : "pointer", padding: 0, opacity: s.premium ? 0.75 : 1 }}>
             <img src={s.photo} alt={s.name} style={{ width: "100%", height: "100%", objectFit: "cover", filter: "saturate(0.75) brightness(0.85)" }} />
-            <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(35,33,38,0.7), transparent)" }} />
+            <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(28,34,42,0.7), transparent)" }} />
             {s.premium && <div style={{ position: "absolute", top: 8, right: 8, background: "rgba(177,156,163,0.85)", color: "#f1eef2", fontSize: 10, padding: "2px 8px", borderRadius: 20 }}>PRO</div>}
             <div style={{ position: "absolute", bottom: 10, left: 12, right: 12 }}>
               <div style={{ fontSize: 15, fontWeight: 500, color: "#f1eef2", marginBottom: 2 }}>{s.name}</div>
@@ -467,7 +467,7 @@ function MeditationsScreen() {
           {MEDITATIONS.map(m => (
             <div key={m.id} style={{ borderRadius: 20, overflow: "hidden", position: "relative", height: 120 }}>
               <img src={m.photo} alt={m.title} style={{ width: "100%", height: "100%", objectFit: "cover", filter: "saturate(0.75) brightness(0.85)" }} />
-              <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to right, rgba(35,33,38,0.78) 0%, rgba(35,33,38,0.2) 100%)" }} />
+              <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to right, rgba(28,34,42,0.78) 0%, rgba(28,34,42,0.2) 100%)" }} />
               <div style={{ position: "absolute", inset: 0, padding: "14px 16px", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
                 <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
                   <span style={{ background: "rgba(241,238,242,0.2)", color: "#f1eef2", fontSize: 11, padding: "3px 10px", borderRadius: 20 }}>{TAG_COLORS[m.tag]?.label}</span>
@@ -1132,7 +1132,7 @@ export default function App() {
         {screen === "progress"     && <ProgressScreen mood={mood} />}
       </div>
 
-      <div style={{ display: "flex", justifyContent: "space-around", padding: "10px 0 12px", borderTop: `1px solid ${C.border}`, flexShrink: 0, background: "rgba(105,103,106,0.92)", backdropFilter: "blur(10px)" }}>
+      <div style={{ display: "flex", justifyContent: "space-around", padding: "10px 0 12px", borderTop: `1px solid ${C.border}`, flexShrink: 0, background: "rgba(82,93,107,0.92)", backdropFilter: "blur(10px)" }}>
         {NAV.map(n => (
           <button key={n.id} onClick={() => setScreen(n.id)}
             style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 3, fontSize: 10, color: screen === n.id ? C.accent : C.muted, background: "none", border: "none", cursor: "pointer", padding: "2px 6px", transition: "color 0.2s" }}>
