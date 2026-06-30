@@ -4,13 +4,13 @@ import { useState, useEffect, useRef, useCallback } from "react";
 
 const SOUNDS = [
   { id: "rain",     name: "Дождь",        category: "Природа",   duration: 2160, tag: "sleep",   file: "rain.mp3",     photo: "https://images.unsplash.com/photo-1515694346937-94d85e41e6f0?w=400&q=80" },
-  { id: "fire",     name: "Камин",        category: "Уют",       duration: 2700, tag: "relax",   file: "fire.mp3",     photo: "https://images.pexels.com/photos/11254616/pexels-photo-11254616.jpeg" },
+  { id: "fire",     name: "Камин",        category: "Уют",       duration: 2700, tag: "relax",   file: "fire.mp3",     photo: "https://images.unsplash.com/photo-1543722530-d2c3201371e7?w=400&q=80" },
   { id: "ocean",    name: "Океан",        category: "Волны",     duration: 3600, tag: "sleep",   file: "ocean.mp3",    photo: "https://images.unsplash.com/photo-1505118380757-91f5f5632de0?w=400&q=80" },
   { id: "forest",   name: "Лес",          category: "Природа",   duration: 2400, tag: "relax",   file: "forest.mp3",   photo: "https://images.unsplash.com/photo-1448375240586-882707db888b?w=400&q=80" },
   { id: "white",    name: "Белый шум",    category: "Фокус",     duration: null, tag: "focus",   file: "white.mp3",    photo: "https://images.unsplash.com/photo-1534796636912-3b95b3ab5986?w=400&q=80" },
   { id: "binaural", name: "Бинауральные", category: "Δ 2 Гц",   duration: 3600, tag: "sleep",   file: "binaural.mp3", photo: "https://images.unsplash.com/photo-1419242902214-272b3f66ee7a?w=400&q=80", premium: true },
   { id: "bowl",     name: "Чаши",         category: "Тибет",     duration: 1800, tag: "meditate",file: "bowl.mp3",     photo: "https://images.unsplash.com/photo-1508672019048-805c876b67e2?w=400&q=80" },
-  { id: "night",    name: "Ночной сад",   category: "Сверчки",   duration: 3000, tag: "sleep",   file: "night.mp3",    photo: "https://images.pexels.com/photos/2422265/pexels-photo-2422265.jpeg" },
+  { id: "night",    name: "Ночной сад",   category: "Сверчки",   duration: 3000, tag: "sleep",   file: "night.mp3",    photo: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&q=80" },
   { id: "mountain", name: "Горы",         category: "Ветер",     duration: 2100, tag: "relax",   file: "mountain.mp3", photo: "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=400&q=80" },
   { id: "cafe",     name: "Кофейня",      category: "Городской", duration: 3600, tag: "focus",   file: "cafe.mp3",     photo: "https://images.unsplash.com/photo-1442512595331-e89e73853f31?w=400&q=80", premium: true },
   { id: "thunder",  name: "Гроза",        category: "Природа",   duration: 2400, tag: "sleep",   file: "thunder.mp3",  photo: "https://images.unsplash.com/photo-1505672678657-cc7037095e60?w=400&q=80" },
@@ -354,14 +354,8 @@ function SoundsScreen({ currentSound, setCurrentSound }) {
   function togglePlay() {
     setPlaying(p => {
       const next = !p;
-      if (next) {
-        if (audioRef.current) {
-          audioRef.current.play().catch(() => {});
-        } else {
-          playAudioFile(sound);
-        }
-      } else if (audioRef.current) {
-        audioRef.current.pause();
+      if (audioRef.current) {
+        if (next) audioRef.current.play().catch(() => {}); else audioRef.current.pause();
       }
       startTimer(next);
       return next;
@@ -1017,6 +1011,123 @@ function ReflectionScreen() {
   );
 }
 
+// ─── Pattern Map Screen — "Карта моих паттернов" + "Что изменилось" ────────────
+
+function PatternMapScreen() {
+  const [tab, setTab] = useState("patterns");
+
+  // Aggregate pattern tags from journal seed entries (in a full backend this would span all stored entries)
+  const allTaggedEntries = [...SEED_ENTRIES];
+  const patternCounts = {};
+  allTaggedEntries.forEach(e => {
+    (e.pattern_tags || []).forEach(t => { patternCounts[t] = (patternCounts[t] || 0) + 1; });
+  });
+  const sortedPatterns = Object.entries(patternCounts).sort((a, b) => b[1] - a[1]);
+  const maxCount = sortedPatterns.length ? sortedPatterns[0][1] : 1;
+
+  // Mock month-over-month comparison — illustrative until enough real data accumulates
+  const monthCompare = [
+    { tag: "усталость",      prev: 6, now: 3 },
+    { tag: "тревога о будущем", prev: 5, now: 4 },
+    { tag: "перфекционизм",  prev: 3, now: 5 },
+    { tag: "спокойствие",    prev: 2, now: 6 },
+    { tag: "вина",           prev: 4, now: 2 },
+  ];
+
+  return (
+    <div style={{ padding: "0 0 1.5rem" }}>
+      <div style={{ display: "flex", padding: "0 1.5rem", borderBottom: `1px solid ${C.border}`, marginBottom: 16 }}>
+        {[["patterns","Карта паттернов"],["changes","Что изменилось"]].map(([id,label]) => (
+          <button key={id} onClick={() => setTab(id)} style={{
+            padding: "10px 14px", fontSize: 13, color: tab === id ? C.accent : C.muted,
+            background: "none", border: "none", cursor: "pointer",
+            borderBottom: `2px solid ${tab === id ? C.accent : "transparent"}`, marginBottom: -1, whiteSpace: "nowrap"
+          }}>{label}</button>
+        ))}
+      </div>
+
+      {tab === "patterns" && (
+        <div style={{ padding: "0 1.5rem" }}>
+          <div style={{ fontSize: 13, color: C.muted, lineHeight: 1.6, marginBottom: 20 }}>
+            То, что повторяется чаще всего в твоих записях за последнее время — без оценки, просто наблюдение.
+          </div>
+          {sortedPatterns.length === 0 ? (
+            <div style={{ fontSize: 14, color: C.muted, textAlign: "center", padding: "2rem 0" }}>
+              Пока недостаточно записей. Карта появится после нескольких записей в дневнике или разборе.
+            </div>
+          ) : (
+            <div style={{ display: "grid", gap: 12 }}>
+              {sortedPatterns.map(([tag, count]) => (
+                <div key={tag}>
+                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
+                    <span style={{ fontSize: 14, color: C.text }}>{tag}</span>
+                    <span style={{ fontSize: 12, color: C.muted }}>{count}×</span>
+                  </div>
+                  <div style={{ height: 8, background: "rgba(255,255,255,0.08)", borderRadius: 4, overflow: "hidden" }}>
+                    <div style={{ height: "100%", width: `${(count / maxCount) * 100}%`, background: C.accent, borderRadius: 4, transition: "width 0.6s ease" }} />
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+          <div style={{ marginTop: 28, background: C.surface, border: `1px solid ${C.border}`, borderRadius: 18, padding: "16px", backdropFilter: "blur(8px)" }}>
+            <div style={{ fontSize: 13, color: C.accent, fontWeight: 500, marginBottom: 6 }}>💭 Мягкое наблюдение</div>
+            <div style={{ fontSize: 13, color: C.text, lineHeight: 1.6 }}>
+              {sortedPatterns[0]
+                ? `«${sortedPatterns[0][0]}» встречается у тебя чаще всего. Это не диагноз и не повод для критики — просто то, на что стоит обратить внимание с добротой.`
+                : "Начни вести дневник или пройди разбор «Что на самом деле происходит?» — и здесь появится твоя карта."}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {tab === "changes" && (
+        <div style={{ padding: "0 1.5rem" }}>
+          <div style={{ fontSize: 13, color: C.muted, lineHeight: 1.6, marginBottom: 20 }}>
+            Сравнение прошлого месяца и текущего — какие состояния стали реже, а какие чаще.
+          </div>
+          <div style={{ display: "grid", gap: 16 }}>
+            {monthCompare.map(({ tag, prev, now }) => {
+              const diff = now - prev;
+              const improving = diff > 0 && ["спокойствие", "гордость собой", "ресурс"].includes(tag);
+              const worsening = diff > 0 && !improving;
+              const better = diff < 0 && !["спокойствие", "гордость собой", "ресурс"].includes(tag);
+              let badge = "Без изменений", badgeColor = C.muted;
+              if (improving || better) { badge = "Стало легче"; badgeColor = "#9bbf9e"; }
+              else if (worsening || (diff < 0 && ["спокойствие","гордость собой","ресурс"].includes(tag))) { badge = "Стоит заметить"; badgeColor = C.accent; }
+              return (
+                <div key={tag} style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 16, padding: "14px 16px", backdropFilter: "blur(8px)" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
+                    <span style={{ fontSize: 14, color: C.text, fontWeight: 500 }}>{tag}</span>
+                    <span style={{ fontSize: 11, color: badgeColor, background: "rgba(255,255,255,0.06)", padding: "3px 10px", borderRadius: 20 }}>{badge}</span>
+                  </div>
+                  <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontSize: 10, color: C.muted, marginBottom: 4 }}>Месяц назад · {prev}×</div>
+                      <div style={{ height: 6, background: "rgba(255,255,255,0.08)", borderRadius: 3 }}>
+                        <div style={{ height: "100%", width: `${(prev / 7) * 100}%`, background: C.muted, borderRadius: 3 }} />
+                      </div>
+                    </div>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontSize: 10, color: C.muted, marginBottom: 4 }}>Сейчас · {now}×</div>
+                      <div style={{ height: 6, background: "rgba(255,255,255,0.08)", borderRadius: 3 }}>
+                        <div style={{ height: "100%", width: `${(now / 7) * 100}%`, background: C.accent, borderRadius: 3 }} />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+          <div style={{ marginTop: 20, fontSize: 12, color: C.muted, lineHeight: 1.6, textAlign: "center" }}>
+            Сравнение становится точнее по мере того как ты ведёшь записи дольше.
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ─── Progress Screen ───────────────────────────────────────────────────────────
 
 function ProgressScreen({ mood }) {
@@ -1092,6 +1203,7 @@ const NAV = [
   { id: "meditations",  icon: "🧘", label: "Практики" },
   { id: "tuneins",       icon: "✨", label: "Настрои" },
   { id: "journal",       icon: "📓", label: "Дневник" },
+  { id: "patterns",      icon: "🗺️", label: "Карта" },
   { id: "reflection",   icon: "🌊", label: "Разбор" },
   { id: "letters",      icon: "💌", label: "Письма" },
   { id: "progress",     icon: "📈", label: "Прогресс" },
@@ -1105,7 +1217,7 @@ export default function App() {
   const [mood, setMood] = useState(null);
   const [currentSound, setCurrentSound] = useState(SOUNDS[0]);
 
-  const screenTitles = { home: getGreeting(), sounds: "Звуки", meditations: "Практики", tuneins: "Настрои", affirmations: "Аффирмации", journal: "Дневник", reflection: "Разбор", letters: "Письма", progress: "Прогресс" };
+  const screenTitles = { home: getGreeting(), sounds: "Звуки", meditations: "Практики", tuneins: "Настрои", affirmations: "Аффирмации", journal: "Дневник", patterns: "Карта паттернов", reflection: "Разбор", letters: "Письма", progress: "Прогресс" };
 
   if (splash) return <SplashScreen onStart={() => setSplash(false)} />;
 
@@ -1133,6 +1245,7 @@ export default function App() {
         {screen === "tuneins"      && <TuneInsScreen />}
         {screen === "affirmations" && <AffirmationsScreen />}
         {screen === "journal"      && <JournalScreen />}
+        {screen === "patterns"     && <PatternMapScreen />}
         {screen === "reflection"   && <ReflectionScreen />}
         {screen === "letters"      && <FutureLetterScreen />}
         {screen === "progress"     && <ProgressScreen mood={mood} />}
