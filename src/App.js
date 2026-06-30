@@ -1128,67 +1128,6 @@ function PatternMapScreen() {
   );
 }
 
-// ─── Progress Screen ───────────────────────────────────────────────────────────
-
-function ProgressScreen({ mood }) {
-  const weekMoods = [2, 3, 4, 3, 4, 4, mood ?? 3];
-  const maxBarH = 60;
-
-  return (
-    <div style={{ padding: "0 1.5rem 1.5rem" }}>
-      <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 20, padding: "1.5rem", marginBottom: 12, textAlign: "center", backdropFilter: "blur(8px)" }}>
-        <div style={{ fontSize: 44, marginBottom: 4 }}>🔥</div>
-        <div style={{ fontSize: 36, fontWeight: 300, color: C.text, marginBottom: 4 }}>7</div>
-        <div style={{ fontSize: 14, color: C.muted }}>дней подряд</div>
-      </div>
-
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10, marginBottom: 12 }}>
-        {[["23","сессии","этот месяц"],["4.2ч","среднее","в неделю"],["12","медит.","завершено"]].map(([val,label,sub],i) => (
-          <div key={i} style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 16, padding: "14px 10px", textAlign: "center", backdropFilter: "blur(8px)" }}>
-            <div style={{ fontSize: 22, fontWeight: 300, color: C.text, marginBottom: 2 }}>{val}</div>
-            <div style={{ fontSize: 11, color: C.accent }}>{label}</div>
-            <div style={{ fontSize: 10, color: C.muted }}>{sub}</div>
-          </div>
-        ))}
-      </div>
-
-      <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 20, padding: "1.25rem", marginBottom: 12, backdropFilter: "blur(8px)" }}>
-        <div style={{ fontSize: 15, fontWeight: 500, color: C.text, marginBottom: 16 }}>Настроение за неделю</div>
-        <div style={{ display: "flex", alignItems: "flex-end", gap: 8, height: maxBarH + 30 }}>
-          {["Пн","Вт","Ср","Чт","Пт","Сб","Вс"].map((day, i) => {
-            const h = Math.round((weekMoods[i] / 4) * maxBarH);
-            return (
-              <div key={day} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 6 }}>
-                <div style={{ fontSize: 14 }}>{MOODS[weekMoods[i]]}</div>
-                <div style={{ width: "100%", background: "rgba(255,255,255,0.06)", borderRadius: 6, position: "relative", height: maxBarH }}>
-                  <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, background: i === 6 ? C.accent : C.accent2, borderRadius: 6, height: h, transition: "height 0.6s ease" }} />
-                </div>
-                <div style={{ fontSize: 10, color: C.muted }}>{day}</div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-
-      <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 20, padding: "1.25rem", backdropFilter: "blur(8px)" }}>
-        <div style={{ fontSize: 15, fontWeight: 500, color: C.text, marginBottom: 14 }}>Достижения</div>
-        <div style={{ display: "grid", gap: 12 }}>
-          {[["🌱","Первый шаг","Первая сессия","done"],["🌙","Ночной покой","7 сессий перед сном","done"],["🔥","Неделя подряд","7 дней без пропусков","done"],["🧘","Мастер дыхания","10 дыхательных практик","lock"]].map(([icon,title,desc,state]) => (
-            <div key={title} style={{ display: "flex", alignItems: "center", gap: 14, opacity: state === "lock" ? 0.4 : 1 }}>
-              <div style={{ fontSize: 24, width: 40, textAlign: "center" }}>{icon}</div>
-              <div>
-                <div style={{ fontSize: 14, fontWeight: 500, color: C.text }}>{title}</div>
-                <div style={{ fontSize: 12, color: C.muted }}>{desc}</div>
-              </div>
-              {state === "done" && <div style={{ marginLeft: "auto", color: C.accent, fontSize: 18 }}>✓</div>}
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-}
-
 // ─── Shared styles ─────────────────────────────────────────────────────────────
 
 const wBtn = { background: "none", border: "none", color: "rgba(241,238,242,0.7)", cursor: "pointer", fontSize: 20, padding: 4 };
@@ -1206,7 +1145,6 @@ const NAV = [
   { id: "patterns",      icon: "🗺️", label: "Карта" },
   { id: "reflection",   icon: "🌊", label: "Разбор" },
   { id: "letters",      icon: "💌", label: "Письма" },
-  { id: "progress",     icon: "📈", label: "Прогресс" },
 ];
 
 // ─── App ───────────────────────────────────────────────────────────────────────
@@ -1217,7 +1155,7 @@ export default function App() {
   const [mood, setMood] = useState(null);
   const [currentSound, setCurrentSound] = useState(SOUNDS[0]);
 
-  const screenTitles = { home: getGreeting(), sounds: "Звуки", meditations: "Практики", tuneins: "Настрои", affirmations: "Аффирмации", journal: "Дневник", patterns: "Карта паттернов", reflection: "Разбор", letters: "Письма", progress: "Прогресс" };
+  const screenTitles = { home: getGreeting(), sounds: "Звуки", meditations: "Практики", tuneins: "Настрои", affirmations: "Аффирмации", journal: "Дневник", patterns: "Карта паттернов", reflection: "Разбор", letters: "Письма" };
 
   if (splash) return <SplashScreen onStart={() => setSplash(false)} />;
 
@@ -1248,13 +1186,12 @@ export default function App() {
         {screen === "patterns"     && <PatternMapScreen />}
         {screen === "reflection"   && <ReflectionScreen />}
         {screen === "letters"      && <FutureLetterScreen />}
-        {screen === "progress"     && <ProgressScreen mood={mood} />}
       </div>
 
-      <div style={{ display: "flex", justifyContent: "space-around", padding: "10px 0 12px", borderTop: `1px solid ${C.border}`, flexShrink: 0, background: "rgba(82,93,107,0.92)", backdropFilter: "blur(10px)" }}>
+      <div style={{ display: "flex", justifyContent: "flex-start", gap: 2, padding: "10px 8px 12px", borderTop: `1px solid ${C.border}`, flexShrink: 0, background: "rgba(82,93,107,0.92)", backdropFilter: "blur(10px)", overflowX: "auto", scrollbarWidth: "none" }}>
         {NAV.map(n => (
           <button key={n.id} onClick={() => setScreen(n.id)}
-            style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 3, fontSize: 10, color: screen === n.id ? C.accent : C.muted, background: "none", border: "none", cursor: "pointer", padding: "2px 6px", transition: "color 0.2s" }}>
+            style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 3, fontSize: 10, color: screen === n.id ? C.accent : C.muted, background: "none", border: "none", cursor: "pointer", padding: "2px 10px", transition: "color 0.2s", flexShrink: 0, whiteSpace: "nowrap" }}>
             <span style={{ fontSize: 20 }}>{n.icon}</span>
             {n.label}
           </button>
