@@ -1188,11 +1188,11 @@ export default function App() {
         {screen === "letters"      && <FutureLetterScreen />}
       </div>
 
-      <div style={{ display: "flex", justifyContent: "flex-start", gap: 2, padding: "10px 8px 12px", borderTop: `1px solid ${C.border}`, flexShrink: 0, background: "rgba(82,93,107,0.92)", backdropFilter: "blur(10px)", overflowX: "auto", scrollbarWidth: "none" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", gap: 0, padding: "10px 4px 12px", borderTop: `1px solid ${C.border}`, flexShrink: 0, background: "rgba(82,93,107,0.92)", backdropFilter: "blur(10px)" }}>
         {NAV.map(n => (
           <button key={n.id} onClick={() => setScreen(n.id)}
-            style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 3, fontSize: 10, color: screen === n.id ? C.accent : C.muted, background: "none", border: "none", cursor: "pointer", padding: "2px 10px", transition: "color 0.2s", flexShrink: 0, whiteSpace: "nowrap" }}>
-            <span style={{ fontSize: 20 }}>{n.icon}</span>
+            style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 2, fontSize: 9, color: screen === n.id ? C.accent : C.muted, background: "none", border: "none", cursor: "pointer", padding: "2px 2px", transition: "color 0.2s", flex: 1, minWidth: 0, whiteSpace: "nowrap" }}>
+            <span style={{ fontSize: 18 }}>{n.icon}</span>
             {n.label}
           </button>
         ))}
