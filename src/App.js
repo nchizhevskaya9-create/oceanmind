@@ -461,6 +461,86 @@ function SoundsScreen({ currentSound, setCurrentSound }) {
 
 function MeditationsScreen() {
   const [tab, setTab] = useState("meditations");
+  const [selected, setSelected] = useState(null);
+  const [stepIdx, setStepIdx] = useState(0);
+  const [fade, setFade] = useState(true);
+  const [playing, setPlaying] = useState(false);
+  const [audioProgress, setAudioProgress] = useState(0);
+  const audioRef = useRef(null);
+
+  function openMeditation(m) {
+    if (m.premium) return;
+    if (!m.steps) return;
+    setSelected(m);
+    setStepIdx(0);
+    setFade(true);
+    setAudioProgress(0);
+    if (m.audio) {
+      if (audioRef.current) { audioRef.current.pause(); audioRef.current = null; }
+      audioRef.current = new Audio("/audio/" + m.audio);
+      audioRef.current.ontimeupdate = () => {
+        if (audioRef.current && audioRef.current.duration) {
+          setAudioProgress(audioRef.current.currentTime / audioRef.current.duration * 100);
+        }
+      };
+      audioRef.current.play().catch(() => {});
+      setPlaying(true);
+    }
+  }
+
+  function closeMeditation() {
+    if (audioRef.current) { audioRef.current.pause(); audioRef.current = null; }
+    setPlaying(false);
+    setSelected(null);
+    setStepIdx(0);
+  }
+
+  function toggleAudio() {
+    if (!audioRef.current) return;
+    if (playing) { audioRef.current.pause(); setPlaying(false); }
+    else { audioRef.current.play(); setPlaying(true); }
+  }
+
+  function nextStep() {
+    if (stepIdx < selected.steps.length - 1) {
+      setFade(false);
+      setTimeout(() => { setStepIdx(i => i + 1); setFade(true); }, 200);
+    } else {
+      closeMeditation();
+    }
+  }
+
+  if (selected) {
+    return (
+      <div style={{ padding: "2rem 1.5rem", minHeight: 400, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center" }}>
+        <div style={{ fontSize: 12, color: C.muted, textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: 8 }}>{selected.level}</div>
+        <div style={{ fontSize: 22, fontWeight: 500, color: C.text, marginBottom: 4 }}>{selected.title}</div>
+        <div style={{ fontSize: 12, color: C.accent, marginBottom: 24 }}>{selected.duration}</div>
+        {selected.audio && (
+          <div style={{ width: "100%", marginBottom: 24 }}>
+            <div style={{ height: 3, background: "rgba(0,0,0,0.08)", borderRadius: 2, marginBottom: 12, cursor: "pointer" }}>
+              <div style={{ height: "100%", background: C.accent, borderRadius: 2, width: audioProgress + "%", transition: "width 0.5s linear" }} />
+            </div>
+            <button onClick={toggleAudio} style={{ width: 48, height: 48, borderRadius: "50%", background: C.accent, border: "none", fontSize: 18, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto", color: "#fff" }}>
+              {playing ? "⏸" : "▶"}
+            </button>
+          </div>
+        )}
+        <div style={{ fontSize: 18, lineHeight: 1.8, color: C.text, opacity: fade ? 1 : 0, transition: "opacity 0.2s", marginBottom: 40, maxWidth: 340, fontStyle: "italic" }}>
+          {selected.steps[stepIdx]}
+        </div>
+        <div style={{ display: "flex", gap: 8, marginBottom: 28 }}>
+          {selected.steps.map((_, i) => (
+            <div key={i} style={{ width: i === stepIdx ? 20 : 6, height: 6, borderRadius: 3, background: i === stepIdx ? C.accent : C.border, transition: "all 0.3s" }} />
+          ))}
+        </div>
+        <button onClick={nextStep} style={{ padding: "14px 36px", background: C.accent, border: "none", borderRadius: 50, color: "#fff", fontSize: 15, cursor: "pointer" }}>
+          {stepIdx < selected.steps.length - 1 ? "Далее →" : "Завершить ✓"}
+        </button>
+        <button onClick={closeMeditation} style={{ marginTop: 16, fontSize: 13, color: C.muted, background: "none", border: "none", cursor: "pointer" }}>Назад</button>
+      </div>
+    );
+  }
 
   return (
     <div style={{ padding: "0 0 1rem" }}>
