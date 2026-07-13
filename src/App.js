@@ -557,7 +557,7 @@ function MeditationsScreen() {
       {tab === "meditations" && (
         <div style={{ display: "grid", gap: 12, padding: "0 1.5rem" }}>
           {MEDITATIONS.map(m => (
-            <div key={m.id} style={{ borderRadius: 20, overflow: "hidden", position: "relative", height: 120 }}>
+            <div key={m.id} onClick={() => openMeditation(m)} style={{ borderRadius: 20, overflow: "hidden", position: "relative", height: 120, cursor: m.steps && !m.premium ? "pointer" : "default" }}>
               <img src={m.photo} alt={m.title} style={{ width: "100%", height: "100%", objectFit: "cover", filter: "saturate(0.75) brightness(0.85)" }} />
               <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to right, rgba(28,34,42,0.78) 0%, rgba(28,34,42,0.2) 100%)" }} />
               <div style={{ position: "absolute", inset: 0, padding: "14px 16px", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
