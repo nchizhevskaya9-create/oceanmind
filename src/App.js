@@ -4,13 +4,13 @@ import { useState, useEffect, useRef, useCallback } from "react";
 
 const SOUNDS = [
   { id: "rain",     name: "Дождь",        category: "Природа",   duration: 2160, tag: "sleep",   file: "rain.mp3",     photo: "https://images.unsplash.com/photo-1515694346937-94d85e41e6f0?w=400&q=80" },
-  { id: "fire",     name: "Камин",        category: "Уют",       duration: 2700, tag: "relax",   file: "fire.mp3",     photo: "https://images.pexels.com/photos/11254616/pexels-photo-11254616.jpeg?auto=compress&w=800&q=80" },
+  { id: "fire",     name: "Камин",        category: "Уют",       duration: 2700, tag: "relax",   file: "fire.mp3",     photo: "https://images.unsplash.com/photo-1543722530-d2c3201371e7?w=400&q=80" },
   { id: "ocean",    name: "Океан",        category: "Волны",     duration: 3600, tag: "sleep",   file: "ocean.mp3",    photo: "https://images.unsplash.com/photo-1505118380757-91f5f5632de0?w=400&q=80" },
   { id: "forest",   name: "Лес",          category: "Природа",   duration: 2400, tag: "relax",   file: "forest.mp3",   photo: "https://images.unsplash.com/photo-1448375240586-882707db888b?w=400&q=80" },
   { id: "white",    name: "Белый шум",    category: "Фокус",     duration: null, tag: "focus",   file: "white.mp3",    photo: "https://images.unsplash.com/photo-1534796636912-3b95b3ab5986?w=400&q=80" },
   { id: "binaural", name: "Бинауральные", category: "Δ 2 Гц",   duration: 3600, tag: "sleep",   file: "binaural.mp3", photo: "https://images.unsplash.com/photo-1419242902214-272b3f66ee7a?w=400&q=80", premium: true },
   { id: "bowl",     name: "Чаши",         category: "Тибет",     duration: 1800, tag: "meditate",file: "bowl.mp3",     photo: "https://images.unsplash.com/photo-1508672019048-805c876b67e2?w=400&q=80" },
-  { id: "night",    name: "Ночной сад",   category: "Сверчки",   duration: 3000, tag: "sleep",   file: "night.mp3",    photo: "https://images.pexels.com/photos/698317/pexels-photo-698317.jpeg?auto=compress&w=800&q=80" },
+  { id: "night",    name: "Ночной сад",   category: "Сверчки",   duration: 3000, tag: "sleep",   file: "night.mp3",    photo: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&q=80" },
   { id: "mountain", name: "Горы",         category: "Ветер",     duration: 2100, tag: "relax",   file: "mountain.mp3", photo: "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=400&q=80" },
   { id: "cafe",     name: "Кофейня",      category: "Городской", duration: 3600, tag: "focus",   file: "cafe.mp3",     photo: "https://images.unsplash.com/photo-1442512595331-e89e73853f31?w=400&q=80", premium: true },
   { id: "thunder",  name: "Гроза",        category: "Природа",   duration: 2400, tag: "sleep",   file: "thunder.mp3",  photo: "https://images.unsplash.com/photo-1505672678657-cc7037095e60?w=400&q=80" },
@@ -18,19 +18,7 @@ const SOUNDS = [
 ];
 
 const MEDITATIONS = [
-{ id: "m1", tag: "sleep", title: "Погружение в тишину", duration: "20 мин", level: "Начинающим", desc: "Мягкое сопровождение тела перед сном",
-    photo: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&q=80",
-    audio: "meditation_tishina.mp3",
-    steps: [
-      "Найдите положение, в котором тело наконец может выдохнуть. Не идеальная поза — просто такая, где можно на время забыть, что у вас есть тело.",
-      "Позвольте глазам закрыться. Им сегодня досталось — столько всего нужно было видеть, замечать, реагировать. Пусть отдохнут.",
-      "Заметьте звуки вокруг. Не пытайтесь их убрать — просто дайте им быть. Они не мешают. Вы просто здесь, и они просто здесь.",
-      "Почувствуйте, где тело касается поверхности. Спина, плечи, затылок. Вас держат. Можно не держаться самой.",
-      "Если мысли приходят — пусть приходят. Они просто доделывают день, который был долгим. Не гоните их — просто не цепляйтесь. Мысль появилась, мысль ушла.",
-      "Дышите так, как дышится. Не глубже и не правильнее — просто наблюдайте, как тело делает это само. Оно знает как. Оно всегда знало.",
-      "Отпустите завтра. Не навсегда — только на эту ночь. Всё, что важно, никуда не денется. А сейчас важны только вы, эта тишина и этот момент.",
-    ]
-  },
+  { id: "m1", tag: "sleep",   title: "Погружение в тишину",     duration: "20 мин", level: "Начинающим",  desc: "Мягкое сканирование тела перед сном",               photo: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&q=80" },
   { id: "m2", tag: "stress",  title: "Освобождение от тревоги", duration: "15 мин", level: "Дыхание",      desc: "Техника 4-7-8 для успокоения нервной системы",      photo: "https://images.unsplash.com/photo-1518241353330-0f7941c2d9b5?w=400&q=80" },
   { id: "m3", tag: "focus",   title: "Ясность ума",             duration: "10 мин", level: "Осознанность", desc: "Практика присутствия здесь и сейчас",               photo: "https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?w=400&q=80" },
   { id: "m4", tag: "sleep",   title: "Скан тела",               duration: "30 мин", level: "Body scan",    desc: "Классическая практика MBSR для глубокого сна",      photo: "https://images.unsplash.com/photo-1508739773434-c26b3d09e071?w=400&q=80", premium: true },
@@ -461,86 +449,6 @@ function SoundsScreen({ currentSound, setCurrentSound }) {
 
 function MeditationsScreen() {
   const [tab, setTab] = useState("meditations");
-  const [selected, setSelected] = useState(null);
-  const [stepIdx, setStepIdx] = useState(0);
-  const [fade, setFade] = useState(true);
-  const [playing, setPlaying] = useState(false);
-  const [audioProgress, setAudioProgress] = useState(0);
-  const audioRef = useRef(null);
-
-  function openMeditation(m) {
-    if (m.premium) return;
-    if (!m.steps) return;
-    setSelected(m);
-    setStepIdx(0);
-    setFade(true);
-    setAudioProgress(0);
-    if (m.audio) {
-      if (audioRef.current) { audioRef.current.pause(); audioRef.current = null; }
-      audioRef.current = new Audio("/audio/" + m.audio);
-      audioRef.current.ontimeupdate = () => {
-        if (audioRef.current && audioRef.current.duration) {
-          setAudioProgress(audioRef.current.currentTime / audioRef.current.duration * 100);
-        }
-      };
-      audioRef.current.play().catch(() => {});
-      setPlaying(true);
-    }
-  }
-
-  function closeMeditation() {
-    if (audioRef.current) { audioRef.current.pause(); audioRef.current = null; }
-    setPlaying(false);
-    setSelected(null);
-    setStepIdx(0);
-  }
-
-  function toggleAudio() {
-    if (!audioRef.current) return;
-    if (playing) { audioRef.current.pause(); setPlaying(false); }
-    else { audioRef.current.play(); setPlaying(true); }
-  }
-
-  function nextStep() {
-    if (stepIdx < selected.steps.length - 1) {
-      setFade(false);
-      setTimeout(() => { setStepIdx(i => i + 1); setFade(true); }, 200);
-    } else {
-      closeMeditation();
-    }
-  }
-
-  if (selected) {
-    return (
-      <div style={{ padding: "2rem 1.5rem", minHeight: 400, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center" }}>
-        <div style={{ fontSize: 12, color: C.muted, textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: 8 }}>{selected.level}</div>
-        <div style={{ fontSize: 22, fontWeight: 500, color: C.text, marginBottom: 4 }}>{selected.title}</div>
-        <div style={{ fontSize: 12, color: C.accent, marginBottom: 24 }}>{selected.duration}</div>
-        {selected.audio && (
-          <div style={{ width: "100%", marginBottom: 24 }}>
-            <div style={{ height: 3, background: "rgba(0,0,0,0.08)", borderRadius: 2, marginBottom: 12, cursor: "pointer" }}>
-              <div style={{ height: "100%", background: C.accent, borderRadius: 2, width: audioProgress + "%", transition: "width 0.5s linear" }} />
-            </div>
-            <button onClick={toggleAudio} style={{ width: 48, height: 48, borderRadius: "50%", background: C.accent, border: "none", fontSize: 18, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto", color: "#fff" }}>
-              {playing ? "⏸" : "▶"}
-            </button>
-          </div>
-        )}
-        <div style={{ fontSize: 18, lineHeight: 1.8, color: C.text, opacity: fade ? 1 : 0, transition: "opacity 0.2s", marginBottom: 40, maxWidth: 340, fontStyle: "italic" }}>
-          {selected.steps[stepIdx]}
-        </div>
-        <div style={{ display: "flex", gap: 8, marginBottom: 28 }}>
-          {selected.steps.map((_, i) => (
-            <div key={i} style={{ width: i === stepIdx ? 20 : 6, height: 6, borderRadius: 3, background: i === stepIdx ? C.accent : C.border, transition: "all 0.3s" }} />
-          ))}
-        </div>
-        <button onClick={nextStep} style={{ padding: "14px 36px", background: C.accent, border: "none", borderRadius: 50, color: "#fff", fontSize: 15, cursor: "pointer" }}>
-          {stepIdx < selected.steps.length - 1 ? "Далее →" : "Завершить ✓"}
-        </button>
-        <button onClick={closeMeditation} style={{ marginTop: 16, fontSize: 13, color: C.muted, background: "none", border: "none", cursor: "pointer" }}>Назад</button>
-      </div>
-    );
-  }
 
   return (
     <div style={{ padding: "0 0 1rem" }}>
@@ -557,7 +465,7 @@ function MeditationsScreen() {
       {tab === "meditations" && (
         <div style={{ display: "grid", gap: 12, padding: "0 1.5rem" }}>
           {MEDITATIONS.map(m => (
-            <div key={m.id} onClick={() => openMeditation(m)} style={{ borderRadius: 20, overflow: "hidden", position: "relative", height: 120, cursor: m.steps && !m.premium ? "pointer" : "default" }}>
+            <div key={m.id} style={{ borderRadius: 20, overflow: "hidden", position: "relative", height: 120 }}>
               <img src={m.photo} alt={m.title} style={{ width: "100%", height: "100%", objectFit: "cover", filter: "saturate(0.75) brightness(0.85)" }} />
               <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to right, rgba(28,34,42,0.78) 0%, rgba(28,34,42,0.2) 100%)" }} />
               <div style={{ position: "absolute", inset: 0, padding: "14px 16px", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
