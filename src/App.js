@@ -424,9 +424,66 @@ function SoundsScreen({ currentSound, setCurrentSound }) {
 // ─── Meditations Screen ────────────────────────────────────────────────────────
 
 function MeditationsScreen() {
+  const [tab, setTab] = useState("frequencies");
   const [playing, setPlaying] = useState(null);
   const [expanded, setExpanded] = useState(null);
+  const [practiceIdx, setPracticeIdx] = useState(null);
+  const [practiceStep, setPracticeStep] = useState(0);
+  const [practiceAnswers, setPracticeAnswers] = useState({});
   const audioRef = useRef(null);
+
+  const WRITTEN_PRACTICES = [
+    {
+      id: "fear", icon: "🌊", title: "Избавление от страха",
+      desc: "Письменная практика для работы со страхом",
+      steps: [
+        { q: "Назови страх", hint: "Напиши конкретно чего ты боишься прямо сейчас. Не «всего», а одно конкретное." },
+        { q: "Что самое плохое может случиться?", hint: "Доведи страх до конца — что реально произойдёт если это случится?" },
+        { q: "Ты справишься с этим?", hint: "Вспомни: ты уже переживал(а) трудное. Что тебе помогало?" },
+        { q: "Что зависит от тебя прямо сейчас?", hint: "Одно маленькое действие которое ты можешь сделать сегодня." },
+      ]
+    },
+    {
+      id: "anger", icon: "🔥", title: "Проработка злости",
+      desc: "Когда злишься и не знаешь что с этим делать",
+      steps: [
+        { q: "На что или на кого ты злишься?", hint: "Назови это прямо. Злость имеет право быть." },
+        { q: "Что именно тебя задело?", hint: "Не поведение другого — а что это значит для тебя лично?" },
+        { q: "Какая потребность не была удовлетворена?", hint: "За злостью всегда стоит что-то важное — уважение, справедливость, признание..." },
+        { q: "Что ты хочешь чтобы изменилось?", hint: "Не «чтобы он(а) понял(а)» — а что конкретно тебе нужно?" },
+      ]
+    },
+    {
+      id: "guilt", icon: "🕯️", title: "Работа с виной",
+      desc: "Отделить здоровую ответственность от разрушительной вины",
+      steps: [
+        { q: "За что ты чувствуешь вину?", hint: "Опиши ситуацию коротко — факты, без оценки." },
+        { q: "Ты действительно причинил(а) вред?", hint: "Честно: было ли твоё действие намеренным? Что ты знал(а) тогда?" },
+        { q: "Что бы ты сказал(а) другу в этой ситуации?", hint: "Представь что это сделал близкий тебе человек. Как бы ты отнёсся(лась) к нему?" },
+        { q: "Что ты можешь сделать сейчас?", hint: "Исправить, извиниться, отпустить — или просто принять и идти дальше?" },
+      ]
+    },
+    {
+      id: "anxiety", icon: "🌬️", title: "Разбор тревоги",
+      desc: "Найти источник тревоги и снизить её интенсивность",
+      steps: [
+        { q: "О чём конкретно ты тревожишься?", hint: "Напиши все мысли подряд — без фильтра, без порядка." },
+        { q: "Это реальная угроза или предположение?", hint: "Насколько вероятно что это случится? Что говорят факты?" },
+        { q: "Что ты можешь контролировать?", hint: "Раздели: что в твоих руках, а что нет." },
+        { q: "Что помогло тебе раньше когда было тревожно?", hint: "Вспомни конкретный момент когда ты справился(лась)." },
+      ]
+    },
+    {
+      id: "self", icon: "🪞", title: "Встреча с собой",
+      desc: "Кто я сейчас — без ролей и масок",
+      steps: [
+        { q: "Кем ты себя чувствуешь прямо сейчас?", hint: "Не должность, не роль — а внутреннее ощущение." },
+        { q: "Что тебе сейчас важнее всего?", hint: "Не что должно быть важным — а что реально важно для тебя." },
+        { q: "Что ты делаешь для себя — не для других?", hint: "Что в твоей жизни существует только потому что тебе это нравится?" },
+        { q: "Что ты хочешь сказать себе прямо сейчас?", hint: "Одно предложение — как от лучшего друга." },
+      ]
+    },
+  ];
 
   function togglePlay(track) {
     if (playing === track.id) {
@@ -447,64 +504,166 @@ function MeditationsScreen() {
     return () => { if (audioRef.current) { audioRef.current.pause(); audioRef.current = null; } };
   }, []);
 
+  // Practice flow
+  if (practiceIdx !== null) {
+    const p = WRITTEN_PRACTICES[practiceIdx];
+    const step = p.steps[practiceStep];
+    const isDone = practiceStep >= p.steps.length;
+
+    if (isDone) {
+      return (
+        <div style={{ padding: "2rem 1.5rem", textAlign: "center" }}>
+          <div style={{ fontSize: 48, marginBottom: 16 }}>🌿</div>
+          <div style={{ fontSize: 18, fontWeight: 500, color: C.text, marginBottom: 24 }}>Практика завершена</div>
+          <div style={{ display: "grid", gap: 10, marginBottom: 28, textAlign: "left" }}>
+            {p.steps.map((s, i) => practiceAnswers[i] && (
+              <div key={i} style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 14, padding: "12px 14px", backdropFilter: "blur(8px)" }}>
+                <div style={{ fontSize: 11, color: C.accent, marginBottom: 4 }}>{s.q}</div>
+                <div style={{ fontSize: 13, color: C.text, lineHeight: 1.6 }}>{practiceAnswers[i]}</div>
+              </div>
+            ))}
+          </div>
+          <button onClick={() => { setPracticeIdx(null); setPracticeStep(0); setPracticeAnswers({}); }}
+            style={{ padding: "12px 32px", background: C.accent, border: "none", borderRadius: 30, color: "#f1eef2", fontSize: 14, cursor: "pointer" }}>
+            Завершить
+          </button>
+        </div>
+      );
+    }
+
+    return (
+      <div style={{ padding: "0 1.5rem 1.5rem" }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 28, paddingTop: 8 }}>
+          <button onClick={() => practiceStep === 0 ? setPracticeIdx(null) : setPracticeStep(s => s - 1)}
+            style={{ background: "none", border: "none", color: C.muted, cursor: "pointer", fontSize: 13 }}>
+            {practiceStep === 0 ? "Отмена" : "← Назад"}
+          </button>
+          <div style={{ display: "flex", gap: 6 }}>
+            {p.steps.map((_, i) => (
+              <div key={i} style={{ width: i === practiceStep ? 20 : 6, height: 6, borderRadius: 3, background: i <= practiceStep ? C.accent : C.border, transition: "all 0.3s" }} />
+            ))}
+          </div>
+          <div style={{ width: 48 }} />
+        </div>
+        <div style={{ fontSize: 13, color: C.accent, marginBottom: 6 }}>{p.icon} {p.title}</div>
+        <div style={{ fontSize: 18, fontWeight: 500, color: C.text, marginBottom: 8 }}>{step.q}</div>
+        <div style={{ fontSize: 13, color: C.muted, marginBottom: 20, lineHeight: 1.6 }}>{step.hint}</div>
+        <textarea
+          value={practiceAnswers[practiceStep] || ""}
+          onChange={e => setPracticeAnswers(a => ({ ...a, [practiceStep]: e.target.value }))}
+          placeholder="Пиши свободно..."
+          rows={6}
+          style={taStyle}
+        />
+        <div style={{ marginTop: 20, display: "flex", gap: 10 }}>
+          <button onClick={() => setPracticeStep(s => s + 1)}
+            style={{ flex: 1, padding: "14px", background: C.accent, border: "none", borderRadius: 16, color: "#f1eef2", fontSize: 15, cursor: "pointer" }}>
+            {practiceStep < p.steps.length - 1 ? "Далее →" : "Завершить ✓"}
+          </button>
+        </div>
+        {practiceStep < p.steps.length - 1 && (
+          <button onClick={() => setPracticeStep(s => s + 1)}
+            style={{ width: "100%", padding: "10px", background: "none", border: "none", color: C.muted, fontSize: 13, cursor: "pointer", marginTop: 8 }}>
+            Пропустить
+          </button>
+        )}
+      </div>
+    );
+  }
+
   return (
     <div style={{ padding: "0 0 1.5rem" }}>
-      {/* Header */}
-      <div style={{ padding: "0 1.5rem 16px" }}>
-        <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 16, padding: "14px 16px", backdropFilter: "blur(8px)" }}>
-          <div style={{ fontSize: 13, color: C.accent, fontWeight: 500, marginBottom: 6 }}>🎧 Важно: только в наушниках</div>
-          <div style={{ fontSize: 12, color: C.muted, lineHeight: 1.6 }}>
-            Бинауральные ритмы работают только в стереонаушниках. В каждое ухо подаётся разная частота — мозг создаёт третью, которая меняет его состояние. Без наушников эффекта нет.
-          </div>
-        </div>
+      {/* Tabs */}
+      <div style={{ display: "flex", padding: "0 1.5rem", borderBottom: `1px solid ${C.border}`, marginBottom: 16 }}>
+        {[["frequencies","〰️ Частоты"],["practices","✍️ Практики"]].map(([id,label]) => (
+          <button key={id} onClick={() => setTab(id)} style={{
+            padding: "10px 16px", fontSize: 14, color: tab === id ? C.accent : C.muted,
+            background: "none", border: "none", cursor: "pointer",
+            borderBottom: `2px solid ${tab === id ? C.accent : "transparent"}`, marginBottom: -1
+          }}>{label}</button>
+        ))}
       </div>
 
-      {/* Tracks */}
-      <div style={{ display: "grid", gap: 14, padding: "0 1.5rem" }}>
-        {MUSIC_TRACKS.map(track => {
-          const sci = FREQ_SCIENCE[track.tag];
-          const isExpanded = expanded === track.id;
-          const isPlaying = playing === track.id;
-          return (
-            <div key={track.id} style={{ borderRadius: 20, overflow: "hidden", background: C.surface, border: `1px solid ${isPlaying ? C.accent : C.border}`, backdropFilter: "blur(8px)", transition: "border-color 0.3s" }}>
-              {/* Photo + controls */}
-              <div style={{ position: "relative", height: 100 }}>
-                <img src={track.photo} alt={track.title} style={{ width: "100%", height: "100%", objectFit: "cover", filter: "saturate(0.75) brightness(0.8)" }} />
-                <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to right, rgba(28,34,42,0.88) 0%, rgba(28,34,42,0.3) 100%)" }} />
-                <div style={{ position: "absolute", inset: 0, padding: "12px 16px", display: "flex", alignItems: "center", gap: 14 }}>
-                  <button onClick={() => togglePlay(track)} style={{ width: 46, height: 46, borderRadius: "50%", flexShrink: 0, background: isPlaying ? C.accent : "rgba(241,238,242,0.2)", border: `1px solid rgba(241,238,242,0.4)`, color: "#f1eef2", fontSize: 17, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                    {isPlaying ? "⏸" : "▶"}
-                  </button>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
-                      <span style={{ fontSize: 16 }}>{track.icon}</span>
-                      <span style={{ background: "rgba(177,156,163,0.3)", color: "#f1eef2", fontSize: 11, padding: "2px 10px", borderRadius: 20 }}>{track.hz}</span>
-                      <span style={{ marginLeft: "auto", color: "rgba(241,238,242,0.7)", fontSize: 11 }}>{track.duration}</span>
-                    </div>
-                    <div style={{ fontSize: 15, fontWeight: 500, color: "#f1eef2", marginBottom: 2 }}>{track.title}</div>
-                    <div style={{ fontSize: 12, color: "rgba(241,238,242,0.7)" }}>{track.desc}</div>
-                  </div>
-                </div>
-              </div>
-              {/* Science block */}
-              <div style={{ padding: "10px 16px 12px" }}>
-                <button onClick={() => setExpanded(isExpanded ? null : track.id)} style={{ background: "none", border: "none", color: C.accent, fontSize: 12, cursor: "pointer", padding: 0, display: "flex", alignItems: "center", gap: 6 }}>
-                  🔬 Научная база {isExpanded ? "▲" : "▼"}
-                </button>
-                {isExpanded && (
-                  <div style={{ marginTop: 10, fontSize: 12, color: C.muted, lineHeight: 1.7, borderTop: `1px solid ${C.border}`, paddingTop: 10 }}>
-                    <div style={{ color: C.text, fontWeight: 500, marginBottom: 4 }}>{sci.name} · {sci.hz}</div>
-                    {sci.science}
-                  </div>
-                )}
+      {/* Frequencies tab */}
+      {tab === "frequencies" && (
+        <div>
+          <div style={{ padding: "0 1.5rem 16px" }}>
+            <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 16, padding: "14px 16px", backdropFilter: "blur(8px)" }}>
+              <div style={{ fontSize: 13, color: C.accent, fontWeight: 500, marginBottom: 6 }}>🎧 Только в наушниках</div>
+              <div style={{ fontSize: 12, color: C.muted, lineHeight: 1.6 }}>
+                Бинауральные ритмы работают только в стереонаушниках. В каждое ухо подаётся разная частота — мозг создаёт третью которая меняет его состояние.
               </div>
             </div>
-          );
-        })}
-      </div>
+          </div>
+          <div style={{ display: "grid", gap: 14, padding: "0 1.5rem" }}>
+            {MUSIC_TRACKS.map(track => {
+              const sci = FREQ_SCIENCE[track.tag];
+              const isExpanded = expanded === track.id;
+              const isPlaying = playing === track.id;
+              return (
+                <div key={track.id} style={{ borderRadius: 20, overflow: "hidden", background: C.surface, border: `1px solid ${isPlaying ? C.accent : C.border}`, backdropFilter: "blur(8px)", transition: "border-color 0.3s" }}>
+                  <div style={{ position: "relative", height: 100 }}>
+                    <img src={track.photo} alt={track.title} style={{ width: "100%", height: "100%", objectFit: "cover", filter: "saturate(0.75) brightness(0.8)" }} />
+                    <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to right, rgba(28,34,42,0.88) 0%, rgba(28,34,42,0.3) 100%)" }} />
+                    <div style={{ position: "absolute", inset: 0, padding: "12px 16px", display: "flex", alignItems: "center", gap: 14 }}>
+                      <button onClick={() => togglePlay(track)} style={{ width: 46, height: 46, borderRadius: "50%", flexShrink: 0, background: isPlaying ? C.accent : "rgba(241,238,242,0.2)", border: "1px solid rgba(241,238,242,0.4)", color: "#f1eef2", fontSize: 17, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                        {isPlaying ? "⏸" : "▶"}
+                      </button>
+                      <div style={{ flex: 1 }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+                          <span style={{ fontSize: 14 }}>{track.icon}</span>
+                          <span style={{ background: "rgba(177,156,163,0.3)", color: "#f1eef2", fontSize: 11, padding: "2px 10px", borderRadius: 20 }}>{track.hz}</span>
+                          <span style={{ marginLeft: "auto", color: "rgba(241,238,242,0.7)", fontSize: 11 }}>{track.duration}</span>
+                        </div>
+                        <div style={{ fontSize: 15, fontWeight: 500, color: "#f1eef2", marginBottom: 2 }}>{track.title}</div>
+                        <div style={{ fontSize: 12, color: "rgba(241,238,242,0.7)" }}>{track.desc}</div>
+                      </div>
+                    </div>
+                  </div>
+                  <div style={{ padding: "10px 16px 12px" }}>
+                    <button onClick={() => setExpanded(isExpanded ? null : track.id)} style={{ background: "none", border: "none", color: C.accent, fontSize: 12, cursor: "pointer", padding: 0, display: "flex", alignItems: "center", gap: 6 }}>
+                      🔬 Научная база {isExpanded ? "▲" : "▼"}
+                    </button>
+                    {isExpanded && sci && (
+                      <div style={{ marginTop: 10, fontSize: 12, color: C.muted, lineHeight: 1.7, borderTop: `1px solid ${C.border}`, paddingTop: 10 }}>
+                        <div style={{ color: C.text, fontWeight: 500, marginBottom: 4 }}>{sci.name} · {sci.hz}</div>
+                        {sci.science}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Written practices tab */}
+      {tab === "practices" && (
+        <div style={{ padding: "0 1.5rem" }}>
+          <div style={{ fontSize: 13, color: C.muted, lineHeight: 1.6, marginBottom: 16 }}>
+            Письменные практики помогают разобраться в себе — не просто успокоиться, а понять что происходит внутри.
+          </div>
+          <div style={{ display: "grid", gap: 10 }}>
+            {WRITTEN_PRACTICES.map((p, i) => (
+              <button key={p.id} onClick={() => { setPracticeIdx(i); setPracticeStep(0); setPracticeAnswers({}); }}
+                style={{ display: "flex", alignItems: "center", gap: 16, background: C.surface, border: `1px solid ${C.border}`, borderRadius: 18, padding: "16px", cursor: "pointer", color: C.text, textAlign: "left", backdropFilter: "blur(8px)" }}>
+                <div style={{ fontSize: 32, flexShrink: 0 }}>{p.icon}</div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 15, fontWeight: 500, color: C.text, marginBottom: 4 }}>{p.title}</div>
+                  <div style={{ fontSize: 12, color: C.muted }}>{p.desc}</div>
+                  <div style={{ fontSize: 11, color: C.accent, marginTop: 4 }}>{p.steps.length} шага</div>
+                </div>
+                <div style={{ color: C.muted, fontSize: 20 }}>›</div>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
+
 
 // ─── Tune-ins Screen ───────────────────────────────────────────────────────────
 
@@ -1139,7 +1298,7 @@ const taStyle = { width: "100%", background: C.surface, border: `1px solid ${C.b
 const NAV = [
   { id: "home",         icon: "🏠", label: "Главная" },
   { id: "sounds",       icon: "🎧", label: "Звуки" },
-  { id: "meditations",  icon: "〰️", label: "Частоты" },
+  { id: "meditations",  icon: "🧘", label: "Практики" },
   { id: "tuneins",       icon: "✨", label: "Настрои" },
   { id: "journal",       icon: "📓", label: "Дневник" },
   { id: "patterns",      icon: "🗺️", label: "Карта" },
@@ -1155,7 +1314,7 @@ export default function App() {
   const [mood, setMood] = useState(null);
   const [currentSound, setCurrentSound] = useState(SOUNDS[0]);
 
-  const screenTitles = { home: getGreeting(), sounds: "Звуки", meditations: "Частоты", tuneins: "Настрои", affirmations: "Аффирмации", journal: "Дневник", patterns: "Карта паттернов", reflection: "Разбор", letters: "Письма" };
+  const screenTitles = { home: getGreeting(), sounds: "Звуки", meditations: "Практики", tuneins: "Настрои", affirmations: "Аффирмации", journal: "Дневник", patterns: "Карта паттернов", reflection: "Разбор", letters: "Письма" };
 
   if (splash) return <SplashScreen onStart={() => setSplash(false)} />;
 
