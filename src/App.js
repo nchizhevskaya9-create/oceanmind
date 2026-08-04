@@ -4,56 +4,54 @@ import { useState, useEffect, useRef, useCallback } from "react";
 
 const SOUNDS = [
   { id: "rain",     name: "Дождь",        category: "Природа",   duration: 2160, tag: "sleep",   file: "rain.mp3",     photo: "https://images.unsplash.com/photo-1515694346937-94d85e41e6f0?w=400&q=80" },
-  { id: "fire",     name: "Камин",        category: "Уют",       duration: 2700, tag: "relax",   file: "fire.mp3",     photo: "https://images.unsplash.com/photo-1543722530-d2c3201371e7?w=400&q=80" },
+  { id: "fire",     name: "Камин",        category: "Уют",       duration: 2700, tag: "relax",   file: "fire.mp3",     photo: "https://images.pexels.com/photos/11254616/pexels-photo-11254616.jpeg?auto=compress&w=800&q=80" },
   { id: "ocean",    name: "Океан",        category: "Волны",     duration: 3600, tag: "sleep",   file: "ocean.mp3",    photo: "https://images.unsplash.com/photo-1505118380757-91f5f5632de0?w=400&q=80" },
   { id: "forest",   name: "Лес",          category: "Природа",   duration: 2400, tag: "relax",   file: "forest.mp3",   photo: "https://images.unsplash.com/photo-1448375240586-882707db888b?w=400&q=80" },
   { id: "white",    name: "Белый шум",    category: "Фокус",     duration: null, tag: "focus",   file: "white.mp3",    photo: "https://images.unsplash.com/photo-1534796636912-3b95b3ab5986?w=400&q=80" },
-  { id: "binaural", name: "Бинауральные", category: "Δ 2 Гц",   duration: 3600, tag: "sleep",   file: "binaural.mp3", photo: "https://images.unsplash.com/photo-1419242902214-272b3f66ee7a?w=400&q=80", premium: true },
   { id: "bowl",     name: "Чаши",         category: "Тибет",     duration: 1800, tag: "meditate",file: "bowl.mp3",     photo: "https://images.unsplash.com/photo-1508672019048-805c876b67e2?w=400&q=80" },
-  { id: "night",    name: "Ночной сад",   category: "Сверчки",   duration: 3000, tag: "sleep",   file: "night.mp3",    photo: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&q=80" },
+  { id: "night",    name: "Ночной сад",   category: "Сверчки",   duration: 3000, tag: "sleep",   file: "night.mp3",    photo: "https://images.pexels.com/photos/698317/pexels-photo-698317.jpeg?auto=compress&w=800&q=80" },
   { id: "mountain", name: "Горы",         category: "Ветер",     duration: 2100, tag: "relax",   file: "mountain.mp3", photo: "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=400&q=80" },
   { id: "cafe",     name: "Кофейня",      category: "Городской", duration: 3600, tag: "focus",   file: "cafe.mp3",     photo: "https://images.unsplash.com/photo-1442512595331-e89e73853f31?w=400&q=80", premium: true },
   { id: "thunder",  name: "Гроза",        category: "Природа",   duration: 2400, tag: "sleep",   file: "thunder.mp3",  photo: "https://images.unsplash.com/photo-1505672678657-cc7037095e60?w=400&q=80" },
   { id: "river",    name: "Горный ручей", category: "Природа",   duration: 2700, tag: "relax",   file: "river.mp3",    photo: "https://images.unsplash.com/photo-1455218873509-8097305ee378?w=400&q=80" },
 ];
 
-const MEDITATIONS = [
-  { id: "m1", tag: "sleep",   title: "Погружение в тишину",     duration: "20 мин", level: "Начинающим",  desc: "Мягкое сканирование тела перед сном",               photo: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&q=80" },
-  { id: "m2", tag: "stress",  title: "Освобождение от тревоги", duration: "15 мин", level: "Дыхание",      desc: "Техника 4-7-8 для успокоения нервной системы",      photo: "https://images.unsplash.com/photo-1518241353330-0f7941c2d9b5?w=400&q=80" },
-  { id: "m3", tag: "focus",   title: "Ясность ума",             duration: "10 мин", level: "Осознанность", desc: "Практика присутствия здесь и сейчас",               photo: "https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?w=400&q=80" },
-  { id: "m4", tag: "sleep",   title: "Скан тела",               duration: "30 мин", level: "Body scan",    desc: "Классическая практика MBSR для глубокого сна",      photo: "https://images.unsplash.com/photo-1508739773434-c26b3d09e071?w=400&q=80", premium: true },
-  { id: "m5", tag: "stress",  title: "Земля под ногами",        duration: "12 мин", level: "Заземление",   desc: "Практика 5-4-3-2-1 при панике и тревоге",           photo: "https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=400&q=80" },
-  { id: "m6", tag: "focus",   title: "Концентрация на дыхании", duration: "8 мин",  level: "Базовая",      desc: "Классическая медитация для развития внимания",      photo: "https://images.unsplash.com/photo-1470252649378-9c29740c9fa8?w=400&q=80" },
-];
+const FREQ_SCIENCE = {
+  delta: { hz: "0.5–2 Hz", name: "Delta", science: "Дельта-волны доминируют во время глубокого сна без сновидений. Исследования показывают их связь с восстановлением организма, укреплением иммунитета и консолидацией памяти." },
+  theta: { hz: "4–6 Hz", name: "Theta", science: "Тета-волны активны в состоянии между сном и бодрствованием. Связаны с творческим мышлением, интуицией и глубокой медитацией. Именно в этом диапазоне работают опытные медитирующие." },
+  alpha: { hz: "8–10 Hz", name: "Alpha", science: "Альфа-волны — состояние спокойного бодрствования. Снижают уровень кортизола (гормона стресса), уменьшают тревогу и помогают восстановиться после нагрузки." },
+  beta:  { hz: "18–20 Hz", name: "Beta", science: "Бета-волны доминируют при активной умственной деятельности. Улучшают концентрацию, ускоряют обработку информации и повышают продуктивность." },
+  gamma: { hz: "40 Hz", name: "Gamma", science: "Гамма-волны связаны с пиковой концентрацией и состоянием потока. Исследования MIT показали что 40 Hz стимуляция замедляет развитие болезни Альцгеймера. Самая изученная частота в нейронауке." },
+};
 
-const MORNING_PRACTICES = [
-  { id: "p1", tag: "morning",   title: "Намерение дня",       duration: "5 мин",  desc: "Задайте тон всему дню через намерение" },
-  { id: "p2", tag: "breath",    title: "Бодрящее дыхание",    duration: "8 мин",  desc: "Техника Вим Хофа для энергии с утра" },
-  { id: "p3", tag: "gratitude", title: "Три благодарности",   duration: "3 мин",  desc: "Дневник благодарности для позитивного настроя" },
-  { id: "p4", tag: "stretch",   title: "Утренняя растяжка",   duration: "10 мин", desc: "Мягкая йога для пробуждения тела", premium: true },
-  { id: "p5", tag: "morning",   title: "Визуализация успеха", duration: "7 мин",  desc: "Представьте идеальную версию своего дня" },
+const MUSIC_TRACKS = [
+  { id: "delta", tag: "delta", title: "Глубокий сон",           duration: "60 мин", hz: "0.5–2 Hz",  file: "delta.mp3",  photo: "https://images.unsplash.com/photo-1508739773434-c26b3d09e071?w=400&q=80", icon: "🌑", desc: "Для тех кто не может заснуть или просыпается ночью" },
+  { id: "theta", tag: "theta", title: "Медитация и творчество", duration: "45 мин", hz: "4–6 Hz",    file: "theta.mp3",  photo: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&q=80", icon: "🌊", desc: "Творческий поток, интуиция, глубокая медитация" },
+  { id: "alpha", tag: "alpha", title: "Покой и расслабление",   duration: "30 мин", hz: "8–10 Hz",   file: "alpha.mp3",  photo: "https://images.unsplash.com/photo-1518241353330-0f7941c2d9b5?w=400&q=80", icon: "☁️", desc: "Снятие тревоги и стресса, восстановление" },
+  { id: "beta",  tag: "beta",  title: "Фокус и концентрация",   duration: "30 мин", hz: "18–20 Hz",  file: "beta.mp3",   photo: "https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?w=400&q=80", icon: "⚡", desc: "Для работы и учёбы — ясность и продуктивность" },
+  { id: "gamma", tag: "gamma", title: "Состояние потока",        duration: "25 мин", hz: "40 Hz",     file: "gamma.mp3",  photo: "https://images.unsplash.com/photo-1470252649378-9c29740c9fa8?w=400&q=80", icon: "✦", desc: "Пиковая концентрация — исследовано в MIT" },
 ];
 
 const AFFIRMATIONS = [
-  { id: "a1", category: "Самопринятие",  text: "Я достаточна. Я делаю всё, что в моих силах, и этого хватает." },
+  { id: "a1", category: "Самопринятие",  text: "Я делаю всё, что в моих силах. Этого достаточно." },
   { id: "a2", category: "Покой",         text: "Покой живёт внутри меня. Я могу обратиться к нему в любой момент." },
   { id: "a3", category: "Любовь к себе", text: "Я выбираю мягкость к себе. Мои ошибки — часть роста." },
-  { id: "a4", category: "Новый день",    text: "Каждый новый день — это чистая страница. Я пишу её с любовью." },
+  { id: "a4", category: "Новый день",    text: "Каждый новый день — это чистая страница. Я пишу её осознанно." },
   { id: "a5", category: "Дыхание",       text: "Моё дыхание — мой якорь. Я возвращаюсь к себе снова и снова." },
-  { id: "a6", category: "Сила",          text: "Я справлялась с трудностями раньше — справлюсь и сейчас." },
+  { id: "a6", category: "Сила",          text: "Я справлялся(ась) с трудностями раньше — справлюсь и сейчас." },
   { id: "a7", category: "Безопасность",  text: "Прямо сейчас я в безопасности. Всё хорошо в этот момент." },
   { id: "a8", category: "Рост",          text: "Я расту каждый день, даже когда этого не замечаю." },
-  { id: "a9", category: "Усталость",     text: "Я устала — и это не слабость. Это сигнал что я давала много." },
+  { id: "a9", category: "Усталость",     text: "Усталость — не слабость. Это сигнал что я отдавал(а) много." },
 ];
 
 const TUNE_INS = [
-  { id: "t1", category: "Утренний настрой", icon: "🌅", title: "Начни день с намерения",   lines: ["Сегодня я выбираю спокойствие.", "Я открыта для хорошего.", "Моя энергия идёт туда, где мне важно."] },
+  { id: "t1", category: "Утренний настрой", icon: "🌅", title: "Начни день с намерения",   lines: ["Сегодня я выбираю спокойствие.", "Я открыт(а) для хорошего.", "Моя энергия идёт туда, где мне важно."] },
   { id: "t2", category: "После работы",     icon: "🌆", title: "Перезагрузка после дня",   lines: ["Рабочий день окончен — я отпускаю его.", "Мои достижения сегодня реальны.", "Теперь время для себя."] },
-  { id: "t3", category: "Перед сном",       icon: "🌙", title: "Плавный уход в ночь",      lines: ["Я благодарна за этот день.", "Я отпускаю всё незавершённое.", "Моё тело готово к отдыху."] },
+  { id: "t3", category: "Перед сном",       icon: "🌙", title: "Плавный уход в ночь",      lines: ["Я благодарен(а) за этот день.", "Я отпускаю всё незавершённое.", "Моё тело готово к отдыху."] },
   { id: "t4", category: "При тревоге",      icon: "🌬️", title: "Если тревога накрывает",   lines: ["Прямо сейчас я в безопасности.", "Это чувство временно — оно пройдёт.", "Я дышу и возвращаюсь к себе."] },
-  { id: "t5", category: "Уверенность",      icon: "⚡", title: "Перед важным событием",    lines: ["Я готова. Я справлюсь.", "Мой опыт и знания со мной.", "Я делаю всё, что могу — и этого достаточно."] },
-  { id: "t6", category: "Благодарность",    icon: "💛", title: "Практика благодарности",   lines: ["Три вещи, за которые я благодарна сегодня...", "Одна маленькая победа этого дня...", "Человек, которому я мысленно говорю спасибо..."] },
-  { id: "t7", category: "Выгорание",        icon: "🕯️", title: "Когда устала и тревожно",  lines: ["Я давала много. Долго. Сегодня я разрешаю себе замедлиться.", "Восстановление — это тоже работа.", "Я заслуживаю отдыха прямо сейчас."] },
+  { id: "t5", category: "Уверенность",      icon: "⚡", title: "Перед важным событием",    lines: ["Я готов(а). Я справлюсь.", "Мой опыт и знания со мной.", "Я делаю всё, что могу — и этого достаточно."] },
+  { id: "t6", category: "Благодарность",    icon: "💛", title: "Практика благодарности",   lines: ["Три вещи, за которые я благодарен(а) сегодня...", "Одна маленькая победа этого дня...", "Человек, которому я мысленно говорю спасибо..."] },
+  { id: "t7", category: "Выгорание",        icon: "🕯️", title: "Когда устал(а) и тревожно", lines: ["Я отдавал(а) много. Сегодня я разрешаю себе замедлиться.", "Восстановление — это тоже работа.", "Я заслуживаю отдыха прямо сейчас."] },
 ];
 
 const MOODS = ["😔", "😐", "🙂", "😊", "✨"];
@@ -74,26 +72,15 @@ const C = {
   dark:     "rgba(28,34,42,0.6)",
 };
 
-const TAG_COLORS = {
-  sleep:    { bg: "rgba(110,117,135,0.22)", text: "#c7c2cb", label: "Сон" },
-  relax:    { bg: "rgba(151,147,162,0.22)", text: "#c7c2cb", label: "Расслабление" },
-  focus:    { bg: "rgba(177,156,163,0.22)", text: "#e3d6da", label: "Фокус" },
-  meditate: { bg: "rgba(141,145,154,0.22)", text: "#dcd9de", label: "Медитация" },
-  stress:   { bg: "rgba(177,156,163,0.28)", text: "#e3d6da", label: "Стресс" },
-  morning:  { bg: "rgba(151,147,162,0.22)", text: "#dcd9de", label: "Утро" },
-  breath:   { bg: "rgba(110,117,135,0.22)", text: "#c7c2cb", label: "Дыхание" },
-  gratitude:{ bg: "rgba(177,156,163,0.22)", text: "#e3d6da", label: "Благодарность" },
-  stretch:  { bg: "rgba(151,147,162,0.22)", text: "#dcd9de", label: "Растяжка" },
-};
 
 const REFLECTION_PROMPTS = [
   "Что сегодня было самым тяжёлым?",
   "Какой момент сегодня был хорошим, даже маленьким?",
   "Что я сейчас чувствую в теле?",
   "Что мне сегодня помогло справиться?",
-  "Какой паттерн я снова заметила в себе?",
+  "Какой паттерн я снова замечаю в себе?",
   "Что я хочу отпустить перед сном?",
-  "За что я благодарна сегодня?",
+  "За что я благодарен(а) сегодня?",
 ];
 
 const PATTERN_TAGS = [
@@ -104,8 +91,8 @@ const PATTERN_TAGS = [
 ];
 
 const SEED_ENTRIES = [
-  { id: "e1", date: new Date(Date.now() - 86400000*2), mood: 2, what_happened: "Поругалась с мамой по телефону. Снова почувствовала, что меня не слышат.", what_felt: "Злость, потом вина, потом усталость от этого круга.", what_helped: "Послушала звуки дождя 20 минут. Немного отпустило.", pattern_tags: ["угождение другим", "вина"], insight: "Заметила, что сначала злюсь, а потом сразу виню себя." },
-  { id: "e2", date: new Date(Date.now() - 86400000), mood: 3, what_happened: "Сдала проект вовремя. Похвалили на работе.", what_felt: "Облегчение и немного удивление — не ожидала, что получится.", what_helped: "Утренний настрой помог сосредоточиться.", pattern_tags: ["перфекционизм", "гордость собой"], insight: "Снова убедилась: когда начинаю — становится легче." },
+  { id: "e1", date: new Date(Date.now() - 86400000*2), mood: 2, what_happened: "Конфликт с близким человеком. Снова почувствовал(а) что меня не слышат.", what_felt: "Злость, потом вина, потом усталость от этого круга.", what_helped: "Послушал(а) звуки дождя 20 минут. Немного отпустило.", pattern_tags: ["угождение другим", "вина"], insight: "Заметил(а) что сначала злюсь, а потом сразу виню себя." },
+  { id: "e2", date: new Date(Date.now() - 86400000), mood: 3, what_happened: "Сдал(а) проект вовремя. Похвалили на работе.", what_felt: "Облегчение — не ожидал(а) что получится так хорошо.", what_helped: "Утренний настрой помог сосредоточиться.", pattern_tags: ["перфекционизм", "гордость собой"], insight: "Снова убедился(ась): когда начинаю — становится легче." },
 ];
 
 const GRATITUDE_SEED = [
@@ -169,18 +156,7 @@ function formatEntryDate(date) {
 
 // ─── Sub-components ────────────────────────────────────────────────────────────
 
-function Tag({ tag }) {
-  const c = TAG_COLORS[tag] || TAG_COLORS.relax;
-  return (
-    <span style={{ background: c.bg, color: c.text, fontSize: 11, padding: "3px 10px", borderRadius: 20, display: "inline-block" }}>
-      {c.label}
-    </span>
-  );
-}
 
-function PremiumBadge() {
-  return <span style={{ background: "rgba(177,156,163,0.3)", color: "#f1eef2", fontSize: 10, padding: "2px 8px", borderRadius: 20, marginLeft: 6 }}>PRO</span>;
-}
 
 // ─── Splash Screen ─────────────────────────────────────────────────────────────
 
@@ -448,59 +424,84 @@ function SoundsScreen({ currentSound, setCurrentSound }) {
 // ─── Meditations Screen ────────────────────────────────────────────────────────
 
 function MeditationsScreen() {
-  const [tab, setTab] = useState("meditations");
+  const [playing, setPlaying] = useState(null);
+  const [expanded, setExpanded] = useState(null);
+  const audioRef = useRef(null);
+
+  function togglePlay(track) {
+    if (playing === track.id) {
+      audioRef.current?.pause();
+      setPlaying(null);
+      return;
+    }
+    if (audioRef.current) { audioRef.current.pause(); audioRef.current = null; }
+    const audio = new Audio(`/audio/${track.file}`);
+    audio.loop = true;
+    audio.volume = 0.7;
+    audio.play().catch(() => {});
+    audioRef.current = audio;
+    setPlaying(track.id);
+  }
+
+  useEffect(() => {
+    return () => { if (audioRef.current) { audioRef.current.pause(); audioRef.current = null; } };
+  }, []);
 
   return (
-    <div style={{ padding: "0 0 1rem" }}>
-      <div style={{ display: "flex", padding: "0 1.5rem", borderBottom: `1px solid ${C.border}`, marginBottom: 16 }}>
-        {[["meditations","Медитации"],["morning","Утро"]].map(([id,label]) => (
-          <button key={id} onClick={() => setTab(id)} style={{
-            padding: "10px 16px", fontSize: 14, color: tab === id ? C.accent : C.muted,
-            background: "none", border: "none", cursor: "pointer",
-            borderBottom: `2px solid ${tab === id ? C.accent : "transparent"}`, marginBottom: -1
-          }}>{label}</button>
-        ))}
+    <div style={{ padding: "0 0 1.5rem" }}>
+      {/* Header */}
+      <div style={{ padding: "0 1.5rem 16px" }}>
+        <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 16, padding: "14px 16px", backdropFilter: "blur(8px)" }}>
+          <div style={{ fontSize: 13, color: C.accent, fontWeight: 500, marginBottom: 6 }}>🎧 Важно: только в наушниках</div>
+          <div style={{ fontSize: 12, color: C.muted, lineHeight: 1.6 }}>
+            Бинауральные ритмы работают только в стереонаушниках. В каждое ухо подаётся разная частота — мозг создаёт третью, которая меняет его состояние. Без наушников эффекта нет.
+          </div>
+        </div>
       </div>
 
-      {tab === "meditations" && (
-        <div style={{ display: "grid", gap: 12, padding: "0 1.5rem" }}>
-          {MEDITATIONS.map(m => (
-            <div key={m.id} style={{ borderRadius: 20, overflow: "hidden", position: "relative", height: 120 }}>
-              <img src={m.photo} alt={m.title} style={{ width: "100%", height: "100%", objectFit: "cover", filter: "saturate(0.75) brightness(0.85)" }} />
-              <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to right, rgba(28,34,42,0.78) 0%, rgba(28,34,42,0.2) 100%)" }} />
-              <div style={{ position: "absolute", inset: 0, padding: "14px 16px", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
-                <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-                  <span style={{ background: "rgba(241,238,242,0.2)", color: "#f1eef2", fontSize: 11, padding: "3px 10px", borderRadius: 20 }}>{TAG_COLORS[m.tag]?.label}</span>
-                  {m.premium && <PremiumBadge />}
-                  <span style={{ marginLeft: "auto", color: "rgba(241,238,242,0.8)", fontSize: 12 }}>{m.duration}</span>
-                </div>
-                <div>
-                  <div style={{ fontSize: 16, fontWeight: 500, color: "#f1eef2", marginBottom: 3 }}>{m.title}</div>
-                  <div style={{ fontSize: 12, color: "rgba(241,238,242,0.7)" }}>{m.desc}</div>
+      {/* Tracks */}
+      <div style={{ display: "grid", gap: 14, padding: "0 1.5rem" }}>
+        {MUSIC_TRACKS.map(track => {
+          const sci = FREQ_SCIENCE[track.tag];
+          const isExpanded = expanded === track.id;
+          const isPlaying = playing === track.id;
+          return (
+            <div key={track.id} style={{ borderRadius: 20, overflow: "hidden", background: C.surface, border: `1px solid ${isPlaying ? C.accent : C.border}`, backdropFilter: "blur(8px)", transition: "border-color 0.3s" }}>
+              {/* Photo + controls */}
+              <div style={{ position: "relative", height: 100 }}>
+                <img src={track.photo} alt={track.title} style={{ width: "100%", height: "100%", objectFit: "cover", filter: "saturate(0.75) brightness(0.8)" }} />
+                <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to right, rgba(28,34,42,0.88) 0%, rgba(28,34,42,0.3) 100%)" }} />
+                <div style={{ position: "absolute", inset: 0, padding: "12px 16px", display: "flex", alignItems: "center", gap: 14 }}>
+                  <button onClick={() => togglePlay(track)} style={{ width: 46, height: 46, borderRadius: "50%", flexShrink: 0, background: isPlaying ? C.accent : "rgba(241,238,242,0.2)", border: `1px solid rgba(241,238,242,0.4)`, color: "#f1eef2", fontSize: 17, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    {isPlaying ? "⏸" : "▶"}
+                  </button>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+                      <span style={{ fontSize: 16 }}>{track.icon}</span>
+                      <span style={{ background: "rgba(177,156,163,0.3)", color: "#f1eef2", fontSize: 11, padding: "2px 10px", borderRadius: 20 }}>{track.hz}</span>
+                      <span style={{ marginLeft: "auto", color: "rgba(241,238,242,0.7)", fontSize: 11 }}>{track.duration}</span>
+                    </div>
+                    <div style={{ fontSize: 15, fontWeight: 500, color: "#f1eef2", marginBottom: 2 }}>{track.title}</div>
+                    <div style={{ fontSize: 12, color: "rgba(241,238,242,0.7)" }}>{track.desc}</div>
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {tab === "morning" && (
-        <div style={{ display: "grid", gap: 10, padding: "0 1.5rem" }}>
-          {MORNING_PRACTICES.map(p => (
-            <div key={p.id} style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 18, padding: "16px", backdropFilter: "blur(8px)" }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
-                <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-                  <Tag tag={p.tag} />
-                  {p.premium && <PremiumBadge />}
-                </div>
-                <span style={{ fontSize: 12, color: C.muted }}>{p.duration}</span>
+              {/* Science block */}
+              <div style={{ padding: "10px 16px 12px" }}>
+                <button onClick={() => setExpanded(isExpanded ? null : track.id)} style={{ background: "none", border: "none", color: C.accent, fontSize: 12, cursor: "pointer", padding: 0, display: "flex", alignItems: "center", gap: 6 }}>
+                  🔬 Научная база {isExpanded ? "▲" : "▼"}
+                </button>
+                {isExpanded && (
+                  <div style={{ marginTop: 10, fontSize: 12, color: C.muted, lineHeight: 1.7, borderTop: `1px solid ${C.border}`, paddingTop: 10 }}>
+                    <div style={{ color: C.text, fontWeight: 500, marginBottom: 4 }}>{sci.name} · {sci.hz}</div>
+                    {sci.science}
+                  </div>
+                )}
               </div>
-              <div style={{ fontSize: 15, fontWeight: 500, color: C.text, marginBottom: 4 }}>{p.title}</div>
-              <div style={{ fontSize: 13, color: C.muted }}>{p.desc}</div>
             </div>
-          ))}
-        </div>
-      )}
+          );
+        })}
+      </div>
     </div>
   );
 }
@@ -563,7 +564,6 @@ function TuneInsScreen() {
     </div>
   );
 }
-
 // ─── Affirmations Screen ───────────────────────────────────────────────────────
 
 function AffirmationsScreen() {
@@ -649,7 +649,7 @@ function JournalScreen() {
       {tab === "gratitude" && (
         <div>
           <div style={{ padding: "0 1.5rem", marginBottom: 16 }}>
-            <div style={{ fontSize: 13, color: C.muted, marginBottom: 14, lineHeight: 1.6 }}>Три вещи, за которые ты благодарна сегодня — даже самые маленькие.</div>
+            <div style={{ fontSize: 13, color: C.muted, marginBottom: 14, lineHeight: 1.6 }}>Три вещи, за которые ты благодарен(а) сегодня — даже самые маленькие.</div>
             {gItems.map((v, i) => (
               <input key={i} value={v} onChange={e => setGItems(arr => arr.map((x, idx) => idx === i ? e.target.value : x))}
                 placeholder={`${i + 1}. Например: тёплый чай утром`}
@@ -705,7 +705,7 @@ function JournalListAndEntry({
   const steps = [
     { title: "Как ты сейчас?" },
     { title: "Что произошло?", hint: REFLECTION_PROMPTS[promptIdx] },
-    { title: "Что ты почувствовала?", hint: "Можно одно слово или целый абзац" },
+    { title: "Что ты почувствовал(а)?", hint: "Можно одно слово или целый абзац" },
     { title: "Что помогло?", hint: "Звук, практика, разговор, прогулка..." },
     { title: "Осознание и паттерны" },
   ];
@@ -745,7 +745,7 @@ function JournalListAndEntry({
         {step === 3 && <textarea value={newHelped} onChange={e => setNewHelped(e.target.value)} placeholder="Медитация, звуки, прогулка..." rows={4} style={taStyle} />}
         {step === 4 && (
           <div>
-            <textarea value={newInsight} onChange={e => setNewInsight(e.target.value)} placeholder="Я снова заметила что..." rows={3} style={{ ...taStyle, marginBottom: 16 }} />
+            <textarea value={newInsight} onChange={e => setNewInsight(e.target.value)} placeholder="Я снова замечаю что..." rows={3} style={{ ...taStyle, marginBottom: 16 }} />
             <div style={{ fontSize: 13, color: C.muted, marginBottom: 10 }}>Отметь паттерны:</div>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
               {PATTERN_TAGS.map(t => (
@@ -777,7 +777,7 @@ function JournalListAndEntry({
             <div style={{ fontSize: 13, color: C.muted }}>{formatEntryDate(e.date)}</div>
           </div>
         </div>
-        {[{ label: "Что произошло", value: e.what_happened }, { label: "Что почувствовала", value: e.what_felt }, { label: "Что помогло", value: e.what_helped }, { label: "Осознание", value: e.insight }].filter(x => x.value).map(({ label, value }) => (
+        {[{ label: "Что произошло", value: e.what_happened }, { label: "Что почувствовал(а)", value: e.what_felt }, { label: "Что помогло", value: e.what_helped }, { label: "Осознание", value: e.insight }].filter(x => x.value).map(({ label, value }) => (
           <div key={label} style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 16, padding: "14px 16px", marginBottom: 10, backdropFilter: "blur(8px)" }}>
             <div style={{ fontSize: 11, color: C.muted, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 8 }}>{label}</div>
             <div style={{ fontSize: 14, lineHeight: 1.7, color: C.text }}>{value}</div>
@@ -1139,7 +1139,7 @@ const taStyle = { width: "100%", background: C.surface, border: `1px solid ${C.b
 const NAV = [
   { id: "home",         icon: "🏠", label: "Главная" },
   { id: "sounds",       icon: "🎧", label: "Звуки" },
-  { id: "meditations",  icon: "🧘", label: "Практики" },
+  { id: "meditations",  icon: "〰️", label: "Частоты" },
   { id: "tuneins",       icon: "✨", label: "Настрои" },
   { id: "journal",       icon: "📓", label: "Дневник" },
   { id: "patterns",      icon: "🗺️", label: "Карта" },
@@ -1155,7 +1155,7 @@ export default function App() {
   const [mood, setMood] = useState(null);
   const [currentSound, setCurrentSound] = useState(SOUNDS[0]);
 
-  const screenTitles = { home: getGreeting(), sounds: "Звуки", meditations: "Практики", tuneins: "Настрои", affirmations: "Аффирмации", journal: "Дневник", patterns: "Карта паттернов", reflection: "Разбор", letters: "Письма" };
+  const screenTitles = { home: getGreeting(), sounds: "Звуки", meditations: "Частоты", tuneins: "Настрои", affirmations: "Аффирмации", journal: "Дневник", patterns: "Карта паттернов", reflection: "Разбор", letters: "Письма" };
 
   if (splash) return <SplashScreen onStart={() => setSplash(false)} />;
 
