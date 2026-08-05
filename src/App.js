@@ -44,16 +44,6 @@ const AFFIRMATIONS = [
   { id: "a9", category: "Усталость",     text: "Усталость — не слабость. Это сигнал что я отдавал(а) много." },
 ];
 
-const TUNE_INS = [
-  { id: "t1", category: "Утренний настрой", icon: "🌅", title: "Начни день с намерения",   lines: ["Сегодня я выбираю спокойствие.", "Я открыт(а) для хорошего.", "Моя энергия идёт туда, где мне важно."] },
-  { id: "t2", category: "После работы",     icon: "🌆", title: "Перезагрузка после дня",   lines: ["Рабочий день окончен — я отпускаю его.", "Мои достижения сегодня реальны.", "Теперь время для себя."] },
-  { id: "t3", category: "Перед сном",       icon: "🌙", title: "Плавный уход в ночь",      lines: ["Я благодарен(а) за этот день.", "Я отпускаю всё незавершённое.", "Моё тело готово к отдыху."] },
-  { id: "t4", category: "При тревоге",      icon: "🌬️", title: "Если тревога накрывает",   lines: ["Прямо сейчас я в безопасности.", "Это чувство временно — оно пройдёт.", "Я дышу и возвращаюсь к себе."] },
-  { id: "t5", category: "Уверенность",      icon: "⚡", title: "Перед важным событием",    lines: ["Я готов(а). Я справлюсь.", "Мой опыт и знания со мной.", "Я делаю всё, что могу — и этого достаточно."] },
-  { id: "t6", category: "Благодарность",    icon: "💛", title: "Практика благодарности",   lines: ["Три вещи, за которые я благодарен(а) сегодня...", "Одна маленькая победа этого дня...", "Человек, которому я мысленно говорю спасибо..."] },
-  { id: "t7", category: "Выгорание",        icon: "🕯️", title: "Когда устал(а) и тревожно", lines: ["Я отдавал(а) много. Сегодня я разрешаю себе замедлиться.", "Восстановление — это тоже работа.", "Я заслуживаю отдыха прямо сейчас."] },
-];
-
 const MOODS = ["😔", "😐", "🙂", "😊", "✨"];
 const MOOD_LABELS = ["Тяжело", "Нейтрально", "Неплохо", "Хорошо", "Отлично"];
 
@@ -255,23 +245,6 @@ function HomeScreen({ mood, setMood, currentSound, setCurrentSound, onNavigate }
         <button onClick={nextAff} style={{ fontSize: 13, color: C.accent, background: "none", border: `1px solid ${C.border}`, padding: "8px 20px", borderRadius: 30, cursor: "pointer" }}>
           Следующая →
         </button>
-      </div>
-
-      <div style={{ padding: "0 1.5rem" }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-          <div style={{ fontSize: 17, fontWeight: 500, color: C.text }}>Настрои</div>
-          <button onClick={() => onNavigate("tuneins")} style={{ fontSize: 13, color: C.accent, background: "none", border: "none", cursor: "pointer" }}>Все →</button>
-        </div>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-          {TUNE_INS.slice(0, 2).map(t => (
-            <button key={t.id} onClick={() => onNavigate("tuneins")}
-              style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 18, padding: "16px 14px", textAlign: "left", cursor: "pointer", color: C.text, backdropFilter: "blur(8px)" }}>
-              <div style={{ fontSize: 24, marginBottom: 8 }}>{t.icon}</div>
-              <div style={{ fontSize: 13, fontWeight: 500, marginBottom: 4, color: C.text }}>{t.title}</div>
-              <div style={{ fontSize: 12, color: C.muted }}>{t.category}</div>
-            </button>
-          ))}
-        </div>
       </div>
     </div>
   );
@@ -667,62 +640,6 @@ function MeditationsScreen() {
 
 // ─── Tune-ins Screen ───────────────────────────────────────────────────────────
 
-function TuneInsScreen() {
-  const [selected, setSelected] = useState(null);
-  const [lineIdx, setLineIdx] = useState(0);
-  const [fade, setFade] = useState(true);
-
-  function openTuneIn(t) { setSelected(t); setLineIdx(0); setFade(true); }
-  function nextLine() {
-    if (lineIdx < selected.lines.length - 1) {
-      setFade(false); setTimeout(() => { setLineIdx(i => i + 1); setFade(true); }, 200);
-    } else { setSelected(null); setLineIdx(0); }
-  }
-
-  if (selected) {
-    return (
-      <div style={{ padding: "2rem 1.5rem", minHeight: 400, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center" }}>
-        <div style={{ fontSize: 52, marginBottom: 16 }}>{selected.icon}</div>
-        <div style={{ fontSize: 12, color: C.muted, textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: 8 }}>{selected.category}</div>
-        <div style={{ fontSize: 22, fontWeight: 500, color: C.text, marginBottom: 32 }}>{selected.title}</div>
-        <div style={{ fontSize: 20, lineHeight: 1.7, fontStyle: "italic", color: C.text, opacity: fade ? 1 : 0, transition: "opacity 0.2s", marginBottom: 40, maxWidth: 340 }}>
-          «{selected.lines[lineIdx]}»
-        </div>
-        <div style={{ display: "flex", gap: 8, marginBottom: 28 }}>
-          {selected.lines.map((_, i) => (
-            <div key={i} style={{ width: i === lineIdx ? 20 : 6, height: 6, borderRadius: 3, background: i === lineIdx ? C.accent : C.border, transition: "all 0.3s" }} />
-          ))}
-        </div>
-        <button onClick={nextLine} style={{ padding: "14px 36px", background: C.accent, border: "none", borderRadius: 50, color: "#f1eef2", fontSize: 15, cursor: "pointer" }}>
-          {lineIdx < selected.lines.length - 1 ? "Далее →" : "Завершить ✓"}
-        </button>
-        <button onClick={() => setSelected(null)} style={{ marginTop: 16, fontSize: 13, color: C.muted, background: "none", border: "none", cursor: "pointer" }}>Назад</button>
-      </div>
-    );
-  }
-
-  return (
-    <div style={{ padding: "0 0 1rem" }}>
-      <div style={{ padding: "0 1.5rem 1rem" }}>
-        <div style={{ fontSize: 13, color: C.muted, lineHeight: 1.6 }}>Настрои — короткие практики присутствия. Выберите подходящий момент.</div>
-      </div>
-      <div style={{ display: "grid", gap: 10, padding: "0 1.5rem" }}>
-        {TUNE_INS.map(t => (
-          <button key={t.id} onClick={() => openTuneIn(t)}
-            style={{ display: "flex", alignItems: "center", gap: 16, background: C.surface, border: `1px solid ${C.border}`, borderRadius: 18, padding: "16px", cursor: "pointer", color: C.text, textAlign: "left", backdropFilter: "blur(8px)" }}>
-            <div style={{ fontSize: 32, flexShrink: 0 }}>{t.icon}</div>
-            <div>
-              <div style={{ fontSize: 12, color: C.muted, marginBottom: 4 }}>{t.category}</div>
-              <div style={{ fontSize: 15, fontWeight: 500, color: C.text, marginBottom: 4 }}>{t.title}</div>
-              <div style={{ fontSize: 12, color: C.accent }}>{t.lines.length} шага</div>
-            </div>
-            <div style={{ marginLeft: "auto", color: C.muted, fontSize: 20 }}>›</div>
-          </button>
-        ))}
-      </div>
-    </div>
-  );
-}
 // ─── Affirmations Screen ───────────────────────────────────────────────────────
 
 function AffirmationsScreen() {
@@ -1299,7 +1216,7 @@ const NAV = [
   { id: "home",         icon: "🏠", label: "Главная" },
   { id: "sounds",       icon: "🎧", label: "Звуки" },
   { id: "meditations",  icon: "🧘", label: "Практики" },
-  { id: "tuneins",       icon: "✨", label: "Настрои" },
+
   { id: "journal",       icon: "📓", label: "Дневник" },
   { id: "patterns",      icon: "🗺️", label: "Карта" },
   { id: "reflection",   icon: "🌊", label: "Разбор" },
@@ -1314,7 +1231,7 @@ export default function App() {
   const [mood, setMood] = useState(null);
   const [currentSound, setCurrentSound] = useState(SOUNDS[0]);
 
-  const screenTitles = { home: getGreeting(), sounds: "Звуки", meditations: "Практики", tuneins: "Настрои", affirmations: "Аффирмации", journal: "Дневник", patterns: "Карта паттернов", reflection: "Разбор", letters: "Письма" };
+  const screenTitles = { home: getGreeting(), sounds: "Звуки", meditations: "Практики", affirmations: "Аффирмации", journal: "Дневник", patterns: "Карта паттернов", reflection: "Разбор", letters: "Письма" };
 
   if (splash) return <SplashScreen onStart={() => setSplash(false)} />;
 
@@ -1339,7 +1256,7 @@ export default function App() {
         {screen === "home"         && <HomeScreen mood={mood} setMood={setMood} currentSound={currentSound} setCurrentSound={setCurrentSound} onNavigate={setScreen} />}
         {screen === "sounds"       && <SoundsScreen currentSound={currentSound} setCurrentSound={setCurrentSound} />}
         {screen === "meditations"  && <MeditationsScreen />}
-        {screen === "tuneins"      && <TuneInsScreen />}
+
         {screen === "affirmations" && <AffirmationsScreen />}
         {screen === "journal"      && <JournalScreen />}
         {screen === "patterns"     && <PatternMapScreen />}
