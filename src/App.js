@@ -47,6 +47,30 @@ const AFFIRMATIONS = [
 const MOODS = ["😔", "😐", "🙂", "😊", "✨"];
 const MOOD_LABELS = ["Тяжело", "Нейтрально", "Неплохо", "Хорошо", "Отлично"];
 
+// ─── localStorage helpers ──────────────────────────────────────────────────────
+
+function loadFromStorage(key, fallback) {
+  try {
+    const raw = localStorage.getItem(key);
+    if (!raw) return fallback;
+    const parsed = JSON.parse(raw);
+    // Restore Date objects
+    if (Array.isArray(parsed)) {
+      return parsed.map(item => ({
+        ...item,
+        date: item.date ? new Date(item.date) : undefined,
+        createdAt: item.createdAt ? new Date(item.createdAt) : undefined,
+        deliverAt: item.deliverAt ? new Date(item.deliverAt) : undefined,
+      }));
+    }
+    return parsed;
+  } catch { return fallback; }
+}
+
+function saveToStorage(key, value) {
+  try { localStorage.setItem(key, JSON.stringify(value)); } catch {}
+}
+
 // ─── Design tokens — глубокий приглушённый закат ───────────────────────────────
 
 const C = {
@@ -689,7 +713,7 @@ function AffirmationsScreen() {
 function JournalScreen() {
   const [tab, setTab] = useState("journal");
   const [view, setView] = useState("list");
-  const [entries, setEntries] = useState(SEED_ENTRIES);
+  const [entries, setEntries] = useState(() => loadFromStorage("om_entries", SEED_ENTRIES));
   const [selected, setSelected] = useState(null);
   const [newMood, setNewMood] = useState(null);
   const [newWhat, setNewWhat] = useState("");
@@ -700,13 +724,17 @@ function JournalScreen() {
   const [promptIdx, setPromptIdx] = useState(0);
   const [step, setStep] = useState(0);
 
-  const [gratitudeEntries, setGratitudeEntries] = useState(GRATITUDE_SEED);
+  const [gratitudeEntries, setGratitudeEntries] = useState(() => loadFromStorage("om_gratitude", GRATITUDE_SEED));
   const [gItems, setGItems] = useState(["", "", ""]);
 
   function saveGratitude() {
     const filled = gItems.map(s => s.trim()).filter(Boolean);
     if (filled.length === 0) return;
-    setGratitudeEntries(prev => [{ id: "g" + Date.now(), date: new Date(), items: filled }, ...prev]);
+    setGratitudeEntries(prev => {
+      const updated = [{ id: "g" + Date.now(), date: new Date(), items: filled }, ...prev];
+      saveToStorage("om_gratitude", updated);
+      return updated;
+    });
     setGItems(["", "", ""]);
   }
 
@@ -772,7 +800,11 @@ function JournalListAndEntry({
 }) {
   function saveEntry() {
     const e = { id: "e" + Date.now(), date: new Date(), mood: newMood ?? 2, what_happened: newWhat, what_felt: newFelt, what_helped: newHelped, pattern_tags: newTags, insight: newInsight };
-    setEntries(prev => [e, ...prev]);
+    setEntries(prev => {
+      const updated = [e, ...prev];
+      saveToStorage("om_entries", updated);
+      return updated;
+    });
     setView("list"); setStep(0); setNewMood(null); setNewWhat(""); setNewFelt(""); setNewHelped(""); setNewInsight(""); setNewTags([]);
   }
 
@@ -908,7 +940,7 @@ function JournalListAndEntry({
 // ─── Future Letter Screen ───────────────────────────────────────────────────────
 
 function FutureLetterScreen() {
-  const [letters, setLetters] = useState(SEED_LETTERS);
+  const [letters, setLetters] = useState(() => loadFromStorage("om_letters", SEED_LETTERS));
   const [view, setView] = useState("list");
   const [text, setText] = useState("");
   const [months, setMonths] = useState(3);
@@ -919,7 +951,11 @@ function FutureLetterScreen() {
     if (!text.trim()) return;
     const now = new Date();
     const l = { id: "l" + Date.now(), createdAt: now, deliverAt: new Date(now.getTime() + months * 30 * 86400000), text, delivered: false };
-    setLetters(prev => [l, ...prev]);
+    setLetters(prev => {
+      const updated = [l, ...prev];
+      saveToStorage("om_letters", updated);
+      return updated;
+    });
     setText(""); setView("list");
   }
 
@@ -1093,7 +1129,7 @@ function PatternMapScreen() {
   const [tab, setTab] = useState("patterns");
 
   // Aggregate pattern tags from journal seed entries (in a full backend this would span all stored entries)
-  const allTaggedEntries = [...SEED_ENTRIES];
+  const allTaggedEntries = loadFromStorage("om_entries", SEED_ENTRIES);
   const patternCounts = {};
   allTaggedEntries.forEach(e => {
     (e.pattern_tags || []).forEach(t => { patternCounts[t] = (patternCounts[t] || 0) + 1; });
