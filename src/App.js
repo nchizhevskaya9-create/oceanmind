@@ -227,22 +227,6 @@ function HomeScreen({ mood, setMood, currentSound, setCurrentSound, onNavigate }
       <div style={{ padding: "0 1.5rem 1.5rem" }}>
         <div style={{ fontSize: 60, fontWeight: 300, color: C.text, letterSpacing: -2, lineHeight: 1, marginBottom: 4 }}>{clock}</div>
         <div style={{ fontSize: 14, color: C.muted, marginBottom: "1.5rem" }}>{getDateStr()}</div>
-
-        <div style={{ display: "flex", gap: 6 }}>
-          {MOODS.map((m, i) => (
-            <button key={i} onClick={() => setMood(i)} style={{
-              flex: 1, padding: "8px 0 6px",
-              border: `${mood === i ? `1.5px solid ${C.accent}` : `1px solid ${C.border}`}`,
-              borderRadius: 16,
-              background: mood === i ? "rgba(177,156,163,0.25)" : C.surface,
-              fontSize: 18, cursor: "pointer", transition: "all 0.2s",
-              backdropFilter: "blur(8px)", display: "flex", flexDirection: "column", alignItems: "center", gap: 3
-            }}>
-              {m}
-              <span style={{ fontSize: 9, color: mood === i ? C.accent : C.muted }}>{MOOD_LABELS[i]}</span>
-            </button>
-          ))}
-        </div>
       </div>
 
       <div style={{ padding: "0 1.5rem", marginBottom: "1.25rem" }}>
