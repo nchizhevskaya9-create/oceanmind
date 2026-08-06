@@ -228,17 +228,19 @@ function HomeScreen({ mood, setMood, currentSound, setCurrentSound, onNavigate }
         <div style={{ fontSize: 60, fontWeight: 300, color: C.text, letterSpacing: -2, lineHeight: 1, marginBottom: 4 }}>{clock}</div>
         <div style={{ fontSize: 14, color: C.muted, marginBottom: "1.5rem" }}>{getDateStr()}</div>
 
-        <div style={{ fontSize: 12, color: C.muted, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 10 }}>Как вы сейчас?</div>
-        <div style={{ display: "flex", gap: 8 }}>
+        <div style={{ display: "flex", gap: 6 }}>
           {MOODS.map((m, i) => (
             <button key={i} onClick={() => setMood(i)} style={{
-              flex: 1, padding: "10px 0",
+              flex: 1, padding: "8px 0 6px",
               border: `${mood === i ? `1.5px solid ${C.accent}` : `1px solid ${C.border}`}`,
-              borderRadius: 40,
+              borderRadius: 16,
               background: mood === i ? "rgba(177,156,163,0.25)" : C.surface,
-              fontSize: 20, cursor: "pointer", transition: "all 0.2s",
-              backdropFilter: "blur(8px)"
-            }}>{m}</button>
+              fontSize: 18, cursor: "pointer", transition: "all 0.2s",
+              backdropFilter: "blur(8px)", display: "flex", flexDirection: "column", alignItems: "center", gap: 3
+            }}>
+              {m}
+              <span style={{ fontSize: 9, color: mood === i ? C.accent : C.muted }}>{MOOD_LABELS[i]}</span>
+            </button>
           ))}
         </div>
       </div>
@@ -910,10 +912,20 @@ function JournalListAndEntry({
           + Новая запись
         </button>
       </div>
+      {entries.some(e => e.id === "e1" || e.id === "e2") && (
+        <div style={{ margin: "0 1.5rem 12px", background: "rgba(177,156,163,0.12)", border: `1px solid ${C.border}`, borderRadius: 14, padding: "10px 14px" }}>
+          <div style={{ fontSize: 12, color: C.muted, lineHeight: 1.6 }}>
+            💡 Записи ниже — это примеры. Создай свою первую запись нажав «+ Новая запись».
+          </div>
+        </div>
+      )}
       <div style={{ display: "grid", gap: 10, padding: "0 1.5rem" }}>
         {entries.map(e => (
           <button key={e.id} onClick={() => { setSelected(e); setView("entry"); }}
-            style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 18, padding: "16px", textAlign: "left", cursor: "pointer", color: C.text, width: "100%", backdropFilter: "blur(8px)" }}>
+            style={{ background: C.surface, border: `1px solid ${(e.id === "e1" || e.id === "e2") ? "rgba(177,156,163,0.2)" : C.border}`, borderRadius: 18, padding: "16px", textAlign: "left", cursor: "pointer", color: C.text, width: "100%", backdropFilter: "blur(8px)", opacity: (e.id === "e1" || e.id === "e2") ? 0.7 : 1 }}>
+            {(e.id === "e1" || e.id === "e2") && (
+              <div style={{ fontSize: 10, color: C.muted, marginBottom: 8, textTransform: "uppercase", letterSpacing: "0.08em" }}>Пример записи</div>
+            )}
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                 <span style={{ fontSize: 24 }}>{MOODS[e.mood]}</span>
@@ -1263,6 +1275,7 @@ const NAV = [
 
 export default function App() {
   const [splash, setSplash] = useState(true);
+  const [onboarding, setOnboarding] = useState(() => !localStorage.getItem("om_onboarded"));
   const [screen, setScreen] = useState("home");
   const [mood, setMood] = useState(null);
   const [currentSound, setCurrentSound] = useState(SOUNDS[0]);
@@ -1270,6 +1283,42 @@ export default function App() {
   const screenTitles = { home: getGreeting(), sounds: "Звуки", meditations: "Практики", affirmations: "Аффирмации", journal: "Дневник", patterns: "Карта паттернов", reflection: "Разбор", letters: "Письма" };
 
   if (splash) return <SplashScreen onStart={() => setSplash(false)} />;
+
+  if (onboarding) return (
+    <div style={{ background: C.bg, minHeight: "100vh", fontFamily: "'Nunito', sans-serif", maxWidth: 430, margin: "0 auto", padding: "2rem 1.5rem", display: "flex", flexDirection: "column" }}>
+      <style>{`* { box-sizing: border-box; margin: 0; padding: 0; } ::-webkit-scrollbar { display: none; }`}</style>
+      <div style={{ fontSize: 24, fontWeight: 500, color: C.text, marginBottom: 6 }}>
+        Добро пожаловать в Ocean<span style={{ color: C.accent2 }}>Mind</span>
+      </div>
+      <div style={{ fontSize: 14, color: C.muted, marginBottom: 32, lineHeight: 1.6 }}>
+        Пространство твоей глубины — инструменты для самопознания и внутренней работы.
+      </div>
+      <div style={{ display: "grid", gap: 12, marginBottom: 32 }}>
+        {[
+          { icon: "🎧", title: "Звуки", desc: "Природные звуки для фона и отдыха" },
+          { icon: "〰️", title: "Частоты", desc: "Бинауральные ритмы для сна, медитации и фокуса. Только в наушниках." },
+          { icon: "✍️", title: "Практики", desc: "Письменные упражнения для работы с эмоциями и паттернами" },
+          { icon: "💬", title: "Аффирмации", desc: "Короткие фразы для поддержки в течение дня" },
+          { icon: "📓", title: "Дневник", desc: "Записи состояний и дневник благодарности" },
+          { icon: "🌊", title: "Разбор", desc: "НВО-метод: от события до потребности" },
+          { icon: "💌", title: "Письма", desc: "Напиши себе в будущее — письмо откроется через выбранное время" },
+          { icon: "🗺️", title: "Карта", desc: "Твои паттерны на основе записей дневника" },
+        ].map(item => (
+          <div key={item.icon} style={{ display: "flex", gap: 14, alignItems: "flex-start", background: C.surface, border: `1px solid ${C.border}`, borderRadius: 16, padding: "12px 14px", backdropFilter: "blur(8px)" }}>
+            <span style={{ fontSize: 22, flexShrink: 0 }}>{item.icon}</span>
+            <div>
+              <div style={{ fontSize: 14, fontWeight: 500, color: C.text, marginBottom: 2 }}>{item.title}</div>
+              <div style={{ fontSize: 12, color: C.muted, lineHeight: 1.5 }}>{item.desc}</div>
+            </div>
+          </div>
+        ))}
+      </div>
+      <button onClick={() => { localStorage.setItem("om_onboarded", "1"); setOnboarding(false); }}
+        style={{ width: "100%", padding: "16px", background: C.accent, border: "none", borderRadius: 16, color: "#f1eef2", fontSize: 16, cursor: "pointer", fontFamily: "'Nunito', sans-serif" }}>
+        Начать 🌊
+      </button>
+    </div>
+  );
 
   return (
     <div style={{ background: C.bg, color: C.text, minHeight: "100vh", fontFamily: "'Nunito', sans-serif", maxWidth: 430, margin: "0 auto", display: "flex", flexDirection: "column" }}>
