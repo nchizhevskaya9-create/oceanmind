@@ -256,19 +256,6 @@ function HomeScreen({ mood, setMood, currentSound, setCurrentSound, onNavigate }
           Следующая →
         </button>
       </div>
-
-      {/* Donation */}
-      <div style={{ margin: "1.25rem 1.5rem 0.5rem", background: C.surface, border: `1px solid ${C.border}`, borderRadius: 18, padding: "14px 16px", backdropFilter: "blur(8px)", textAlign: "center" }}>
-        <div style={{ fontSize: 12, color: C.muted, marginBottom: 8, lineHeight: 1.6 }}>
-          🌊 OceanMind — бесплатное приложение.<br/>Если оно тебе помогает — поддержи развитие.
-        </div>
-        <div style={{ fontSize: 12, color: C.text, marginBottom: 4 }}>
-          СБП (любой банк): <span style={{ color: C.accent, userSelect: "all" }}>+7 922 291 44 10</span>
-        </div>
-        <div style={{ fontSize: 12, color: C.text }}>
-          PayPal: <span style={{ color: C.accent, userSelect: "all" }}>nchizhevskaya9@gmail.com</span>
-        </div>
-      </div>
     </div>
   );
 }
