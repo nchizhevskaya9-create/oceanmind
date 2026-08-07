@@ -11,7 +11,7 @@ const SOUNDS = [
   { id: "bowl",     name: "Чаши",         category: "Тибет",     duration: 1800, tag: "meditate",file: "bowl.mp3",     photo: "https://images.unsplash.com/photo-1508672019048-805c876b67e2?w=400&q=80" },
   { id: "night",    name: "Ночной сад",   category: "Сверчки",   duration: 3000, tag: "sleep",   file: "night.mp3",    photo: "https://images.pexels.com/photos/698317/pexels-photo-698317.jpeg?auto=compress&w=800&q=80" },
   { id: "mountain", name: "Горы",         category: "Ветер",     duration: 2100, tag: "relax",   file: "mountain.mp3", photo: "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=400&q=80" },
-  { id: "cafe",     name: "Кофейня",      category: "Городской", duration: 3600, tag: "focus",   file: "cafe.mp3",     photo: "https://images.unsplash.com/photo-1442512595331-e89e73853f31?w=400&q=80", premium: true },
+  { id: "cafe",     name: "Кофейня",      category: "Городской", duration: 3600, tag: "focus",   file: "cafe.mp3",     photo: "https://images.unsplash.com/photo-1442512595331-e89e73853f31?w=400&q=80" },
   { id: "thunder",  name: "Гроза",        category: "Природа",   duration: 2400, tag: "sleep",   file: "thunder.mp3",  photo: "https://images.unsplash.com/photo-1505672678657-cc7037095e60?w=400&q=80" },
   { id: "river",    name: "Горный ручей", category: "Природа",   duration: 2700, tag: "relax",   file: "river.mp3",    photo: "https://images.unsplash.com/photo-1455218873509-8097305ee378?w=400&q=80" },
 ];
@@ -335,7 +335,6 @@ function SoundsScreen({ currentSound, setCurrentSound }) {
   }
 
   function selectSound(s) {
-    if (s.premium) return;
     setCurrentSound(s);
     setProgress(0);
     setElapsed(0);
@@ -402,10 +401,10 @@ function SoundsScreen({ currentSound, setCurrentSound }) {
       <div style={{ display: "grid", gridTemplateColumns: "repeat(2,1fr)", gap: 12, padding: "0 1.5rem" }}>
         {filtered.map(s => (
           <button key={s.id} onClick={() => selectSound(s)}
-            style={{ position: "relative", height: 140, borderRadius: 20, overflow: "hidden", border: `${sound.id === s.id ? `2px solid ${C.accent}` : "none"}`, cursor: s.premium ? "not-allowed" : "pointer", padding: 0, opacity: s.premium ? 0.75 : 1 }}>
+            style={{ position: "relative", height: 140, borderRadius: 20, overflow: "hidden", border: `${sound.id === s.id ? `2px solid ${C.accent}` : "none"}`, cursor: "pointer", padding: 0 }}>
             <img src={s.photo} alt={s.name} style={{ width: "100%", height: "100%", objectFit: "cover", filter: "saturate(0.75) brightness(0.85)" }} />
             <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(28,34,42,0.7), transparent)" }} />
-            {s.premium && <div style={{ position: "absolute", top: 8, right: 8, background: "rgba(177,156,163,0.85)", color: "#f1eef2", fontSize: 10, padding: "2px 8px", borderRadius: 20 }}>PRO</div>}
+            {s.premium && <div style={{ display: "none" }} />}
             <div style={{ position: "absolute", bottom: 10, left: 12, right: 12 }}>
               <div style={{ fontSize: 15, fontWeight: 500, color: "#f1eef2", marginBottom: 2 }}>{s.name}</div>
               <div style={{ fontSize: 12, color: "rgba(241,238,242,0.7)" }}>{s.category}</div>
