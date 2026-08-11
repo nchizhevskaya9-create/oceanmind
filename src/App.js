@@ -2,6 +2,396 @@ import { useState, useEffect, useRef, useCallback } from "react";
 
 // ─── Data ──────────────────────────────────────────────────────────────────────
 
+// ─── i18n — bilingual content ──────────────────────────────────────────────────
+
+const T = {
+  ru: {
+    // Navigation
+    nav: { home: "Главная", sounds: "Звуки", practices: "Практики", affirmations: "Аффирмации", journal: "Дневник", reflection: "Разбор", letters: "Письма", patterns: "Карта" },
+    // Splash
+    splash: { tagline: "Пространство твоей глубины", subtitle: "Позволь себе отдохнуть", start: "Начать" },
+    // Home
+    home: { quickstart: "Быстрый запуск", all: "Все →", affirmations: "Аффирмации", next: "Следующая →", donation: "🌊 OceanMind — бесплатное приложение.\nЕсли оно тебе помогает — поддержи развитие.", sbp: "СБП (любой банк):", paypal: "PayPal:" },
+    // Greetings
+    greetings: ["Доброй ночи", "Доброе утро", "Добрый день", "Добрый вечер"],
+    // Days & months
+    days: ["Воскресенье","Понедельник","Вторник","Среда","Четверг","Пятница","Суббота"],
+    months: ["января","февраля","марта","апреля","мая","июня","июля","августа","сентября","октября","ноября","декабря"],
+    // Moods
+    moodLabels: ["Тяжело", "Нейтрально", "Неплохо", "Хорошо", "Отлично"],
+    // Sounds
+    sounds: { filters: { all: "Все", sleep: "Сон", relax: "Расслабление", focus: "Фокус", meditate: "Медитация" } },
+    soundList: [
+      { id: "rain",     name: "Дождь",        category: "Природа" },
+      { id: "fire",     name: "Камин",        category: "Уют" },
+      { id: "ocean",    name: "Океан",        category: "Волны" },
+      { id: "forest",   name: "Лес",          category: "Природа" },
+      { id: "white",    name: "Белый шум",    category: "Фокус" },
+      { id: "bowl",     name: "Чаши",         category: "Тибет" },
+      { id: "night",    name: "Ночной сад",   category: "Сверчки" },
+      { id: "mountain", name: "Горы",         category: "Ветер" },
+      { id: "thunder",  name: "Гроза",        category: "Природа" },
+      { id: "river",    name: "Горный ручей", category: "Природа" },
+    ],
+    // Frequencies
+    freq: {
+      headphonesNote: "🎧 Только в наушниках",
+      headphonesDesc: "Бинауральные ритмы работают только в стереонаушниках. В каждое ухо подаётся разная частота — мозг создаёт третью которая меняет его состояние.",
+      scienceBtn: "🔬 Научная база",
+      tracks: [
+        { id: "delta", title: "Глубокий сон",           duration: "60 мин", desc: "Для тех кто не может заснуть или просыпается ночью" },
+        { id: "theta", title: "Медитация и творчество", duration: "45 мин", desc: "Творческий поток, интуиция, глубокая медитация" },
+        { id: "alpha", title: "Покой и расслабление",   duration: "30 мин", desc: "Снятие тревоги и стресса, восстановление" },
+        { id: "beta",  title: "Фокус и концентрация",   duration: "30 мин", desc: "Для работы и учёбы — ясность и продуктивность" },
+        { id: "gamma", title: "Состояние потока",        duration: "25 мин", desc: "Пиковая концентрация — исследовано в MIT" },
+      ],
+      science: {
+        delta: "Дельта-волны доминируют во время глубокого сна без сновидений. Исследования показывают их связь с восстановлением организма, укреплением иммунитета и консолидацией памяти.",
+        theta: "Тета-волны активны в состоянии между сном и бодрствованием. Связаны с творческим мышлением, интуицией и глубокой медитацией.",
+        alpha: "Альфа-волны — состояние спокойного бодрствования. Снижают уровень кортизола (гормона стресса), уменьшают тревогу и помогают восстановиться.",
+        beta:  "Бета-волны доминируют при активной умственной деятельности. Улучшают концентрацию, ускоряют обработку информации и повышают продуктивность.",
+        gamma: "Гамма-волны связаны с пиковой концентрацией и состоянием потока. Исследования MIT показали что 40 Hz стимуляция замедляет развитие болезни Альцгеймера.",
+      },
+    },
+    // Affirmations
+    affirmations: [
+      { id: "a1", category: "Самопринятие",  text: "Я делаю всё, что в моих силах. Этого достаточно." },
+      { id: "a2", category: "Покой",         text: "Покой живёт внутри меня. Я могу обратиться к нему в любой момент." },
+      { id: "a3", category: "Любовь к себе", text: "Я выбираю мягкость к себе. Мои ошибки — часть роста." },
+      { id: "a4", category: "Новый день",    text: "Каждый новый день — это чистая страница. Я пишу её осознанно." },
+      { id: "a5", category: "Дыхание",       text: "Моё дыхание — мой якорь. Я возвращаюсь к себе снова и снова." },
+      { id: "a6", category: "Сила",          text: "Я справлялся(ась) с трудностями раньше — справлюсь и сейчас." },
+      { id: "a7", category: "Безопасность",  text: "Прямо сейчас я в безопасности. Всё хорошо в этот момент." },
+      { id: "a8", category: "Рост",          text: "Я расту каждый день, даже когда этого не замечаю." },
+      { id: "a9", category: "Усталость",     text: "Усталость — не слабость. Это сигнал что я отдавал(а) много." },
+    ],
+    // Journal
+    journal: {
+      tabs: { journal: "Дневник", gratitude: "Благодарность" },
+      newEntry: "+ Новая запись",
+      exampleNote: "💡 Записи ниже — это примеры. Создай свою первую запись нажав «+ Новая запись».",
+      exampleLabel: "Пример записи",
+      steps: [
+        { title: "Как ты сейчас?" },
+        { title: "Что произошло?", hint: "Пиши свободно..." },
+        { title: "Что ты почувствовал(а)?", hint: "Можно одно слово или целый абзац" },
+        { title: "Что помогло?", hint: "Звук, практика, разговор, прогулка..." },
+        { title: "Осознание и паттерны" },
+      ],
+      next: "Далее →", save: "Сохранить ✓", skip: "Пропустить", cancel: "Отмена", back: "← Назад",
+      patternLabel: "Отметь паттерны:",
+      insightPlaceholder: "Я снова замечаю что...",
+      gratitudeHint: "Три вещи, за которые ты благодарен(а) сегодня — даже самые маленькие.",
+      gratitudeBtn: "Сохранить запись 🙏",
+      reflectionPrompts: [
+        "Что сегодня было самым тяжёлым?",
+        "Какой момент сегодня был хорошим, даже маленьким?",
+        "Что я сейчас чувствую в теле?",
+        "Что мне сегодня помогло справиться?",
+        "Какой паттерн я снова замечаю в себе?",
+        "Что я хочу отпустить перед сном?",
+        "За что я благодарен(а) сегодня?",
+      ],
+      anotherPrompt: "другой вопрос",
+      whatHappened: "Что произошло", whatFelt: "Что почувствовал(а)", whatHelped: "Что помогло", insight: "Осознание", patterns: "Паттерны",
+    },
+    // Reflection
+    reflection: {
+      title: "Что на самом деле происходит?",
+      intro: "Когда накрывает тревога или обида, пройди вместе с приложением путь от события до потребности.",
+      start: "Начать разбор",
+      past: "Прошлые разборы",
+      done: "Разбор завершён",
+      finish: "Готово",
+      steps: [
+        { title: "Событие",     hint: "Что произошло? Опиши факты, без оценки.",                placeholder: "Например: Меня не позвали на встречу команды" },
+        { title: "Мысль",       hint: "Что ты подумал(а) об этом в первую секунду?",             placeholder: "Например: Я никому не нужен(на), меня игнорируют" },
+        { title: "Эмоция",      hint: "Что ты сейчас чувствуешь? Назови эмоцию.",                placeholder: "Например: Обида, злость, тревога" },
+        { title: "Потребность", hint: "Какая потребность стоит за этим чувством?",               placeholder: "Например: Быть увиденным(ой), чувствовать причастность" },
+        { title: "Действие",    hint: "Что ты можешь сделать — для себя или в этой ситуации?",   placeholder: "Например: Спросить прямо, почему меня не позвали" },
+      ],
+    },
+    // Letters
+    letters: {
+      title: "Письмо себе в будущее",
+      intro: "Напиши себе письмо — оно откроется только через выбранное время.",
+      newBtn: "+ Написать письмо",
+      seal: "Запечатать письмо ✉️",
+      ready: "Письмо готово к открытию",
+      sealed: "Письмо запечатано",
+      from: "от",
+      opens: "откроется",
+      prompts: [
+        "Что ты хочешь сказать себе через 3 месяца?",
+        "Чего ты сейчас боишься — и что хочешь напомнить себе об этом страхе позже?",
+        "Какую надежду ты держишь сейчас, о которой хочешь напомнить себе?",
+        "Что происходит в твоей жизни прямо сейчас, что важно не забыть?",
+      ],
+      anotherPrompt: "другой вопрос",
+      deliverLabel: "Когда доставить?",
+      months: ["1 мес", "3 мес", "6 мес", "12 мес"],
+      placeholder: "Пиши свободно — это письмо увидишь только ты, через время...",
+      close: "Закрыть",
+    },
+    // Patterns
+    patterns: {
+      tabs: { patterns: "Карта паттернов", changes: "Что изменилось" },
+      intro: "То, что повторяется чаще всего в твоих записях за последнее время — без оценки, просто наблюдение.",
+      empty: "Пока недостаточно записей. Карта появится после нескольких записей в дневнике или разборе.",
+      observation: "💭 Мягкое наблюдение",
+      changesIntro: "Сравнение прошлого месяца и текущего — какие состояния стали реже, а какие чаще.",
+      better: "Стало легче", watch: "Стоит заметить", noChange: "Без изменений",
+      note: "Сравнение становится точнее по мере того как ты ведёшь записи дольше.",
+    },
+    // Practices
+    practices: {
+      tabs: { frequencies: "〰️ Частоты", practices: "✍️ Практики" },
+      intro: "Письменные практики помогают разобраться в себе — не просто успокоиться, а понять что происходит внутри.",
+      practiceList: [
+        { id: "fear",    icon: "🌊", title: "Избавление от страха",    desc: "Письменная практика для работы со страхом",
+          steps: [
+            { q: "Назови страх",                        hint: "Напиши конкретно чего ты боишься прямо сейчас.",                    placeholder: "Например: Я боюсь что ничего не получится" },
+            { q: "Что самое плохое может случиться?",   hint: "Доведи страх до конца — что реально произойдёт?",                  placeholder: "Например: Провалюсь, потеряю деньги..." },
+            { q: "Ты справишься с этим?",               hint: "Вспомни: ты уже переживал(а) трудное. Что тебе помогало?",         placeholder: "Например: Я справлялся(ась) раньше когда..." },
+            { q: "Что зависит от тебя прямо сейчас?",  hint: "Одно маленькое действие которое ты можешь сделать сегодня.",        placeholder: "Например: Сделать первый шаг..." },
+          ]},
+        { id: "anger",   icon: "🔥", title: "Проработка злости",        desc: "Когда злишься и не знаешь что с этим делать",
+          steps: [
+            { q: "На что или на кого ты злишься?",      hint: "Назови это прямо. Злость имеет право быть.",                       placeholder: "Например: Я злюсь на..." },
+            { q: "Что именно тебя задело?",             hint: "Не поведение другого — а что это значит для тебя лично?",          placeholder: "Например: Это задело меня потому что..." },
+            { q: "Какая потребность не была удовлетворена?", hint: "За злостью всегда стоит что-то важное.",                      placeholder: "Например: Мне важно уважение, справедливость..." },
+            { q: "Что ты хочешь чтобы изменилось?",    hint: "Что конкретно тебе нужно?",                                        placeholder: "Например: Мне нужно чтобы..." },
+          ]},
+        { id: "guilt",   icon: "🕯️", title: "Работа с виной",           desc: "Отделить здоровую ответственность от разрушительной вины",
+          steps: [
+            { q: "За что ты чувствуешь вину?",          hint: "Опиши ситуацию коротко — факты, без оценки.",                     placeholder: "Например: Я чувствую вину за..." },
+            { q: "Ты действительно причинил(а) вред?",  hint: "Честно: было ли твоё действие намеренным?",                       placeholder: "Например: Я сделал(а) это потому что..." },
+            { q: "Что бы ты сказал(а) другу?",         hint: "Представь что это сделал близкий тебе человек.",                  placeholder: "Например: Я бы сказал(а) ему(ей)..." },
+            { q: "Что ты можешь сделать сейчас?",      hint: "Исправить, извиниться, отпустить или принять.",                   placeholder: "Например: Я могу..." },
+          ]},
+        { id: "anxiety", icon: "🌬️", title: "Разбор тревоги",           desc: "Найти источник тревоги и снизить её интенсивность",
+          steps: [
+            { q: "О чём конкретно ты тревожишься?",    hint: "Напиши все мысли подряд — без фильтра.",                          placeholder: "Например: Я тревожусь о..." },
+            { q: "Это реальная угроза или предположение?", hint: "Насколько вероятно что это случится?",                         placeholder: "Например: Факты говорят что..." },
+            { q: "Что ты можешь контролировать?",      hint: "Раздели: что в твоих руках, а что нет.",                          placeholder: "Например: Я могу контролировать..." },
+            { q: "Что помогло тебе раньше?",           hint: "Вспомни конкретный момент когда ты справился(ась).",              placeholder: "Например: Раньше мне помогало..." },
+          ]},
+        { id: "self",    icon: "🪞", title: "Встреча с собой",           desc: "Кто я сейчас — без ролей и масок",
+          steps: [
+            { q: "Кем ты себя чувствуешь прямо сейчас?", hint: "Не должность, не роль — а внутреннее ощущение.",               placeholder: "Например: Прямо сейчас я чувствую себя..." },
+            { q: "Что тебе сейчас важнее всего?",       hint: "Не что должно быть важным — а что реально важно.",              placeholder: "Например: Прямо сейчас мне важно..." },
+            { q: "Что ты делаешь только для себя?",     hint: "Что в твоей жизни существует только потому что тебе нравится?", placeholder: "Например: Только для себя я..." },
+            { q: "Что ты хочешь сказать себе сейчас?", hint: "Одно предложение — как от лучшего друга.",                      placeholder: "Например: Я хочу сказать себе..." },
+          ]},
+      ],
+      done: "Практика завершена", finish: "Завершить", next: "Далее →", skip: "Пропустить", cancel: "Отмена", back: "← Назад",
+    },
+    // Onboarding
+    onboarding: {
+      welcome: "Добро пожаловать в",
+      subtitle: "Пространство твоей глубины — инструменты для самопознания и внутренней работы.",
+      start: "Начать 🌊",
+      items: [
+        { icon: "🎧", title: "Звуки",        desc: "Природные звуки для фона и отдыха" },
+        { icon: "〰️", title: "Частоты",      desc: "Бинауральные ритмы для сна, медитации и фокуса. Только в наушниках." },
+        { icon: "✍️", title: "Практики",     desc: "Письменные упражнения для работы с эмоциями и паттернами" },
+        { icon: "💬", title: "Аффирмации",   desc: "Короткие фразы для поддержки в течение дня" },
+        { icon: "📓", title: "Дневник",      desc: "Записи состояний и дневник благодарности" },
+        { icon: "🌊", title: "Разбор",       desc: "НВО-метод: от события до потребности" },
+        { icon: "💌", title: "Письма",       desc: "Напиши себе в будущее — письмо откроется через выбранное время" },
+        { icon: "🗺️", title: "Карта",        desc: "Твои паттерны на основе записей дневника" },
+      ],
+    },
+    patternTags: ["перфекционизм", "тревога о будущем", "угождение другим", "самокритика", "прокрастинация", "страх отказа", "усталость", "одиночество", "раздражение", "вина", "гордость собой", "спокойствие", "ресурс"],
+    dateLabels: { today: "Сегодня", yesterday: "Вчера" },
+  },
+
+  en: {
+    nav: { home: "Home", sounds: "Sounds", practices: "Practices", affirmations: "Affirmations", journal: "Journal", reflection: "Reflect", letters: "Letters", patterns: "Patterns" },
+    splash: { tagline: "A space for your depths", subtitle: "Allow yourself to rest", start: "Begin" },
+    home: { quickstart: "Quick start", all: "All →", affirmations: "Affirmations", next: "Next →", donation: "🌊 OceanMind is free.\nIf it helps you — support its growth.", sbp: "Card (Russia):", paypal: "PayPal:" },
+    greetings: ["Good night", "Good morning", "Good afternoon", "Good evening"],
+    days: ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"],
+    months: ["January","February","March","April","May","June","July","August","September","October","November","December"],
+    moodLabels: ["Hard", "Neutral", "OK", "Good", "Great"],
+    sounds: { filters: { all: "All", sleep: "Sleep", relax: "Relax", focus: "Focus", meditate: "Meditate" } },
+    soundList: [
+      { id: "rain",     name: "Rain",          category: "Nature" },
+      { id: "fire",     name: "Fireplace",     category: "Cozy" },
+      { id: "ocean",    name: "Ocean",         category: "Waves" },
+      { id: "forest",   name: "Forest",        category: "Nature" },
+      { id: "white",    name: "White noise",   category: "Focus" },
+      { id: "bowl",     name: "Singing bowls", category: "Tibet" },
+      { id: "night",    name: "Night garden",  category: "Crickets" },
+      { id: "mountain", name: "Mountains",     category: "Wind" },
+      { id: "thunder",  name: "Thunderstorm",  category: "Nature" },
+      { id: "river",    name: "Mountain stream", category: "Nature" },
+    ],
+    freq: {
+      headphonesNote: "🎧 Headphones only",
+      headphonesDesc: "Binaural beats only work with stereo headphones. A slightly different frequency is played in each ear — your brain generates a third frequency that shifts its state.",
+      scienceBtn: "🔬 Science",
+      tracks: [
+        { id: "delta", title: "Deep sleep",            duration: "60 min", desc: "For those who struggle to fall asleep or wake during the night" },
+        { id: "theta", title: "Meditation & creativity", duration: "45 min", desc: "Creative flow, intuition, deep meditation" },
+        { id: "alpha", title: "Calm & relaxation",     duration: "30 min", desc: "Anxiety and stress relief, recovery" },
+        { id: "beta",  title: "Focus & concentration", duration: "30 min", desc: "For work and study — clarity and productivity" },
+        { id: "gamma", title: "Flow state",             duration: "25 min", desc: "Peak concentration — researched at MIT" },
+      ],
+      science: {
+        delta: "Delta waves dominate during deep dreamless sleep. Research links them to physical recovery, immune function, and memory consolidation.",
+        theta: "Theta waves are active in the state between sleep and wakefulness. They are associated with creative thinking, intuition, and deep meditation — the range experienced by seasoned meditators.",
+        alpha: "Alpha waves represent relaxed, calm wakefulness. They lower cortisol levels, reduce anxiety, and help the body recover from stress.",
+        beta:  "Beta waves dominate during active mental work. They improve concentration, accelerate information processing, and boost productivity.",
+        gamma: "Gamma waves are linked to peak concentration and flow states. MIT research showed that 40 Hz stimulation may slow the progression of Alzheimer's disease.",
+      },
+    },
+    affirmations: [
+      { id: "a1", category: "Self-acceptance", text: "I am doing my best. That is enough." },
+      { id: "a2", category: "Peace",           text: "Peace lives within me. I can return to it at any moment." },
+      { id: "a3", category: "Self-love",       text: "I choose gentleness toward myself. My mistakes are part of growth." },
+      { id: "a4", category: "New day",         text: "Every new day is a blank page. I write it with intention." },
+      { id: "a5", category: "Breath",          text: "My breath is my anchor. I return to myself again and again." },
+      { id: "a6", category: "Strength",        text: "I have faced hard things before — I will face this too." },
+      { id: "a7", category: "Safety",          text: "Right now, in this moment, I am safe." },
+      { id: "a8", category: "Growth",          text: "I grow every day, even when I don't notice it." },
+      { id: "a9", category: "Rest",            text: "Tiredness is not weakness. It is a signal that I have given a lot." },
+    ],
+    journal: {
+      tabs: { journal: "Journal", gratitude: "Gratitude" },
+      newEntry: "+ New entry",
+      exampleNote: "💡 These entries below are examples. Create your first entry by tapping «+ New entry».",
+      exampleLabel: "Example entry",
+      steps: [
+        { title: "How are you right now?" },
+        { title: "What happened?", hint: "Write freely..." },
+        { title: "What did you feel?", hint: "One word or a whole paragraph" },
+        { title: "What helped?", hint: "A sound, a walk, a conversation..." },
+        { title: "Insight & patterns" },
+      ],
+      next: "Next →", save: "Save ✓", skip: "Skip", cancel: "Cancel", back: "← Back",
+      patternLabel: "Tag your patterns:",
+      insightPlaceholder: "I noticed again that...",
+      gratitudeHint: "Three things you're grateful for today — even the smallest ones.",
+      gratitudeBtn: "Save entry 🙏",
+      reflectionPrompts: [
+        "What was the hardest thing today?",
+        "What was a good moment today, even a small one?",
+        "What am I feeling in my body right now?",
+        "What helped me cope today?",
+        "What pattern am I noticing in myself again?",
+        "What do I want to let go of before sleep?",
+        "What am I grateful for today?",
+      ],
+      anotherPrompt: "another question",
+      whatHappened: "What happened", whatFelt: "What I felt", whatHelped: "What helped", insight: "Insight", patterns: "Patterns",
+    },
+    reflection: {
+      title: "What is really going on?",
+      intro: "When anxiety or resentment hits, walk through the path from event to need.",
+      start: "Begin reflection",
+      past: "Past reflections",
+      done: "Reflection complete",
+      finish: "Done",
+      steps: [
+        { title: "Event",    hint: "What happened? Describe the facts, without judgment.",              placeholder: "e.g. I wasn't invited to the team meeting" },
+        { title: "Thought",  hint: "What was your first thought about it?",                            placeholder: "e.g. Nobody needs me, they're ignoring me" },
+        { title: "Emotion",  hint: "What are you feeling right now? Name the emotion.",                placeholder: "e.g. Hurt, anger, anxiety" },
+        { title: "Need",     hint: "What need lies beneath this feeling?",                             placeholder: "e.g. To be seen, to feel belonging" },
+        { title: "Action",   hint: "What can you do — for yourself or in this situation?",             placeholder: "e.g. Ask directly why I wasn't included" },
+      ],
+    },
+    letters: {
+      title: "A letter to your future self",
+      intro: "Write yourself a letter — it will only open after the time you choose.",
+      newBtn: "+ Write a letter",
+      seal: "Seal the letter ✉️",
+      ready: "Your letter is ready to open",
+      sealed: "Letter sealed",
+      from: "from",
+      opens: "opens",
+      prompts: [
+        "What do you want to tell yourself in 3 months?",
+        "What are you afraid of now — and what do you want to remind yourself of later?",
+        "What hope are you holding right now that you want to remember?",
+        "What is happening in your life right now that matters to hold onto?",
+      ],
+      anotherPrompt: "another prompt",
+      deliverLabel: "When to deliver?",
+      months: ["1 mo", "3 mo", "6 mo", "12 mo"],
+      placeholder: "Write freely — only you will see this, in time...",
+      close: "Close",
+    },
+    patterns: {
+      tabs: { patterns: "Pattern map", changes: "What changed" },
+      intro: "What repeats most often in your recent entries — no judgment, just observation.",
+      empty: "Not enough entries yet. Your map will appear after a few journal or reflection entries.",
+      observation: "💭 A gentle observation",
+      changesIntro: "A comparison of last month and now — what states have become less frequent, and which more.",
+      better: "Getting easier", watch: "Worth noticing", noChange: "No change",
+      note: "The comparison becomes more accurate the longer you keep entries.",
+    },
+    practices: {
+      tabs: { frequencies: "〰️ Frequencies", practices: "✍️ Practices" },
+      intro: "Written practices help you understand yourself — not just to calm down, but to see what is happening inside.",
+      practiceList: [
+        { id: "fear",    icon: "🌊", title: "Working through fear",     desc: "A written practice for exploring fear",
+          steps: [
+            { q: "Name the fear",                       hint: "Write specifically what you are afraid of right now.",                 placeholder: "e.g. I'm afraid that nothing will work out" },
+            { q: "What is the worst that could happen?", hint: "Take the fear to its end — what would actually happen?",             placeholder: "e.g. I would fail, lose money..." },
+            { q: "Could you handle that?",              hint: "Remember: you have been through hard things before. What helped?",    placeholder: "e.g. I got through it before when..." },
+            { q: "What is within your control right now?", hint: "One small action you could take today.",                          placeholder: "e.g. Take the first step..." },
+          ]},
+        { id: "anger",   icon: "🔥", title: "Working through anger",    desc: "When you're angry and don't know what to do with it",
+          steps: [
+            { q: "What or who are you angry at?",       hint: "Name it directly. Anger has every right to exist.",                  placeholder: "e.g. I'm angry at..." },
+            { q: "What specifically hurt you?",         hint: "Not their behaviour — what does it mean to you personally?",         placeholder: "e.g. It hurt me because..." },
+            { q: "What need wasn't met?",               hint: "Behind anger there is always something important.",                   placeholder: "e.g. I need respect, fairness..." },
+            { q: "What do you want to change?",         hint: "What specifically do you need?",                                     placeholder: "e.g. I need..." },
+          ]},
+        { id: "guilt",   icon: "🕯️", title: "Working through guilt",    desc: "Separating healthy responsibility from destructive guilt",
+          steps: [
+            { q: "What do you feel guilty about?",      hint: "Describe the situation briefly — facts, no judgment.",               placeholder: "e.g. I feel guilty about..." },
+            { q: "Did you actually cause harm?",        hint: "Honestly: was your action intentional? What did you know then?",     placeholder: "e.g. I did this because..." },
+            { q: "What would you say to a friend?",    hint: "Imagine a close friend had done the same thing.",                    placeholder: "e.g. I would say to them..." },
+            { q: "What can you do now?",               hint: "Fix it, apologise, let go, or simply accept and move forward.",     placeholder: "e.g. I can..." },
+          ]},
+        { id: "anxiety", icon: "🌬️", title: "Unpacking anxiety",         desc: "Find the source of anxiety and reduce its intensity",
+          steps: [
+            { q: "What exactly are you anxious about?", hint: "Write all your thoughts — no filter, no order.",                    placeholder: "e.g. I'm anxious about..." },
+            { q: "Is this a real threat or an assumption?", hint: "How likely is this to happen? What do the facts say?",          placeholder: "e.g. The facts say..." },
+            { q: "What is within your control?",       hint: "Separate: what is in your hands, and what is not.",                  placeholder: "e.g. I can control..." },
+            { q: "What helped you before?",            hint: "Remember a specific moment when you coped.",                         placeholder: "e.g. Before, it helped me to..." },
+          ]},
+        { id: "self",    icon: "🪞", title: "Meeting yourself",          desc: "Who am I right now — without roles or masks",
+          steps: [
+            { q: "How do you feel right now?",          hint: "Not your role or title — your inner sense.",                        placeholder: "e.g. Right now I feel..." },
+            { q: "What matters most to you right now?", hint: "Not what should matter — what actually does.",                      placeholder: "e.g. Right now I care most about..." },
+            { q: "What do you do just for yourself?",   hint: "What exists in your life simply because you enjoy it?",             placeholder: "e.g. Just for myself I..." },
+            { q: "What do you want to say to yourself?", hint: "One sentence — as if from your best friend.",                     placeholder: "e.g. I want to tell myself..." },
+          ]},
+      ],
+      done: "Practice complete", finish: "Done", next: "Next →", skip: "Skip", cancel: "Cancel", back: "← Back",
+    },
+    onboarding: {
+      welcome: "Welcome to",
+      subtitle: "A space for self-therapy and inner depth — tools for self-understanding.",
+      start: "Get started 🌊",
+      items: [
+        { icon: "🎧", title: "Sounds",        desc: "Nature sounds for background and rest" },
+        { icon: "〰️", title: "Frequencies",   desc: "Binaural beats for sleep, meditation and focus. Headphones required." },
+        { icon: "✍️", title: "Practices",     desc: "Written exercises for working with emotions and patterns" },
+        { icon: "💬", title: "Affirmations",  desc: "Short phrases for support throughout the day" },
+        { icon: "📓", title: "Journal",       desc: "Mood entries and a gratitude journal" },
+        { icon: "🌊", title: "Reflect",       desc: "NVC method: from event to need" },
+        { icon: "💌", title: "Letters",       desc: "Write to your future self — the letter opens after your chosen time" },
+        { icon: "🗺️", title: "Patterns",      desc: "Your patterns based on journal entries" },
+      ],
+    },
+    patternTags: ["perfectionism", "future anxiety", "people-pleasing", "self-criticism", "procrastination", "fear of rejection", "exhaustion", "loneliness", "irritation", "guilt", "pride", "calm", "resourceful"],
+    dateLabels: { today: "Today", yesterday: "Yesterday" },
+  },
+};
 const SOUNDS = [
   { id: "rain",     name: "Дождь",        category: "Природа",   duration: 2160, tag: "sleep",   file: "rain.mp3",     photo: "https://images.unsplash.com/photo-1515694346937-94d85e41e6f0?w=400&q=80" },
   { id: "fire",     name: "Камин",        category: "Уют",       duration: 2700, tag: "relax",   file: "fire.mp3",     photo: "https://images.pexels.com/photos/11254616/pexels-photo-11254616.jpeg?auto=compress&w=800&q=80" },
@@ -30,21 +420,23 @@ const MUSIC_TRACKS = [
   { id: "beta",  tag: "beta",  title: "Фокус и концентрация",   duration: "30 мин", hz: "18–20 Hz",  file: "beta.mp3",   photo: "https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?w=400&q=80", icon: "⚡", desc: "Для работы и учёбы — ясность и продуктивность" },
   { id: "gamma", tag: "gamma", title: "Состояние потока",        duration: "25 мин", hz: "40 Hz",     file: "gamma.mp3",  photo: "https://images.unsplash.com/photo-1470252649378-9c29740c9fa8?w=400&q=80", icon: "✦", desc: "Пиковая концентрация — исследовано в MIT" },
 ];
-
-const AFFIRMATIONS = [
-  { id: "a1", category: "Самопринятие",  text: "Я делаю всё, что в моих силах. Этого достаточно." },
-  { id: "a2", category: "Покой",         text: "Покой живёт внутри меня. Я могу обратиться к нему в любой момент." },
-  { id: "a3", category: "Любовь к себе", text: "Я выбираю мягкость к себе. Мои ошибки — часть роста." },
-  { id: "a4", category: "Новый день",    text: "Каждый новый день — это чистая страница. Я пишу её осознанно." },
-  { id: "a5", category: "Дыхание",       text: "Моё дыхание — мой якорь. Я возвращаюсь к себе снова и снова." },
-  { id: "a6", category: "Сила",          text: "Я справлялся(ась) с трудностями раньше — справлюсь и сейчас." },
-  { id: "a7", category: "Безопасность",  text: "Прямо сейчас я в безопасности. Всё хорошо в этот момент." },
-  { id: "a8", category: "Рост",          text: "Я расту каждый день, даже когда этого не замечаю." },
-  { id: "a9", category: "Усталость",     text: "Усталость — не слабость. Это сигнал что я отдавал(а) много." },
-];
-
+// ─── Fallback constants (used in components before t is available) ──────────────
+const AFFIRMATIONS = T.ru.affirmations;
 const MOODS = ["😔", "😐", "🙂", "😊", "✨"];
-const MOOD_LABELS = ["Тяжело", "Нейтрально", "Неплохо", "Хорошо", "Отлично"];
+const MOOD_LABELS = T.ru.moodLabels;
+const REFLECTION_PROMPTS = T.ru.journal.reflectionPrompts;
+const PATTERN_TAGS = T.ru.patternTags;
+const FUTURE_LETTER_PROMPTS = T.ru.letters.prompts;
+const SEED_ENTRIES = [
+  { id: "e1", date: new Date(Date.now() - 86400000*2), mood: 2, what_happened: "Конфликт с близким человеком. Снова почувствовал(а) что меня не слышат.", what_felt: "Злость, потом вина, потом усталость от этого круга.", what_helped: "Послушал(а) звуки дождя 20 минут. Немного отпустило.", pattern_tags: ["угождение другим", "вина"], insight: "Заметил(а) что сначала злюсь, а потом сразу виню себя." },
+  { id: "e2", date: new Date(Date.now() - 86400000), mood: 3, what_happened: "Сдал(а) проект вовремя. Похвалили на работе.", what_felt: "Облегчение — не ожидал(а) что получилось так хорошо.", what_helped: "Утренний настрой помог сосредоточиться.", pattern_tags: ["перфекционизм", "гордость собой"], insight: "Снова убедился(ась): когда начинаю — становится легче." },
+];
+const GRATITUDE_SEED = [
+  { id: "g1", date: new Date(Date.now() - 86400000), items: ["Утренний кофе в тишине", "Звонок от друга", "Солнце после трёх дождливых дней"] },
+];
+const SEED_LETTERS = [
+  { id: "l1", createdAt: new Date(Date.now() - 86400000*30), deliverAt: new Date(Date.now() + 86400000*60), text: "Привет, я из прошлого. Надеюсь когда ты это читаешь — стало немного легче.", delivered: false },
+];
 
 // ─── localStorage helpers ──────────────────────────────────────────────────────
 
@@ -86,50 +478,11 @@ const C = {
 };
 
 
-const REFLECTION_PROMPTS = [
-  "Что сегодня было самым тяжёлым?",
-  "Какой момент сегодня был хорошим, даже маленьким?",
-  "Что я сейчас чувствую в теле?",
-  "Что мне сегодня помогло справиться?",
-  "Какой паттерн я снова замечаю в себе?",
-  "Что я хочу отпустить перед сном?",
-  "За что я благодарен(а) сегодня?",
-];
 
-const PATTERN_TAGS = [
-  "перфекционизм", "тревога о будущем", "угождение другим",
-  "самокритика", "прокрастинация", "страх отказа",
-  "усталость", "одиночество", "раздражение", "вина",
-  "гордость собой", "спокойствие", "ресурс",
-];
-
-const SEED_ENTRIES = [
-  { id: "e1", date: new Date(Date.now() - 86400000*2), mood: 2, what_happened: "Конфликт с близким человеком. Снова почувствовал(а) что меня не слышат.", what_felt: "Злость, потом вина, потом усталость от этого круга.", what_helped: "Послушал(а) звуки дождя 20 минут. Немного отпустило.", pattern_tags: ["угождение другим", "вина"], insight: "Заметил(а) что сначала злюсь, а потом сразу виню себя." },
-  { id: "e2", date: new Date(Date.now() - 86400000), mood: 3, what_happened: "Сдал(а) проект вовремя. Похвалили на работе.", what_felt: "Облегчение — не ожидал(а) что получится так хорошо.", what_helped: "Утренний настрой помог сосредоточиться.", pattern_tags: ["перфекционизм", "гордость собой"], insight: "Снова убедился(ась): когда начинаю — становится легче." },
-];
-
-const GRATITUDE_SEED = [
-  { id: "g1", date: new Date(Date.now() - 86400000), items: ["Утренний кофе в тишине", "Звонок от подруги", "Солнце после трёх дождливых дней"] },
-];
-
-const FUTURE_LETTER_PROMPTS = [
-  "Что ты хочешь сказать себе через 3 месяца?",
-  "Чего ты сейчас боишься — и что хочешь напомнить себе об этом страхе позже?",
-  "Какую надежду ты держишь сейчас, о которой хочешь напомнить себе?",
-  "Что происходит в твоей жизни прямо сейчас, что важно не забыть?",
-];
-
-const SEED_LETTERS = [
-  { id: "l1", createdAt: new Date(Date.now() - 86400000*30), deliverAt: new Date(Date.now() + 86400000*60), text: "Привет, я из прошлого. Сейчас тяжело с деньгами и я очень боюсь что ничего не получится. Надеюсь когда ты это читаешь — стало немного легче.", delivered: false },
-];
-
-const NVC_STEPS = [
-  { id: "event",    title: "Событие",     prompt: "Что произошло? Опиши факты, без оценки.",                placeholder: "Например: Меня не позвали на встречу команды" },
-  { id: "thought",  title: "Мысль",       prompt: "Что ты подумала об этом в первую секунду?",               placeholder: "Например: Я никому не нужна, меня игнорируют" },
-  { id: "emotion",  title: "Эмоция",      prompt: "Что ты сейчас чувствуешь? Назови эмоцию.",                  placeholder: "Например: Обида, злость, тревога" },
-  { id: "need",     title: "Потребность", prompt: "Какая потребность стоит за этим чувством?",                placeholder: "Например: Быть увиденной, чувствовать причастность" },
-  { id: "action",   title: "Действие",    prompt: "Что ты можешь сделать — для себя или в этой ситуации?",    placeholder: "Например: Спросить прямо, почему меня не позвали" },
-];
+const NVC_STEPS = T.ru.reflection.steps.map((s, i) => ({
+  id: ["event","thought","emotion","need","action"][i],
+  title: s.title, prompt: s.hint, placeholder: s.placeholder
+}));
 
 // ─── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -204,7 +557,7 @@ function SplashScreen({ onStart }) {
 
 // ─── Home Screen ───────────────────────────────────────────────────────────────
 
-function HomeScreen({ mood, setMood, currentSound, setCurrentSound, onNavigate }) {
+function HomeScreen({ mood, setMood, currentSound, setCurrentSound, onNavigate, t }) {
   const [clock, setClock] = useState(getClockStr());
   const [affIdx, setAffIdx] = useState(0);
   const [affFade, setAffFade] = useState(true);
@@ -246,7 +599,7 @@ function HomeScreen({ mood, setMood, currentSound, setCurrentSound, onNavigate }
       </div>
 
       <div style={{ margin: "0 1.5rem 1.25rem", background: C.surface, border: `1px solid ${C.border}`, borderRadius: 20, padding: "1.5rem", textAlign: "center", backdropFilter: "blur(8px)" }}>
-        <div style={{ fontSize: 11, color: C.muted, textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: 6 }}>Аффирмация дня</div>
+        <div style={{ fontSize: 11, color: C.muted, textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: 6 }}>{t.home.affirmations}</div>
         <div style={{ fontSize: 12, color: C.accent, marginBottom: 14, fontWeight: 500 }}>{aff.category}</div>
         <div style={{ fontSize: 17, lineHeight: 1.7, fontStyle: "italic", color: C.text, opacity: affFade ? 1 : 0, transition: "opacity 0.25s", marginBottom: 16 }}>
           «{aff.text}»
@@ -274,7 +627,7 @@ function HomeScreen({ mood, setMood, currentSound, setCurrentSound, onNavigate }
 
 // ─── Sounds Screen ─────────────────────────────────────────────────────────────
 
-function SoundsScreen({ currentSound, setCurrentSound }) {
+function SoundsScreen({ currentSound, setCurrentSound, t }) {
   const [playing, setPlaying] = useState(false);
   const [progress, setProgress] = useState(0);
   const [volume, setVolume] = useState(70);
@@ -343,7 +696,7 @@ function SoundsScreen({ currentSound, setCurrentSound }) {
   }
 
   const filters = ["all","sleep","relax","focus","meditate"];
-  const filterLabels = { all:"Все", sleep:"Сон", relax:"Расслабление", focus:"Фокус", meditate:"Медитация" };
+  const filterLabels = t.sounds.filters;
   const filtered = filter === "all" ? SOUNDS : SOUNDS.filter(s => s.tag === filter);
   const total = sound.duration || 3600;
 
@@ -417,7 +770,7 @@ function SoundsScreen({ currentSound, setCurrentSound }) {
 
 // ─── Meditations Screen ────────────────────────────────────────────────────────
 
-function MeditationsScreen() {
+function MeditationsScreen({ t = T.ru }) {
   const [tab, setTab] = useState("frequencies");
   const [playing, setPlaying] = useState(null);
   const [expanded, setExpanded] = useState(null);
@@ -1255,20 +1608,26 @@ const taStyle = { width: "100%", background: C.surface, border: `1px solid ${C.b
 
 // ─── Nav ───────────────────────────────────────────────────────────────────────
 
-const NAV = [
-  { id: "home",         icon: "🏠", label: "Главная" },
-  { id: "sounds",       icon: "🎧", label: "Звуки" },
-  { id: "meditations",  icon: "🧘", label: "Практики" },
-
-  { id: "journal",       icon: "📓", label: "Дневник" },
-  { id: "patterns",      icon: "🗺️", label: "Карта" },
-  { id: "reflection",   icon: "🌊", label: "Разбор" },
-  { id: "letters",      icon: "💌", label: "Письма" },
-];
-
 // ─── App ───────────────────────────────────────────────────────────────────────
 
 export default function App() {
+  const [lang, setLang] = useState(() => localStorage.getItem("om_lang") || "ru");
+  const t = T[lang];
+  const NAV = [
+  { id: "home",         icon: "🏠", label: t.nav.home },
+  { id: "sounds",       icon: "🎧", label: t.nav.sounds },
+  { id: "meditations",  icon: "🧘", label: t.nav.practices },
+
+  { id: "journal",       icon: "📓", label: t.nav.journal },
+  { id: "patterns",      icon: "🗺️", label: t.nav.patterns },
+  { id: "reflection",   icon: "🌊", label: t.nav.reflection },
+  { id: "letters",      icon: "💌", label: t.nav.letters },
+];
+  function toggleLang() {
+    const next = lang === "ru" ? "en" : "ru";
+    setLang(next);
+    localStorage.setItem("om_lang", next);
+  }
   const [splash, setSplash] = useState(true);
   const [onboarding, setOnboarding] = useState(() => !localStorage.getItem("om_onboarded"));
   const [screen, setScreen] = useState("home");
@@ -1329,19 +1688,24 @@ export default function App() {
         <div style={{ fontSize: 22, fontWeight: 500, letterSpacing: "0.02em", color: C.text }}>
           Ocean<span style={{ color: C.accent2 }}>Mind</span>
         </div>
-        <div style={{ fontSize: 13, color: C.muted }}>{screenTitles[screen]}</div>
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <button onClick={toggleLang} style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 20, padding: "4px 12px", fontSize: 12, color: C.text, cursor: "pointer", fontFamily: "'Nunito', sans-serif", backdropFilter: "blur(8px)" }}>
+            {lang === "ru" ? "EN" : "RU"}
+          </button>
+          <div style={{ fontSize: 13, color: C.muted }}>{screenTitles[screen]}</div>
+        </div>
       </div>
 
       <div style={{ flex: 1, overflowY: "auto" }}>
-        {screen === "home"         && <HomeScreen mood={mood} setMood={setMood} currentSound={currentSound} setCurrentSound={setCurrentSound} onNavigate={setScreen} />}
-        {screen === "sounds"       && <SoundsScreen currentSound={currentSound} setCurrentSound={setCurrentSound} />}
-        {screen === "meditations"  && <MeditationsScreen />}
+        {screen === "home"         && <HomeScreen mood={mood} setMood={setMood} currentSound={currentSound} setCurrentSound={setCurrentSound} onNavigate={setScreen} t={t} />}
+        {screen === "sounds"       && <SoundsScreen currentSound={currentSound} setCurrentSound={setCurrentSound} t={t} />}
+        {screen === "meditations"  && <MeditationsScreen t={t} />}
 
-        {screen === "affirmations" && <AffirmationsScreen />}
-        {screen === "journal"      && <JournalScreen />}
-        {screen === "patterns"     && <PatternMapScreen />}
-        {screen === "reflection"   && <ReflectionScreen />}
-        {screen === "letters"      && <FutureLetterScreen />}
+        {screen === "affirmations" && <AffirmationsScreen t={t} />}
+        {screen === "journal"      && <JournalScreen t={t} />}
+        {screen === "patterns"     && <PatternMapScreen t={t} />}
+        {screen === "reflection"   && <ReflectionScreen t={t} />}
+        {screen === "letters"      && <FutureLetterScreen t={t} />}
       </div>
 
       <div style={{ display: "flex", justifyContent: "space-between", gap: 0, padding: "10px 4px 12px", borderTop: `1px solid ${C.border}`, flexShrink: 0, background: "rgba(82,93,107,0.92)", backdropFilter: "blur(10px)" }}>
