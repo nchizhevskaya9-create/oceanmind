@@ -492,12 +492,13 @@ function formatTime(sec) {
   return `${m}:${String(s).padStart(2, "0")}`;
 }
 
-function getGreeting() {
+function getGreeting(t) {
   const h = new Date().getHours();
-  if (h < 6) return "Доброй ночи";
-  if (h < 12) return "Доброе утро";
-  if (h < 18) return "Добрый день";
-  return "Добрый вечер";
+  const g = t ? t.greetings : ["Доброй ночи", "Доброе утро", "Добрый день", "Добрый вечер"];
+  if (h < 6) return g[0];
+  if (h < 12) return g[1];
+  if (h < 18) return g[2];
+  return g[3];
 }
 
 function getClockStr() {
@@ -505,10 +506,10 @@ function getClockStr() {
   return `${now.getHours()}:${String(now.getMinutes()).padStart(2, "0")}`;
 }
 
-function getDateStr() {
+function getDateStr(t) {
   const now = new Date();
-  const days = ["Воскресенье","Понедельник","Вторник","Среда","Четверг","Пятница","Суббота"];
-  const months = ["января","февраля","марта","апреля","мая","июня","июля","августа","сентября","октября","ноября","декабря"];
+  const days = t ? t.days : ["Воскресенье","Понедельник","Вторник","Среда","Четверг","Пятница","Суббота"];
+  const months = t ? t.months : ["января","февраля","марта","апреля","мая","июня","июля","августа","сентября","октября","ноября","декабря"];
   return `${days[now.getDay()]}, ${now.getDate()} ${months[now.getMonth()]}`;
 }
 
@@ -569,16 +570,17 @@ function HomeScreen({ mood, setMood, currentSound, setCurrentSound, onNavigate, 
 
   function nextAff() {
     setAffFade(false);
-    setTimeout(() => { setAffIdx(i => (i + 1) % AFFIRMATIONS.length); setAffFade(true); }, 250);
+    setTimeout(() => { setAffIdx(i => (i + 1) % ((t && t.affirmations) || AFFIRMATIONS).length); setAffFade(true); }, 250);
   }
 
-  const aff = AFFIRMATIONS[affIdx];
+  const affs = (t && t.affirmations) || AFFIRMATIONS;
+  const aff = affs[affIdx % affs.length];
 
   return (
     <div style={{ padding: "0 0 1rem" }}>
       <div style={{ padding: "0 1.5rem 1.5rem" }}>
         <div style={{ fontSize: 60, fontWeight: 300, color: C.text, letterSpacing: -2, lineHeight: 1, marginBottom: 4 }}>{clock}</div>
-        <div style={{ fontSize: 14, color: C.muted, marginBottom: "1.5rem" }}>{getDateStr()}</div>
+        <div style={{ fontSize: 14, color: C.muted, marginBottom: "1.5rem" }}>{getDateStr(t)}</div>
       </div>
 
       <div style={{ padding: "0 1.5rem", marginBottom: "1.25rem" }}>
@@ -592,7 +594,7 @@ function HomeScreen({ mood, setMood, currentSound, setCurrentSound, onNavigate, 
               style={{ position: "relative", height: 100, borderRadius: 18, overflow: "hidden", border: `${currentSound?.id === s.id ? `2px solid ${C.accent}` : "none"}`, cursor: "pointer", padding: 0 }}>
               <img src={s.photo} alt={s.name} style={{ width: "100%", height: "100%", objectFit: "cover", filter: "saturate(0.75) brightness(0.85)" }} />
               <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(28,34,42,0.7), transparent)" }} />
-              <div style={{ position: "absolute", bottom: 8, left: 10, color: "#f1eef2", fontSize: 13, fontWeight: 500 }}>{s.name}</div>
+              <div style={{ position: "absolute", bottom: 8, left: 10, color: "#f1eef2", fontSize: 13, fontWeight: 500 }}>{((t && t.soundList && t.soundList.find(x => x.id === s.id)) || s).name}</div>
             </button>
           ))}
         </div>
@@ -612,7 +614,7 @@ function HomeScreen({ mood, setMood, currentSound, setCurrentSound, onNavigate, 
       {/* Donation */}
       <div style={{ margin: "1.25rem 1.5rem 0.5rem", background: C.surface, border: `1px solid ${C.border}`, borderRadius: 18, padding: "14px 16px", backdropFilter: "blur(8px)", textAlign: "center" }}>
         <div style={{ fontSize: 12, color: C.muted, marginBottom: 8, lineHeight: 1.6 }}>
-          🌊 OceanMind — бесплатное приложение.<br/>Если оно тебе помогает — поддержи развитие.
+          {t && t.lang === "en" ? "🌊 OceanMind is free. If it helps you — support its growth." : "🌊 OceanMind — бесплатное приложение. Если оно тебе помогает — поддержи развитие."}
         </div>
         <div style={{ fontSize: 12, color: C.text, marginBottom: 4 }}>
           СБП (любой банк): <span style={{ color: C.accent, userSelect: "all" }}>+7 922 291 44 10</span>
@@ -637,6 +639,12 @@ function SoundsScreen({ currentSound, setCurrentSound, t }) {
   const timerRef = useRef(null);
   const audioRef = useRef(null);
   const sound = currentSound || SOUNDS[0];
+  // Get translated name/category for a sound
+  function getSoundLabel(s) {
+    if (!t || !t.soundList) return { name: s.name, category: s.category };
+    const found = t.soundList.find(x => x.id === s.id);
+    return found || { name: s.name, category: s.category };
+  }
 
   // Keep volume in sync with the audio element
   useEffect(() => {
@@ -706,8 +714,8 @@ function SoundsScreen({ currentSound, setCurrentSound, t }) {
         <img src={sound.photo} alt={sound.name} style={{ width: "100%", height: "100%", objectFit: "cover", filter: "saturate(0.75) brightness(0.85)" }} />
         <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(28,34,42,0.85) 0%, rgba(28,34,42,0.15) 100%)" }} />
         <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, padding: "1rem 1.25rem" }}>
-          <div style={{ fontSize: 20, fontWeight: 500, color: "#f1eef2", marginBottom: 2 }}>{sound.name}</div>
-          <div style={{ fontSize: 13, color: "rgba(241,238,242,0.7)", marginBottom: 12 }}>{sound.category}</div>
+          <div style={{ fontSize: 20, fontWeight: 500, color: "#f1eef2", marginBottom: 2 }}>{getSoundLabel(sound).name}</div>
+          <div style={{ fontSize: 13, color: "rgba(241,238,242,0.7)", marginBottom: 12 }}>{getSoundLabel(sound).category}</div>
           <div onClick={e => {
             const rect = e.currentTarget.getBoundingClientRect();
             const pct = (e.clientX - rect.left) / rect.width;
@@ -758,8 +766,8 @@ function SoundsScreen({ currentSound, setCurrentSound, t }) {
             <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(28,34,42,0.7), transparent)" }} />
             {s.premium && <div style={{ display: "none" }} />}
             <div style={{ position: "absolute", bottom: 10, left: 12, right: 12 }}>
-              <div style={{ fontSize: 15, fontWeight: 500, color: "#f1eef2", marginBottom: 2 }}>{s.name}</div>
-              <div style={{ fontSize: 12, color: "rgba(241,238,242,0.7)" }}>{s.category}</div>
+              <div style={{ fontSize: 15, fontWeight: 500, color: "#f1eef2", marginBottom: 2 }}>{getSoundLabel(s).name}</div>
+              <div style={{ fontSize: 12, color: "rgba(241,238,242,0.7)" }}>{getSoundLabel(s).category}</div>
             </div>
           </button>
         ))}
@@ -962,8 +970,8 @@ function MeditationsScreen({ t = T.ru }) {
                           <span style={{ background: "rgba(177,156,163,0.3)", color: "#f1eef2", fontSize: 11, padding: "2px 10px", borderRadius: 20 }}>{track.hz}</span>
                           <span style={{ marginLeft: "auto", color: "rgba(241,238,242,0.7)", fontSize: 11 }}>{track.duration}</span>
                         </div>
-                        <div style={{ fontSize: 15, fontWeight: 500, color: "#f1eef2", marginBottom: 2 }}>{track.title}</div>
-                        <div style={{ fontSize: 12, color: "rgba(241,238,242,0.7)" }}>{track.desc}</div>
+                        <div style={{ fontSize: 15, fontWeight: 500, color: "#f1eef2", marginBottom: 2 }}>{((t && t.freq && t.freq.tracks && t.freq.tracks.find(x => x.id === track.id)) || track).title}</div>
+                        <div style={{ fontSize: 12, color: "rgba(241,238,242,0.7)" }}>{((t && t.freq && t.freq.tracks && t.freq.tracks.find(x => x.id === track.id)) || track).desc}</div>
                       </div>
                     </div>
                   </div>
@@ -974,7 +982,7 @@ function MeditationsScreen({ t = T.ru }) {
                     {isExpanded && sci && (
                       <div style={{ marginTop: 10, fontSize: 12, color: C.muted, lineHeight: 1.7, borderTop: `1px solid ${C.border}`, paddingTop: 10 }}>
                         <div style={{ color: C.text, fontWeight: 500, marginBottom: 4 }}>{sci.name} · {sci.hz}</div>
-                        {sci.science}
+                        {((t && t.freq && t.freq.science && t.freq.science[track.tag]) || sci.science)}
                       </div>
                     )}
                   </div>
@@ -1016,21 +1024,22 @@ function MeditationsScreen({ t = T.ru }) {
 
 // ─── Affirmations Screen ───────────────────────────────────────────────────────
 
-function AffirmationsScreen() {
+function AffirmationsScreen({ t = T.ru }) {
   const [idx, setIdx] = useState(0);
   const [fade, setFade] = useState(true);
   const [liked, setLiked] = useState(new Set());
+  const affs = (t && t.affirmations) || AFFIRMATIONS;
 
   function go(dir) {
     setFade(false);
-    setTimeout(() => { setIdx(i => (i + dir + AFFIRMATIONS.length) % AFFIRMATIONS.length); setFade(true); }, 200);
+    setTimeout(() => { setIdx(i => (i + dir + affs.length) % affs.length); setFade(true); }, 200);
   }
 
-  const aff = AFFIRMATIONS[idx];
+  const aff = affs[idx % affs.length];
 
   return (
     <div style={{ padding: "2rem 1.5rem", display: "flex", flexDirection: "column", alignItems: "center" }}>
-      <div style={{ fontSize: 12, color: C.muted, textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: 24 }}>{idx + 1} / {AFFIRMATIONS.length}</div>
+      <div style={{ fontSize: 12, color: C.muted, textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: 24 }}>{idx + 1} / {affs.length}</div>
       <div style={{ fontSize: 13, color: C.accent, fontWeight: 500, marginBottom: 16 }}>{aff.category}</div>
       <div style={{ fontSize: 22, lineHeight: 1.7, fontStyle: "italic", textAlign: "center", color: C.text, opacity: fade ? 1 : 0, transition: "opacity 0.2s", marginBottom: 48, maxWidth: 320 }}>
         «{aff.text}»
@@ -1046,7 +1055,7 @@ function AffirmationsScreen() {
       <div style={{ width: "100%", background: C.surface, borderRadius: 18, padding: "16px", border: `1px solid ${C.border}`, backdropFilter: "blur(8px)" }}>
         <div style={{ fontSize: 12, color: C.muted, marginBottom: 12 }}>Все категории</div>
         <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-          {AFFIRMATIONS.map((a, i) => (
+          {affs.map((a, i) => (
             <button key={a.id} onClick={() => { setFade(false); setTimeout(() => { setIdx(i); setFade(true); }, 200); }}
               style={{ padding: "5px 14px", borderRadius: 20, background: i === idx ? "rgba(177,156,163,0.25)" : "rgba(255,255,255,0.04)", border: `1px solid ${i === idx ? C.accent : C.border}`, color: i === idx ? C.text : C.muted, fontSize: 12, cursor: "pointer" }}>
               {a.category}
@@ -1634,7 +1643,7 @@ export default function App() {
   const [mood, setMood] = useState(null);
   const [currentSound, setCurrentSound] = useState(SOUNDS[0]);
 
-  const screenTitles = { home: getGreeting(), sounds: "Звуки", meditations: "Практики", affirmations: "Аффирмации", journal: "Дневник", patterns: "Карта паттернов", reflection: "Разбор", letters: "Письма" };
+  const screenTitles = { home: getGreeting(t), sounds: "Звуки", meditations: "Практики", affirmations: "Аффирмации", journal: "Дневник", patterns: "Карта паттернов", reflection: "Разбор", letters: "Письма" };
 
   if (splash) return <SplashScreen onStart={() => setSplash(false)} />;
 
