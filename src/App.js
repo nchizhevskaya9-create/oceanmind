@@ -901,7 +901,7 @@ function MeditationsScreen({ t = T.ru }) {
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 28, paddingTop: 8 }}>
           <button onClick={() => practiceStep === 0 ? setPracticeIdx(null) : setPracticeStep(s => s - 1)}
             style={{ background: "none", border: "none", color: C.muted, cursor: "pointer", fontSize: 13 }}>
-            {practiceStep === 0 ? "Отмена" : "← Назад"}
+            {practiceStep === 0 ? (t.practices ? t.practices.cancel : "Отмена") : (t.practices ? t.practices.back : "← Назад")}
           </button>
           <div style={{ display: "flex", gap: 6 }}>
             {p.steps.map((_, i) => (
@@ -1205,7 +1205,7 @@ function JournalListAndEntry({ t = T.ru,
         {current.hint && (
           <div style={{ fontSize: 14, color: C.muted, marginBottom: 20, lineHeight: 1.6 }}>
             {current.hint}
-            {step === 1 && <button onClick={() => setPromptIdx(i => (i + 1) % t.journal.reflectionPrompts.length)} style={{ marginLeft: 8, background: "none", border: "none", color: C.accent, cursor: "pointer", fontSize: 12 }}>другой вопрос</button>}
+            {step === 1 && <button onClick={() => setPromptIdx(i => (i + 1) % t.journal.reflectionPrompts.length)} style={{ marginLeft: 8, background: "none", border: "none", color: C.accent, cursor: "pointer", fontSize: 12 }}>{t.letters ? t.letters.anotherPrompt : "другой вопрос"}</button>}
           </div>
         )}
         {step === 0 && (
@@ -1345,8 +1345,8 @@ function FutureLetterScreen({ t = T.ru }) {
         <button onClick={() => setView("list")} style={{ background: "none", border: "none", color: C.muted, cursor: "pointer", fontSize: 13, marginBottom: 20 }}>← Назад</button>
         <div style={{ fontSize: 22, fontWeight: 500, color: C.text, marginBottom: 6 }}>{t.letters.title}</div>
         <div style={{ fontSize: 14, color: C.muted, marginBottom: 16, lineHeight: 1.6 }}>
-          {FUTURE_LETTER_PROMPTS[promptIdx]}
-          <button onClick={() => setPromptIdx(i => (i + 1) % FUTURE_LETTER_PROMPTS.length)} style={{ marginLeft: 8, background: "none", border: "none", color: C.accent, cursor: "pointer", fontSize: 12 }}>{t.letters.anotherPrompt || "другой вопрос"}</button>
+          {(t.letters ? t.letters.prompts : FUTURE_LETTER_PROMPTS)[promptIdx % (t.letters ? t.letters.prompts.length : (t.letters ? t.letters.prompts : FUTURE_LETTER_PROMPTS).length)]}
+          <button onClick={() => setPromptIdx(i => (i + 1) % (t.letters ? t.letters.prompts : FUTURE_LETTER_PROMPTS).length)} style={{ marginLeft: 8, background: "none", border: "none", color: C.accent, cursor: "pointer", fontSize: 12 }}>{t.letters.anotherPrompt || "другой вопрос"}</button>
         </div>
         <textarea value={text} onChange={e => setText(e.target.value)} placeholder={t.letters.placeholder} rows={8} style={{ ...taStyle, marginBottom: 20 }} />
         <div style={{ fontSize: 13, color: C.muted, marginBottom: 10 }}>{t.letters.deliverLabel}</div>
