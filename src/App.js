@@ -426,15 +426,25 @@ const MOODS = ["😔", "😐", "🙂", "😊", "✨"];
 const MOOD_LABELS = T.ru.moodLabels;
 const PATTERN_TAGS = T.ru.patternTags;
 const FUTURE_LETTER_PROMPTS = T.ru.letters.prompts;
-const SEED_ENTRIES = [
+const SEED_ENTRIES_RU = [
   { id: "e1", date: new Date(Date.now() - 86400000*2), mood: 2, what_happened: "Конфликт с близким человеком. Снова почувствовал(а) что меня не слышат.", what_felt: "Злость, потом вина, потом усталость от этого круга.", what_helped: "Послушал(а) звуки дождя 20 минут. Немного отпустило.", pattern_tags: ["угождение другим", "вина"], insight: "Заметил(а) что сначала злюсь, а потом сразу виню себя." },
   { id: "e2", date: new Date(Date.now() - 86400000), mood: 3, what_happened: "Сдал(а) проект вовремя. Похвалили на работе.", what_felt: "Облегчение — не ожидал(а) что получилось так хорошо.", what_helped: "Утренний настрой помог сосредоточиться.", pattern_tags: ["перфекционизм", "гордость собой"], insight: "Снова убедился(ась): когда начинаю — становится легче." },
 ];
-const GRATITUDE_SEED = [
+const SEED_ENTRIES_EN = [
+  { id: "e1", date: new Date(Date.now() - 86400000*2), mood: 2, what_happened: "Had a conflict with someone close. Once again felt like I wasn't being heard.", what_felt: "Anger, then guilt, then exhaustion from this cycle.", what_helped: "Listened to rain sounds for 20 minutes. It helped a little.", pattern_tags: ["people-pleasing", "guilt"], insight: "I noticed that I get angry first, then immediately blame myself." },
+  { id: "e2", date: new Date(Date.now() - 86400000), mood: 3, what_happened: "Finished a project on time. Got praised at work.", what_felt: "Relief — didn't expect it to go so well.", what_helped: "A morning intention helped me focus.", pattern_tags: ["perfectionism", "pride"], insight: "Confirmed again: once I start, it gets easier." },
+];
+const GRATITUDE_SEED_RU = [
   { id: "g1", date: new Date(Date.now() - 86400000), items: ["Утренний кофе в тишине", "Звонок от друга", "Солнце после трёх дождливых дней"] },
 ];
-const SEED_LETTERS = [
+const GRATITUDE_SEED_EN = [
+  { id: "g1", date: new Date(Date.now() - 86400000), items: ["Morning coffee in silence", "A call from a friend", "Sunshine after three rainy days"] },
+];
+const SEED_LETTERS_RU = [
   { id: "l1", createdAt: new Date(Date.now() - 86400000*30), deliverAt: new Date(Date.now() + 86400000*60), text: "Привет, я из прошлого. Надеюсь когда ты это читаешь — стало немного легче.", delivered: false },
+];
+const SEED_LETTERS_EN = [
+  { id: "l1", createdAt: new Date(Date.now() - 86400000*30), deliverAt: new Date(Date.now() + 86400000*60), text: "Hello from the past. I hope that by the time you read this, things have gotten a little easier.", delivered: false },
 ];
 
 // ─── localStorage helpers ──────────────────────────────────────────────────────
@@ -1071,7 +1081,8 @@ function AffirmationsScreen({ t = T.ru }) {
 function JournalScreen({ t = T.ru }) {
   const [tab, setTab] = useState("journal");
   const [view, setView] = useState("list");
-  const [entries, setEntries] = useState(() => loadFromStorage("om_entries", SEED_ENTRIES));
+  const seedEntries = t === T.en ? SEED_ENTRIES_EN : SEED_ENTRIES_RU;
+  const [entries, setEntries] = useState(() => loadFromStorage("om_entries", seedEntries));
   const [selected, setSelected] = useState(null);
   const [newMood, setNewMood] = useState(null);
   const [newWhat, setNewWhat] = useState("");
@@ -1082,7 +1093,8 @@ function JournalScreen({ t = T.ru }) {
   const [promptIdx, setPromptIdx] = useState(0);
   const [step, setStep] = useState(0);
 
-  const [gratitudeEntries, setGratitudeEntries] = useState(() => loadFromStorage("om_gratitude", GRATITUDE_SEED));
+  const seedGratitude = t === T.en ? GRATITUDE_SEED_EN : GRATITUDE_SEED_RU;
+  const [gratitudeEntries, setGratitudeEntries] = useState(() => loadFromStorage("om_gratitude", seedGratitude));
   const [gItems, setGItems] = useState(["", "", ""]);
 
   function saveGratitude() {
@@ -1304,7 +1316,8 @@ function JournalListAndEntry({ t = T.ru,
 // ─── Future Letter Screen ───────────────────────────────────────────────────────
 
 function FutureLetterScreen({ t = T.ru }) {
-  const [letters, setLetters] = useState(() => loadFromStorage("om_letters", SEED_LETTERS));
+  const seedLetters = t === T.en ? SEED_LETTERS_EN : SEED_LETTERS_RU;
+  const [letters, setLetters] = useState(() => loadFromStorage("om_letters", seedLetters));
   const [view, setView] = useState("list");
   const [text, setText] = useState("");
   const [months, setMonths] = useState(3);
@@ -1332,7 +1345,7 @@ function FutureLetterScreen({ t = T.ru }) {
         <div style={{ fontSize: 22, fontWeight: 500, color: C.text, marginBottom: 6 }}>{t.letters.title}</div>
         <div style={{ fontSize: 14, color: C.muted, marginBottom: 16, lineHeight: 1.6 }}>
           {FUTURE_LETTER_PROMPTS[promptIdx]}
-          <button onClick={() => setPromptIdx(i => (i + 1) % FUTURE_LETTER_PROMPTS.length)} style={{ marginLeft: 8, background: "none", border: "none", color: C.accent, cursor: "pointer", fontSize: 12 }}>{t.letters.anotherPrompt}</button>
+          <button onClick={() => setPromptIdx(i => (i + 1) % FUTURE_LETTER_PROMPTS.length)} style={{ marginLeft: 8, background: "none", border: "none", color: C.accent, cursor: "pointer", fontSize: 12 }}>{t.letters.anotherPrompt || "другой вопрос"}</button>
         </div>
         <textarea value={text} onChange={e => setText(e.target.value)} placeholder={t.letters.placeholder} rows={8} style={{ ...taStyle, marginBottom: 20 }} />
         <div style={{ fontSize: 13, color: C.muted, marginBottom: 10 }}>{t.letters.deliverLabel}</div>
@@ -1370,7 +1383,7 @@ function FutureLetterScreen({ t = T.ru }) {
   return (
     <div style={{ padding: "0 0 1.5rem" }}>
       <div style={{ padding: "0 1.5rem", marginBottom: 16 }}>
-        <div style={{ fontSize: 13, color: C.muted, lineHeight: 1.6, marginBottom: 14 }}>{t.letters.intro} Можно сказать то, что хочется услышать от себя из прошлого.</div>
+        <div style={{ fontSize: 13, color: C.muted, lineHeight: 1.6, marginBottom: 14 }}>{t.letters.intro} {t === T.en ? "Say what you wish you could hear from your past self." : "Можно сказать то, что хочется услышать от себя из прошлого."}</div>
         <button onClick={() => setView("new")} style={{ width: "100%", padding: "13px", background: C.accent, border: "none", borderRadius: 16, color: "#f1eef2", fontSize: 14, cursor: "pointer" }}>
           {t.letters.newBtn}
         </button>
@@ -1494,7 +1507,8 @@ function PatternMapScreen({ t = T.ru }) {
   const [tab, setTab] = useState("patterns");
 
   // Aggregate pattern tags from journal seed entries (in a full backend this would span all stored entries)
-  const allTaggedEntries = loadFromStorage("om_entries", SEED_ENTRIES);
+  const seedEntriesForMap = t === T.en ? SEED_ENTRIES_EN : SEED_ENTRIES_RU;
+  const allTaggedEntries = loadFromStorage("om_entries", seedEntriesForMap);
   const patternCounts = {};
   allTaggedEntries.forEach(e => {
     (e.pattern_tags || []).forEach(t => { patternCounts[t] = (patternCounts[t] || 0) + 1; });
@@ -1551,7 +1565,7 @@ function PatternMapScreen({ t = T.ru }) {
             <div style={{ fontSize: 13, color: C.accent, fontWeight: 500, marginBottom: 6 }}>💭 Мягкое наблюдение</div>
             <div style={{ fontSize: 13, color: C.text, lineHeight: 1.6 }}>
               {sortedPatterns[0]
-                ? `«${sortedPatterns[0][0]}» встречается у тебя чаще всего. Это не диагноз и не повод для критики — просто то, на что стоит обратить внимание с добротой.`
+                ? (t === T.en ? `"${sortedPatterns[0][0]}" appears most often in your entries. This is not a diagnosis — just something worth noticing with kindness.` : `«${sortedPatterns[0][0]}» встречается у тебя чаще всего. Это не диагноз и не повод для критики — просто то, на что стоит обратить внимание с добротой.`)
                 : t.patterns.empty}
             </div>
           </div>
@@ -1580,13 +1594,13 @@ function PatternMapScreen({ t = T.ru }) {
                   </div>
                   <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                     <div style={{ flex: 1 }}>
-                      <div style={{ fontSize: 10, color: C.muted, marginBottom: 4 }}>Месяц назад · {prev}×</div>
+                      <div style={{ fontSize: 10, color: C.muted, marginBottom: 4 }}>{t === T.en ? `Last month · ${prev}×` : `Месяц назад · ${prev}×`}</div>
                       <div style={{ height: 6, background: "rgba(255,255,255,0.08)", borderRadius: 3 }}>
                         <div style={{ height: "100%", width: `${(prev / 7) * 100}%`, background: C.muted, borderRadius: 3 }} />
                       </div>
                     </div>
                     <div style={{ flex: 1 }}>
-                      <div style={{ fontSize: 10, color: C.muted, marginBottom: 4 }}>Сейчас · {now}×</div>
+                      <div style={{ fontSize: 10, color: C.muted, marginBottom: 4 }}>{t === T.en ? `Now · ${now}×` : `Сейчас · ${now}×`}</div>
                       <div style={{ height: 6, background: "rgba(255,255,255,0.08)", borderRadius: 3 }}>
                         <div style={{ height: "100%", width: `${(now / 7) * 100}%`, background: C.accent, borderRadius: 3 }} />
                       </div>
