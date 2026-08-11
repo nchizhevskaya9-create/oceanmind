@@ -11,7 +11,7 @@ const T = {
     // Splash
     splash: { tagline: "Пространство твоей глубины", subtitle: "Позволь себе отдохнуть", start: "Начать" },
     // Home
-    home: { quickstart: "Быстрый запуск", all: "Все →", affirmations: "Аффирмации", next: "Следующая →", donation: "🌊 OceanMind — бесплатное приложение.\nЕсли оно тебе помогает — поддержи развитие.", sbp: "СБП (любой банк):", paypal: "PayPal:" },
+    home: { quickstart: "Быстрый запуск", all: "Все →", affirmations: "Аффирмации", next: "Далее →", donation: "🌊 OceanMind — бесплатное приложение.\nЕсли оно тебе помогает — поддержи развитие.", sbp: "СБП (любой банк):", paypal: "PayPal:" },
     // Greetings
     greetings: ["Доброй ночи", "Доброе утро", "Добрый день", "Добрый вечер"],
     // Days & months
@@ -876,7 +876,7 @@ function MeditationsScreen({ t = T.ru }) {
         <div style={{ marginTop: 20, display: "flex", gap: 10 }}>
           <button onClick={() => setPracticeStep(s => s + 1)}
             style={{ flex: 1, padding: "14px", background: C.accent, border: "none", borderRadius: 16, color: "#f1eef2", fontSize: 15, cursor: "pointer" }}>
-            {practiceStep < p.steps.length - 1 ? "Далее →" : "Завершить ✓"}
+            {practiceStep < p.steps.length - 1 ? "Next →" : "Done ✓"}
           </button>
         </div>
         {practiceStep < p.steps.length - 1 && (
@@ -1184,10 +1184,10 @@ function JournalListAndEntry({ t = T.ru,
         )}
         <div style={{ marginTop: 28 }}>
           {step < 4
-            ? <button onClick={() => setStep(s => s + 1)} disabled={!canNext} style={{ width: "100%", padding: "14px", background: canNext ? C.accent : C.border, border: "none", borderRadius: 16, color: canNext ? "#f1eef2" : C.muted, fontSize: 15, cursor: canNext ? "pointer" : "not-allowed" }}>{(t && t.journal) ? t.journal.next : "Далее →"}</button>
-            : <button onClick={saveEntry} style={{ width: "100%", padding: "14px", background: C.accent, border: "none", borderRadius: 16, color: "#f1eef2", fontSize: 15, cursor: "pointer" }}>{(t && t.journal) ? t.journal.save : "Сохранить ✓"}</button>
+            ? <button onClick={() => setStep(s => s + 1)} disabled={!canNext} style={{ width: "100%", padding: "14px", background: canNext ? C.accent : C.border, border: "none", borderRadius: 16, color: canNext ? "#f1eef2" : C.muted, fontSize: 15, cursor: canNext ? "pointer" : "not-allowed" }}>{(t && t.journal) ? t.journal.next : "Next →"}</button>
+            : <button onClick={saveEntry} style={{ width: "100%", padding: "14px", background: C.accent, border: "none", borderRadius: 16, color: "#f1eef2", fontSize: 15, cursor: "pointer" }}>{(t && t.journal) ? t.journal.save : "Save ✓"}</button>
           }
-          {step > 0 && step < 4 && <button onClick={() => setStep(s => s + 1)} style={{ width: "100%", padding: "10px", background: "none", border: "none", color: C.muted, fontSize: 13, cursor: "pointer", marginTop: 8 }}>{(t && t.journal) ? t.journal.skip : "Пропустить"}</button>}
+          {step > 0 && step < 4 && <button onClick={() => setStep(s => s + 1)} style={{ width: "100%", padding: "10px", background: "none", border: "none", color: C.muted, fontSize: 13, cursor: "pointer", marginTop: 8 }}>{(t && t.journal) ? t.journal.skip : "Skip"}</button>}
         </div>
       </div>
     );
@@ -1449,7 +1449,7 @@ function ReflectionScreen({ t = T.ru }) {
       <div style={{ fontSize: 18, fontWeight: 500, color: C.text, marginBottom: 20, lineHeight: 1.5 }}>{current.prompt}</div>
       <textarea value={answers[current.id] || ""} onChange={e => setAnswer(e.target.value)} placeholder={current.placeholder} rows={5} style={{ ...taStyle, marginBottom: 24 }} />
       <button onClick={next} style={{ width: "100%", padding: "14px", background: C.accent, border: "none", borderRadius: 16, color: "#f1eef2", fontSize: 15, cursor: "pointer" }}>
-        {step < nvcSteps.length - 1 ? "Далее →" : "Завершить ✓"}
+        {step < nvcSteps.length - 1 ? "Next →" : "Done ✓"}
       </button>
     </div>
   );
