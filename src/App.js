@@ -797,58 +797,8 @@ function MeditationsScreen({ t = T.ru }) {
   const [practiceAnswers, setPracticeAnswers] = useState({});
   const audioRef = useRef(null);
 
-  const WRITTEN_PRACTICES = [
-    {
-      id: "fear", icon: "🌊", title: "Избавление от страха",
-      desc: "Письменная практика для работы со страхом",
-      steps: [
-        { q: "Назови страх", hint: "Напиши конкретно чего ты боишься прямо сейчас. Не «всего», а одно конкретное." },
-        { q: "Что самое плохое может случиться?", hint: "Доведи страх до конца — что реально произойдёт если это случится?" },
-        { q: "Ты справишься с этим?", hint: "Вспомни: ты уже переживал(а) трудное. Что тебе помогало?" },
-        { q: "Что зависит от тебя прямо сейчас?", hint: "Одно маленькое действие которое ты можешь сделать сегодня." },
-      ]
-    },
-    {
-      id: "anger", icon: "🔥", title: "Проработка злости",
-      desc: "Когда злишься и не знаешь что с этим делать",
-      steps: [
-        { q: "На что или на кого ты злишься?", hint: "Назови это прямо. Злость имеет право быть." },
-        { q: "Что именно тебя задело?", hint: "Не поведение другого — а что это значит для тебя лично?" },
-        { q: "Какая потребность не была удовлетворена?", hint: "За злостью всегда стоит что-то важное — уважение, справедливость, признание..." },
-        { q: "Что ты хочешь чтобы изменилось?", hint: "Не «чтобы он(а) понял(а)» — а что конкретно тебе нужно?" },
-      ]
-    },
-    {
-      id: "guilt", icon: "🕯️", title: "Работа с виной",
-      desc: "Отделить здоровую ответственность от разрушительной вины",
-      steps: [
-        { q: "За что ты чувствуешь вину?", hint: "Опиши ситуацию коротко — факты, без оценки." },
-        { q: "Ты действительно причинил(а) вред?", hint: "Честно: было ли твоё действие намеренным? Что ты знал(а) тогда?" },
-        { q: "Что бы ты сказал(а) другу в этой ситуации?", hint: "Представь что это сделал близкий тебе человек. Как бы ты отнёсся(лась) к нему?" },
-        { q: "Что ты можешь сделать сейчас?", hint: "Исправить, извиниться, отпустить — или просто принять и идти дальше?" },
-      ]
-    },
-    {
-      id: "anxiety", icon: "🌬️", title: "Разбор тревоги",
-      desc: "Найти источник тревоги и снизить её интенсивность",
-      steps: [
-        { q: "О чём конкретно ты тревожишься?", hint: "Напиши все мысли подряд — без фильтра, без порядка." },
-        { q: "Это реальная угроза или предположение?", hint: "Насколько вероятно что это случится? Что говорят факты?" },
-        { q: "Что ты можешь контролировать?", hint: "Раздели: что в твоих руках, а что нет." },
-        { q: "Что помогло тебе раньше когда было тревожно?", hint: "Вспомни конкретный момент когда ты справился(лась)." },
-      ]
-    },
-    {
-      id: "self", icon: "🪞", title: "Встреча с собой",
-      desc: "Кто я сейчас — без ролей и масок",
-      steps: [
-        { q: "Кем ты себя чувствуешь прямо сейчас?", hint: "Не должность, не роль — а внутреннее ощущение." },
-        { q: "Что тебе сейчас важнее всего?", hint: "Не что должно быть важным — а что реально важно для тебя." },
-        { q: "Что ты делаешь для себя — не для других?", hint: "Что в твоей жизни существует только потому что тебе это нравится?" },
-        { q: "Что ты хочешь сказать себе прямо сейчас?", hint: "Одно предложение — как от лучшего друга." },
-      ]
-    },
-  ];
+  const WRITTEN_PRACTICES = t.practices.practiceList;
+
 
   function togglePlay(track) {
     if (playing === track.id) {
@@ -980,14 +930,14 @@ function MeditationsScreen({ t = T.ru }) {
                           <span style={{ background: "rgba(177,156,163,0.3)", color: "#f1eef2", fontSize: 11, padding: "2px 10px", borderRadius: 20 }}>{track.hz}</span>
                           <span style={{ marginLeft: "auto", color: "rgba(241,238,242,0.7)", fontSize: 11 }}>{track.duration}</span>
                         </div>
-                        <div style={{ fontSize: 15, fontWeight: 500, color: "#f1eef2", marginBottom: 2 }}>{((t && t.freq && t.freq.tracks && t.freq.tracks.find(x => x.id === track.id)) || track).title}</div>
-                        <div style={{ fontSize: 12, color: "rgba(241,238,242,0.7)" }}>{((t && t.freq && t.freq.tracks && t.freq.tracks.find(x => x.id === track.id)) || track).desc}</div>
+                        <div style={{ fontSize: 15, fontWeight: 500, color: "#f1eef2", marginBottom: 2 }}>{(t && t.freq && t.freq.tracks ? (t.freq.tracks.find(x => x.id === track.id) || track) : track).title}</div>
+                        <div style={{ fontSize: 12, color: "rgba(241,238,242,0.7)" }}>{(t && t.freq && t.freq.tracks ? (t.freq.tracks.find(x => x.id === track.id) || track) : track).desc}</div>
                       </div>
                     </div>
                   </div>
                   <div style={{ padding: "10px 16px 12px" }}>
                     <button onClick={() => setExpanded(isExpanded ? null : track.id)} style={{ background: "none", border: "none", color: C.accent, fontSize: 12, cursor: "pointer", padding: 0, display: "flex", alignItems: "center", gap: 6 }}>
-                      🔬 Научная база {isExpanded ? "▲" : "▼"}
+                      {t.freq ? t.freq.scienceBtn : "🔬 Научная база"} {isExpanded ? "▲" : "▼"}
                     </button>
                     {isExpanded && sci && (
                       <div style={{ marginTop: 10, fontSize: 12, color: C.muted, lineHeight: 1.7, borderTop: `1px solid ${C.border}`, paddingTop: 10 }}>
@@ -1192,7 +1142,7 @@ function JournalListAndEntry({ t = T.ru,
       <div style={{ padding: "0 1.5rem 1.5rem" }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 28 }}>
           <button onClick={() => step === 0 ? setView("list") : setStep(s => s - 1)} style={{ background: "none", border: "none", color: C.muted, cursor: "pointer", fontSize: 13 }}>
-            {step === 0 ? "Отмена" : "← Назад"}
+            {step === 0 ? ((t && t.journal) ? t.journal.cancel : "Отмена") : ((t && t.journal) ? t.journal.back : "← Назад")}
           </button>
           <div style={{ display: "flex", gap: 6 }}>
             {steps.map((_, i) => (
@@ -1231,7 +1181,7 @@ function JournalListAndEntry({ t = T.ru,
         )}
         <div style={{ marginTop: 28 }}>
           {step < 4
-            ? <button onClick={() => setStep(s => s + 1)} disabled={!canNext} style={{ width: "100%", padding: "14px", background: canNext ? C.accent : C.border, border: "none", borderRadius: 16, color: canNext ? "#f1eef2" : C.muted, fontSize: 15, cursor: canNext ? "pointer" : "not-allowed" }}>Далее →</button>
+            ? <button onClick={() => setStep(s => s + 1)} disabled={!canNext} style={{ width: "100%", padding: "14px", background: canNext ? C.accent : C.border, border: "none", borderRadius: 16, color: canNext ? "#f1eef2" : C.muted, fontSize: 15, cursor: canNext ? "pointer" : "not-allowed" }}>{(t && t.journal) ? t.journal.next : "Далее →"}</button>
             : <button onClick={saveEntry} style={{ width: "100%", padding: "14px", background: C.accent, border: "none", borderRadius: 16, color: "#f1eef2", fontSize: 15, cursor: "pointer" }}>Сохранить ✓</button>
           }
           {step > 0 && step < 4 && <button onClick={() => setStep(s => s + 1)} style={{ width: "100%", padding: "10px", background: "none", border: "none", color: C.muted, fontSize: 13, cursor: "pointer", marginTop: 8 }}>Пропустить</button>}
@@ -1483,7 +1433,7 @@ function ReflectionScreen({ t = T.ru }) {
     <div style={{ padding: "0 1.5rem 1.5rem" }}>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 28, paddingTop: 8 }}>
         <button onClick={() => step === 0 ? setView("intro") : setStep(s => s - 1)} style={{ background: "none", border: "none", color: C.muted, cursor: "pointer", fontSize: 13 }}>
-          {step === 0 ? "Отмена" : "← Назад"}
+          {step === 0 ? (t.practices ? t.practices.cancel : "Отмена") : (t.practices ? t.practices.back : "← Назад")}
         </button>
         <div style={{ display: "flex", gap: 6 }}>
           {nvcSteps.map((_, i) => (
