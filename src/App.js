@@ -114,7 +114,7 @@ const T = {
     // Letters
     letters: {
       title: "Письмо себе в будущее",
-      intro: "Напиши себе письмо — оно откроется только через выбранное время.",
+      intro: "{t.letters.intro}",
       newBtn: "+ Написать письмо",
       seal: "Запечатать письмо ✉️",
       ready: "Письмо готово к открытию",
@@ -146,7 +146,7 @@ const T = {
     // Practices
     practices: {
       tabs: { frequencies: "〰️ Частоты", practices: "✍️ Практики" },
-      intro: "Письменные практики помогают разобраться в себе — не просто успокоиться, а понять что происходит внутри.",
+      intro: "{t.practices.intro}",
       practiceList: [
         { id: "fear",    icon: "🌊", title: "Избавление от страха",    desc: "Письменная практика для работы со страхом",
           steps: [
@@ -424,7 +424,6 @@ const MUSIC_TRACKS = [
 const AFFIRMATIONS = T.ru.affirmations;
 const MOODS = ["😔", "😐", "🙂", "😊", "✨"];
 const MOOD_LABELS = T.ru.moodLabels;
-const REFLECTION_PROMPTS = T.ru.journal.reflectionPrompts;
 const PATTERN_TAGS = T.ru.patternTags;
 const FUTURE_LETTER_PROMPTS = T.ru.letters.prompts;
 const SEED_ENTRIES = [
@@ -930,7 +929,7 @@ function MeditationsScreen({ t = T.ru }) {
     <div style={{ padding: "0 0 1.5rem" }}>
       {/* Tabs */}
       <div style={{ display: "flex", padding: "0 1.5rem", borderBottom: `1px solid ${C.border}`, marginBottom: 16 }}>
-        {[["frequencies","〰️ Частоты"],["practices","✍️ Практики"]].map(([id,label]) => (
+        {[["frequencies", t.practices.tabs.frequencies],["practices", t.practices.tabs.practices]].map(([id,label]) => (
           <button key={id} onClick={() => setTab(id)} style={{
             padding: "10px 16px", fontSize: 14, color: tab === id ? C.accent : C.muted,
             background: "none", border: "none", cursor: "pointer",
@@ -944,9 +943,9 @@ function MeditationsScreen({ t = T.ru }) {
         <div>
           <div style={{ padding: "0 1.5rem 16px" }}>
             <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 16, padding: "14px 16px", backdropFilter: "blur(8px)" }}>
-              <div style={{ fontSize: 13, color: C.accent, fontWeight: 500, marginBottom: 6 }}>🎧 Только в наушниках</div>
+              <div style={{ fontSize: 13, color: C.accent, fontWeight: 500, marginBottom: 6 }}>{t.freq.headphonesNote}</div>
               <div style={{ fontSize: 12, color: C.muted, lineHeight: 1.6 }}>
-                Бинауральные ритмы работают только в стереонаушниках. В каждое ухо подаётся разная частота — мозг создаёт третью которая меняет его состояние.
+                {t.freq.headphonesDesc}
               </div>
             </div>
           </div>
@@ -997,7 +996,7 @@ function MeditationsScreen({ t = T.ru }) {
       {tab === "practices" && (
         <div style={{ padding: "0 1.5rem" }}>
           <div style={{ fontSize: 13, color: C.muted, lineHeight: 1.6, marginBottom: 16 }}>
-            Письменные практики помогают разобраться в себе — не просто успокоиться, а понять что происходит внутри.
+            {t.practices.intro}
           </div>
           <div style={{ display: "grid", gap: 10 }}>
             {WRITTEN_PRACTICES.map((p, i) => (
@@ -1193,7 +1192,7 @@ function JournalListAndEntry({ t = T.ru,
         {current.hint && (
           <div style={{ fontSize: 14, color: C.muted, marginBottom: 20, lineHeight: 1.6 }}>
             {current.hint}
-            {step === 1 && <button onClick={() => setPromptIdx(i => (i + 1) % REFLECTION_PROMPTS.length)} style={{ marginLeft: 8, background: "none", border: "none", color: C.accent, cursor: "pointer", fontSize: 12 }}>другой вопрос</button>}
+            {step === 1 && <button onClick={() => setPromptIdx(i => (i + 1) % t.journal.reflectionPrompts.length)} style={{ marginLeft: 8, background: "none", border: "none", color: C.accent, cursor: "pointer", fontSize: 12 }}>другой вопрос</button>}
           </div>
         )}
         {step === 0 && (
@@ -1211,8 +1210,8 @@ function JournalListAndEntry({ t = T.ru,
             <textarea value={newInsight} onChange={e => setNewInsight(e.target.value)} placeholder="Я снова замечаю что..." rows={3} style={{ ...taStyle, marginBottom: 16 }} />
             <div style={{ fontSize: 13, color: C.muted, marginBottom: 10 }}>Отметь паттерны:</div>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-              {PATTERN_TAGS.map(t => (
-                <button key={t} onClick={() => toggleTag(t)} style={{ padding: "6px 14px", borderRadius: 20, border: `1px solid ${newTags.includes(t) ? C.accent : C.border}`, background: newTags.includes(t) ? "rgba(177,156,163,0.25)" : C.surface, color: newTags.includes(t) ? C.text : C.muted, fontSize: 13, cursor: "pointer" }}>{t}</button>
+              {(t.patternTags || PATTERN_TAGS).map(tag => (
+                <button key={t} onClick={() => toggleTag(t)} style={{ padding: "6px 14px", borderRadius: 20, border: `1px solid ${newTags.includes(tag) ? C.accent : C.border}`, background: newTags.includes(tag) ? "rgba(177,156,163,0.25)" : C.surface, color: newTags.includes(tag) ? C.text : C.muted, fontSize: 13, cursor: "pointer" }}>{tag}</button>
               ))}
             </div>
           </div>
@@ -1330,13 +1329,13 @@ function FutureLetterScreen({ t = T.ru }) {
     return (
       <div style={{ padding: "0 1.5rem 1.5rem" }}>
         <button onClick={() => setView("list")} style={{ background: "none", border: "none", color: C.muted, cursor: "pointer", fontSize: 13, marginBottom: 20 }}>← Назад</button>
-        <div style={{ fontSize: 22, fontWeight: 500, color: C.text, marginBottom: 6 }}>Письмо себе в будущее</div>
+        <div style={{ fontSize: 22, fontWeight: 500, color: C.text, marginBottom: 6 }}>{t.letters.title}</div>
         <div style={{ fontSize: 14, color: C.muted, marginBottom: 16, lineHeight: 1.6 }}>
           {FUTURE_LETTER_PROMPTS[promptIdx]}
           <button onClick={() => setPromptIdx(i => (i + 1) % FUTURE_LETTER_PROMPTS.length)} style={{ marginLeft: 8, background: "none", border: "none", color: C.accent, cursor: "pointer", fontSize: 12 }}>{t.letters.anotherPrompt}</button>
         </div>
         <textarea value={text} onChange={e => setText(e.target.value)} placeholder={t.letters.placeholder} rows={8} style={{ ...taStyle, marginBottom: 20 }} />
-        <div style={{ fontSize: 13, color: C.muted, marginBottom: 10 }}>Когда доставить?</div>
+        <div style={{ fontSize: 13, color: C.muted, marginBottom: 10 }}>{t.letters.deliverLabel}</div>
         <div style={{ display: "flex", gap: 8, marginBottom: 28 }}>
           {[1, 3, 6, 12].map((m, mi) => { const label = t.letters.months[mi]; return (
             <button key={m} onClick={() => setMonths(m)} style={{
@@ -1373,7 +1372,7 @@ function FutureLetterScreen({ t = T.ru }) {
       <div style={{ padding: "0 1.5rem", marginBottom: 16 }}>
         <div style={{ fontSize: 13, color: C.muted, lineHeight: 1.6, marginBottom: 14 }}>{t.letters.intro} Можно сказать то, что хочется услышать от себя из прошлого.</div>
         <button onClick={() => setView("new")} style={{ width: "100%", padding: "13px", background: C.accent, border: "none", borderRadius: 16, color: "#f1eef2", fontSize: 14, cursor: "pointer" }}>
-          + Написать письмо
+          {t.letters.newBtn}
         </button>
       </div>
       <div style={{ display: "grid", gap: 10, padding: "0 1.5rem" }}>
@@ -1421,13 +1420,13 @@ function ReflectionScreen({ t = T.ru }) {
     return (
       <div style={{ padding: "2rem 1.5rem", textAlign: "center" }}>
         <div style={{ fontSize: 48, marginBottom: 16 }}>🌊</div>
-        <div style={{ fontSize: 20, fontWeight: 500, color: C.text, marginBottom: 12 }}>Что на самом деле происходит?</div>
+        <div style={{ fontSize: 20, fontWeight: 500, color: C.text, marginBottom: 12 }}>{t.reflection.title}</div>
         <div style={{ fontSize: 14, color: C.muted, lineHeight: 1.7, marginBottom: 28, maxWidth: 320, marginLeft: "auto", marginRight: "auto" }}>
           {t.reflection.intro}
           Это поможет увидеть что стоит за чувством — и что можно сделать.
         </div>
         <button onClick={startNew} style={{ padding: "14px 36px", background: C.accent, border: "none", borderRadius: 50, color: "#f1eef2", fontSize: 15, cursor: "pointer", marginBottom: 24 }}>
-          Начать разбор
+          {t.reflection.start}
         </button>
         {saved.length > 0 && (
           <div style={{ marginTop: 8 }}>
@@ -1553,7 +1552,7 @@ function PatternMapScreen({ t = T.ru }) {
             <div style={{ fontSize: 13, color: C.text, lineHeight: 1.6 }}>
               {sortedPatterns[0]
                 ? `«${sortedPatterns[0][0]}» встречается у тебя чаще всего. Это не диагноз и не повод для критики — просто то, на что стоит обратить внимание с добротой.`
-                : "Начни вести дневник или пройди разбор «Что на самом деле происходит?» — и здесь появится твоя карта."}
+                : t.patterns.empty}
             </div>
           </div>
         </div>
@@ -1656,7 +1655,7 @@ export default function App() {
       <div style={{ display: "grid", gap: 12, marginBottom: 32 }}>
         {[
           { icon: "🎧", title: "Звуки", desc: "Природные звуки для фона и отдыха" },
-          { icon: "〰️", title: "Частоты", desc: "Бинауральные ритмы для сна, медитации и фокуса. Только в наушниках." },
+          { icon: "〰️", title: t.nav.practices, desc: t.onboarding.items[1].desc },
           { icon: "✍️", title: "Практики", desc: "Письменные упражнения для работы с эмоциями и паттернами" },
           { icon: "💬", title: "Аффирмации", desc: "Короткие фразы для поддержки в течение дня" },
           { icon: "📓", title: "Дневник", desc: "Записи состояний и дневник благодарности" },
