@@ -423,7 +423,7 @@ const MUSIC_TRACKS = [
 // ─── Fallback constants (used in components before t is available) ──────────────
 const AFFIRMATIONS = T.ru.affirmations;
 const MOODS = ["😔", "😐", "🙂", "😊", "✨"];
-const MOOD_LABELS = T.ru.moodLabels;
+const MOOD_LABELS = T.ru.moodLabels; // fallback
 const PATTERN_TAGS = T.ru.patternTags;
 const FUTURE_LETTER_PROMPTS = T.ru.letters.prompts;
 const SEED_ENTRIES_RU = [
@@ -522,11 +522,12 @@ function getDateStr(t) {
   return `${days[now.getDay()]}, ${now.getDate()} ${months[now.getMonth()]}`;
 }
 
-function formatEntryDate(date) {
+function formatEntryDate(date, t) {
   const diff = Math.floor((Date.now() - date) / 86400000);
-  if (diff === 0) return "Сегодня";
-  if (diff === 1) return "Вчера";
-  const months = ["янв","фев","мар","апр","май","июн","июл","авг","сен","окт","ноя","дек"];
+  const labels = (t && t.dateLabels) || { today: "Сегодня", yesterday: "Вчера" };
+  if (diff === 0) return labels.today;
+  if (diff === 1) return labels.yesterday;
+  const months = t ? t.months.map(m => m.slice(0,3)) : ["янв","фев","мар","апр","май","июн","июл","авг","сен","окт","ноя","дек"];
   return `${date.getDate()} ${months[date.getMonth()]}`;
 }
 
@@ -1111,7 +1112,7 @@ function JournalScreen({ t = T.ru }) {
   return (
     <div style={{ padding: "0 0 1.5rem" }}>
       <div style={{ display: "flex", padding: "0 1.5rem", borderBottom: `1px solid ${C.border}`, marginBottom: 16 }}>
-        {[["journal", t.journal.tabs.journal],["gratitude", t.journal.tabs.gratitude]].map(([id,label]) => (
+        {[["journal", (t && t.journal) ? t.journal.tabs.journal : "Дневник"],["gratitude", (t && t.journal) ? t.journal.tabs.gratitude : "Благодарность"]].map(([id,label]) => (
           <button key={id} onClick={() => setTab(id)} style={{
             padding: "10px 16px", fontSize: 14, color: tab === id ? C.accent : C.muted,
             background: "none", border: "none", cursor: "pointer",
@@ -1136,7 +1137,7 @@ function JournalScreen({ t = T.ru }) {
           <div style={{ display: "grid", gap: 10, padding: "0 1.5rem" }}>
             {gratitudeEntries.map(g => (
               <div key={g.id} style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 18, padding: "16px", backdropFilter: "blur(8px)" }}>
-                <div style={{ fontSize: 11, color: C.muted, marginBottom: 10 }}>{formatEntryDate(g.date)}</div>
+                <div style={{ fontSize: 11, color: C.muted, marginBottom: 10 }}>{formatEntryDate(g.date, t)}</div>
                 <div style={{ display: "grid", gap: 6 }}>
                   {g.items.map((it, i) => (
                     <div key={i} style={{ fontSize: 14, color: C.text, lineHeight: 1.6 }}>✦ {it}</div>
@@ -1248,7 +1249,7 @@ function JournalListAndEntry({ t = T.ru,
           <div style={{ fontSize: 36 }}>{MOODS[e.mood]}</div>
           <div>
             <div style={{ fontSize: 16, fontWeight: 500, color: C.text }}>{MOOD_LABELS[e.mood]}</div>
-            <div style={{ fontSize: 13, color: C.muted }}>{formatEntryDate(e.date)}</div>
+            <div style={{ fontSize: 13, color: C.muted }}>{formatEntryDate(e.date, t)}</div>
           </div>
         </div>
         {[{ label: "Что произошло", value: e.what_happened }, { label: "Что почувствовал(а)", value: e.what_felt }, { label: "Что помогло", value: e.what_helped }, { label: "Осознание", value: e.insight }].filter(x => x.value).map(({ label, value }) => (
@@ -1294,8 +1295,8 @@ function JournalListAndEntry({ t = T.ru,
               <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                 <span style={{ fontSize: 24 }}>{MOODS[e.mood]}</span>
                 <div>
-                  <div style={{ fontSize: 13, fontWeight: 500, color: C.text }}>{MOOD_LABELS[e.mood]}</div>
-                  <div style={{ fontSize: 11, color: C.muted }}>{formatEntryDate(e.date)}</div>
+                  <div style={{ fontSize: 13, fontWeight: 500, color: C.text }}>{(t && t.moodLabels ? t.moodLabels : MOOD_LABELS)[e.mood]}</div>
+                  <div style={{ fontSize: 11, color: C.muted }}>{formatEntryDate(e.date, t)}</div>
                 </div>
               </div>
               <span style={{ color: C.muted, fontSize: 18 }}>›</span>
@@ -1371,7 +1372,7 @@ function FutureLetterScreen({ t = T.ru }) {
     return (
       <div style={{ padding: "2rem 1.5rem", textAlign: "center" }}>
         <div style={{ fontSize: 44, marginBottom: 16 }}>💌</div>
-        <div style={{ fontSize: 12, color: C.muted, marginBottom: 24 }}>Письмо от {formatEntryDate(l.createdAt)}</div>
+        <div style={{ fontSize: 12, color: C.muted, marginBottom: 24 }}>Письмо от {formatEntryDate(l.createdAt, t)}</div>
         <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 18, padding: "1.5rem", fontSize: 16, lineHeight: 1.8, color: C.text, fontStyle: "italic", textAlign: "left", marginBottom: 24, backdropFilter: "blur(8px)" }}>
           «{l.text}»
         </div>
@@ -1398,7 +1399,7 @@ function FutureLetterScreen({ t = T.ru }) {
               <div>
                 <div style={{ fontSize: 14, fontWeight: 500, color: C.text, marginBottom: 3 }}>{isReady ? t.letters.ready : t.letters.sealed}</div>
                 <div style={{ fontSize: 12, color: C.muted }}>
-                  {isReady ? `${t.letters.from} ${formatEntryDate(l.createdAt)}` : `${t.letters.opens} ${l.deliverAt.toLocaleDateString("ru-RU")}`}
+                  {isReady ? `${t.letters.from} ${formatEntryDate(l.createdAt, t)}` : `${t.letters.opens} ${l.deliverAt.toLocaleDateString("ru-RU")}`}
                 </div>
               </div>
               {!isReady && <div style={{ marginLeft: "auto", color: C.muted, fontSize: 18 }}>⏳</div>}
@@ -1447,7 +1448,7 @@ function ReflectionScreen({ t = T.ru }) {
             <div style={{ display: "grid", gap: 8 }}>
               {saved.map(s => (
                 <div key={s.id} style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 14, padding: "12px 14px", textAlign: "left" }}>
-                  <div style={{ fontSize: 11, color: C.muted, marginBottom: 4 }}>{formatEntryDate(s.date)}</div>
+                  <div style={{ fontSize: 11, color: C.muted, marginBottom: 4 }}>{formatEntryDate(s.date, t)}</div>
                   <div style={{ fontSize: 13, color: C.text, overflow: "hidden", display: "-webkit-box", WebkitLineClamp: 1, WebkitBoxOrient: "vertical" }}>{s.event}</div>
                 </div>
               ))}
@@ -1517,12 +1518,13 @@ function PatternMapScreen({ t = T.ru }) {
   const maxCount = sortedPatterns.length ? sortedPatterns[0][1] : 1;
 
   // Mock month-over-month comparison — illustrative until enough real data accumulates
+  const isEn = t === T.en;
   const monthCompare = [
-    { tag: "усталость",      prev: 6, now: 3 },
-    { tag: "тревога о будущем", prev: 5, now: 4 },
-    { tag: "перфекционизм",  prev: 3, now: 5 },
-    { tag: "спокойствие",    prev: 2, now: 6 },
-    { tag: "вина",           prev: 4, now: 2 },
+    { tag: isEn ? "exhaustion"     : "усталость",         prev: 6, now: 3 },
+    { tag: isEn ? "future anxiety" : "тревога о будущем", prev: 5, now: 4 },
+    { tag: isEn ? "perfectionism"  : "перфекционизм",     prev: 3, now: 5 },
+    { tag: isEn ? "calm"           : "спокойствие",       prev: 2, now: 6 },
+    { tag: isEn ? "guilt"          : "вина",              prev: 4, now: 2 },
   ];
 
   return (
