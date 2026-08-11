@@ -136,8 +136,8 @@ const T = {
     // Patterns
     patterns: {
       tabs: { patterns: "Карта паттернов", changes: "Что изменилось" },
-      intro: "То, что повторяется чаще всего в твоих записях за последнее время — без оценки, просто наблюдение.",
-      empty: "Пока недостаточно записей. Карта появится после нескольких записей в дневнике или разборе.",
+      intro: "То, что повторяется чаще всего в твоих записях — без оценки, просто наблюдение.",
+      empty: "Пока недостаточно записей. Карта появится после нескольких записей в дневнике.",
       observation: "💭 Мягкое наблюдение",
       changesIntro: "Сравнение прошлого месяца и текущего — какие состояния стали реже, а какие чаще.",
       better: "Стало легче", watch: "Стоит заметить", noChange: "Без изменений",
@@ -614,7 +614,7 @@ function HomeScreen({ mood, setMood, currentSound, setCurrentSound, onNavigate, 
       {/* Donation */}
       <div style={{ margin: "1.25rem 1.5rem 0.5rem", background: C.surface, border: `1px solid ${C.border}`, borderRadius: 18, padding: "14px 16px", backdropFilter: "blur(8px)", textAlign: "center" }}>
         <div style={{ fontSize: 12, color: C.muted, marginBottom: 8, lineHeight: 1.6 }}>
-          {t && t.lang === "en" ? "🌊 OceanMind is free. If it helps you — support its growth." : "🌊 OceanMind — бесплатное приложение. Если оно тебе помогает — поддержи развитие."}
+          {t && t.home ? (t === T.en ? "🌊 OceanMind is free. If it helps you — support its growth." : "🌊 OceanMind — бесплатное приложение. Если оно тебе помогает — поддержи развитие.") : "🌊 OceanMind — бесплатное приложение."}
         </div>
         <div style={{ fontSize: 12, color: C.text, marginBottom: 4 }}>
           СБП (любой банк): <span style={{ color: C.accent, userSelect: "all" }}>+7 922 291 44 10</span>
@@ -1069,7 +1069,7 @@ function AffirmationsScreen({ t = T.ru }) {
 
 // ─── Journal Screen ────────────────────────────────────────────────────────────
 
-function JournalScreen() {
+function JournalScreen({ t = T.ru }) {
   const [tab, setTab] = useState("journal");
   const [view, setView] = useState("list");
   const [entries, setEntries] = useState(() => loadFromStorage("om_entries", SEED_ENTRIES));
@@ -1100,7 +1100,7 @@ function JournalScreen() {
   return (
     <div style={{ padding: "0 0 1.5rem" }}>
       <div style={{ display: "flex", padding: "0 1.5rem", borderBottom: `1px solid ${C.border}`, marginBottom: 16 }}>
-        {[["journal","Дневник"],["gratitude","Благодарность"]].map(([id,label]) => (
+        {[["journal", t.journal.tabs.journal],["gratitude", t.journal.tabs.gratitude]].map(([id,label]) => (
           <button key={id} onClick={() => setTab(id)} style={{
             padding: "10px 16px", fontSize: 14, color: tab === id ? C.accent : C.muted,
             background: "none", border: "none", cursor: "pointer",
@@ -1112,14 +1112,14 @@ function JournalScreen() {
       {tab === "gratitude" && (
         <div>
           <div style={{ padding: "0 1.5rem", marginBottom: 16 }}>
-            <div style={{ fontSize: 13, color: C.muted, marginBottom: 14, lineHeight: 1.6 }}>Три вещи, за которые ты благодарен(а) сегодня — даже самые маленькие.</div>
+            <div style={{ fontSize: 13, color: C.muted, marginBottom: 14, lineHeight: 1.6 }}>{t.journal.gratitudeHint}</div>
             {gItems.map((v, i) => (
               <input key={i} value={v} onChange={e => setGItems(arr => arr.map((x, idx) => idx === i ? e.target.value : x))}
                 placeholder={`${i + 1}. Например: тёплый чай утром`}
                 style={{ width: "100%", background: C.surface, border: `1px solid ${C.border}`, borderRadius: 14, padding: "12px 14px", color: C.text, fontSize: 14, marginBottom: 8, outline: "none", fontFamily: "'Nunito', sans-serif" }} />
             ))}
             <button onClick={saveGratitude} style={{ width: "100%", padding: "13px", background: C.accent, border: "none", borderRadius: 16, color: "#f1eef2", fontSize: 14, cursor: "pointer", marginTop: 6 }}>
-              Сохранить запись 🙏
+              {t.journal.gratitudeBtn}
             </button>
           </div>
           <div style={{ display: "grid", gap: 10, padding: "0 1.5rem" }}>
@@ -1151,7 +1151,7 @@ function JournalScreen() {
   );
 }
 
-function JournalListAndEntry({
+function JournalListAndEntry({ t = T.ru,
   view, setView, entries, setEntries, selected, setSelected,
   newMood, setNewMood, newWhat, setNewWhat, newFelt, setNewFelt,
   newHelped, setNewHelped, newInsight, setNewInsight, newTags, setNewTags,
@@ -1170,11 +1170,7 @@ function JournalListAndEntry({
   function toggleTag(t) { setNewTags(ts => ts.includes(t) ? ts.filter(x => x !== t) : [...ts, t]); }
 
   const steps = [
-    { title: "Как ты сейчас?" },
-    { title: "Что произошло?", hint: REFLECTION_PROMPTS[promptIdx] },
-    { title: "Что ты почувствовал(а)?", hint: "Можно одно слово или целый абзац" },
-    { title: "Что помогло?", hint: "Звук, практика, разговор, прогулка..." },
-    { title: "Осознание и паттерны" },
+    ...t.journal.steps,
   ];
 
   if (view === "new") {
@@ -1266,13 +1262,13 @@ function JournalListAndEntry({
     <div style={{ padding: "0 0 1.5rem" }}>
       <div style={{ padding: "0 1.5rem", marginBottom: 16, display: "flex", gap: 10 }}>
         <button onClick={() => { setStep(0); setView("new"); }} style={{ flex: 1, padding: "13px", background: C.accent, border: "none", borderRadius: 16, color: "#f1eef2", fontSize: 14, cursor: "pointer" }}>
-          + Новая запись
+          {t.journal.newEntry}
         </button>
       </div>
       {entries.some(e => e.id === "e1" || e.id === "e2") && (
         <div style={{ margin: "0 1.5rem 12px", background: "rgba(177,156,163,0.12)", border: `1px solid ${C.border}`, borderRadius: 14, padding: "10px 14px" }}>
           <div style={{ fontSize: 12, color: C.muted, lineHeight: 1.6 }}>
-            💡 Записи ниже — это примеры. Создай свою первую запись нажав «+ Новая запись».
+            💡 Записи ниже — это примеры. Создай свою первую запись нажав «{t.journal.newEntry}».
           </div>
         </div>
       )}
@@ -1308,7 +1304,7 @@ function JournalListAndEntry({
 
 // ─── Future Letter Screen ───────────────────────────────────────────────────────
 
-function FutureLetterScreen() {
+function FutureLetterScreen({ t = T.ru }) {
   const [letters, setLetters] = useState(() => loadFromStorage("om_letters", SEED_LETTERS));
   const [view, setView] = useState("list");
   const [text, setText] = useState("");
@@ -1337,22 +1333,22 @@ function FutureLetterScreen() {
         <div style={{ fontSize: 22, fontWeight: 500, color: C.text, marginBottom: 6 }}>Письмо себе в будущее</div>
         <div style={{ fontSize: 14, color: C.muted, marginBottom: 16, lineHeight: 1.6 }}>
           {FUTURE_LETTER_PROMPTS[promptIdx]}
-          <button onClick={() => setPromptIdx(i => (i + 1) % FUTURE_LETTER_PROMPTS.length)} style={{ marginLeft: 8, background: "none", border: "none", color: C.accent, cursor: "pointer", fontSize: 12 }}>другой вопрос</button>
+          <button onClick={() => setPromptIdx(i => (i + 1) % FUTURE_LETTER_PROMPTS.length)} style={{ marginLeft: 8, background: "none", border: "none", color: C.accent, cursor: "pointer", fontSize: 12 }}>{t.letters.anotherPrompt}</button>
         </div>
-        <textarea value={text} onChange={e => setText(e.target.value)} placeholder="Пиши свободно — это письмо увидишь только ты, через время..." rows={8} style={{ ...taStyle, marginBottom: 20 }} />
+        <textarea value={text} onChange={e => setText(e.target.value)} placeholder={t.letters.placeholder} rows={8} style={{ ...taStyle, marginBottom: 20 }} />
         <div style={{ fontSize: 13, color: C.muted, marginBottom: 10 }}>Когда доставить?</div>
         <div style={{ display: "flex", gap: 8, marginBottom: 28 }}>
-          {[1, 3, 6, 12].map(m => (
+          {[1, 3, 6, 12].map((m, mi) => { const label = t.letters.months[mi]; return (
             <button key={m} onClick={() => setMonths(m)} style={{
               flex: 1, padding: "10px 0", borderRadius: 14,
               border: `1px solid ${months === m ? C.accent : C.border}`,
               background: months === m ? "rgba(177,156,163,0.25)" : C.surface,
               color: months === m ? C.text : C.muted, fontSize: 13, cursor: "pointer"
-            }}>{m} мес</button>
-          ))}
+            }}>{label}</button>
+          ); })}
         </div>
         <button onClick={saveLetter} disabled={!text.trim()} style={{ width: "100%", padding: "14px", background: text.trim() ? C.accent : C.border, border: "none", borderRadius: 16, color: text.trim() ? "#f1eef2" : C.muted, fontSize: 15, cursor: text.trim() ? "pointer" : "not-allowed" }}>
-          Запечатать письмо ✉️
+          {t.letters.seal}
         </button>
       </div>
     );
@@ -1367,7 +1363,7 @@ function FutureLetterScreen() {
         <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 18, padding: "1.5rem", fontSize: 16, lineHeight: 1.8, color: C.text, fontStyle: "italic", textAlign: "left", marginBottom: 24, backdropFilter: "blur(8px)" }}>
           «{l.text}»
         </div>
-        <button onClick={() => setOpenedLetter(null)} style={{ padding: "12px 32px", background: C.accent, border: "none", borderRadius: 30, color: "#f1eef2", fontSize: 14, cursor: "pointer" }}>Закрыть</button>
+        <button onClick={() => setOpenedLetter(null)} style={{ padding: "12px 32px", background: C.accent, border: "none", borderRadius: 30, color: "#f1eef2", fontSize: 14, cursor: "pointer" }}>{t.letters.close}</button>
       </div>
     );
   }
@@ -1375,7 +1371,7 @@ function FutureLetterScreen() {
   return (
     <div style={{ padding: "0 0 1.5rem" }}>
       <div style={{ padding: "0 1.5rem", marginBottom: 16 }}>
-        <div style={{ fontSize: 13, color: C.muted, lineHeight: 1.6, marginBottom: 14 }}>Напиши себе письмо — оно откроется только через выбранное время. Можно сказать то, что хочется услышать от себя из прошлого.</div>
+        <div style={{ fontSize: 13, color: C.muted, lineHeight: 1.6, marginBottom: 14 }}>{t.letters.intro} Можно сказать то, что хочется услышать от себя из прошлого.</div>
         <button onClick={() => setView("new")} style={{ width: "100%", padding: "13px", background: C.accent, border: "none", borderRadius: 16, color: "#f1eef2", fontSize: 14, cursor: "pointer" }}>
           + Написать письмо
         </button>
@@ -1388,9 +1384,9 @@ function FutureLetterScreen() {
               style={{ display: "flex", alignItems: "center", gap: 14, background: C.surface, border: `1px solid ${C.border}`, borderRadius: 18, padding: "16px", cursor: isReady ? "pointer" : "default", color: C.text, textAlign: "left", backdropFilter: "blur(8px)", opacity: isReady ? 1 : 0.7 }}>
               <div style={{ fontSize: 28 }}>{isReady ? "💌" : "🔒"}</div>
               <div>
-                <div style={{ fontSize: 14, fontWeight: 500, color: C.text, marginBottom: 3 }}>{isReady ? "Письмо готово к открытию" : "Письмо запечатано"}</div>
+                <div style={{ fontSize: 14, fontWeight: 500, color: C.text, marginBottom: 3 }}>{isReady ? t.letters.ready : t.letters.sealed}</div>
                 <div style={{ fontSize: 12, color: C.muted }}>
-                  {isReady ? `от ${formatEntryDate(l.createdAt)}` : `откроется ${l.deliverAt.toLocaleDateString("ru-RU")}`}
+                  {isReady ? `${t.letters.from} ${formatEntryDate(l.createdAt)}` : `${t.letters.opens} ${l.deliverAt.toLocaleDateString("ru-RU")}`}
                 </div>
               </div>
               {!isReady && <div style={{ marginLeft: "auto", color: C.muted, fontSize: 18 }}>⏳</div>}
@@ -1402,9 +1398,9 @@ function FutureLetterScreen() {
   );
 }
 
-// ─── Reflection Screen — "Что на самом деле происходит?" ───────────────────────
+// ─── Reflection Screen — {t.reflection.title} ───────────────────────
 
-function ReflectionScreen() {
+function ReflectionScreen({ t = T.ru }) {
   const [view, setView] = useState("intro");
   const [step, setStep] = useState(0);
   const [answers, setAnswers] = useState({});
@@ -1414,7 +1410,7 @@ function ReflectionScreen() {
   function setAnswer(val) { setAnswers(a => ({ ...a, [NVC_STEPS[step].id]: val })); }
 
   function next() {
-    if (step < NVC_STEPS.length - 1) setStep(s => s + 1);
+    if (step < nvcSteps.length - 1) setStep(s => s + 1);
     else {
       setSaved(prev => [{ id: "r" + Date.now(), date: new Date(), ...answers }, ...prev]);
       setView("done");
@@ -1427,7 +1423,7 @@ function ReflectionScreen() {
         <div style={{ fontSize: 48, marginBottom: 16 }}>🌊</div>
         <div style={{ fontSize: 20, fontWeight: 500, color: C.text, marginBottom: 12 }}>Что на самом деле происходит?</div>
         <div style={{ fontSize: 14, color: C.muted, lineHeight: 1.7, marginBottom: 28, maxWidth: 320, marginLeft: "auto", marginRight: "auto" }}>
-          Когда накрывает тревога или обида, пройди вместе с приложением путь от события до потребности.
+          {t.reflection.intro}
           Это поможет увидеть что стоит за чувством — и что можно сделать.
         </div>
         <button onClick={startNew} style={{ padding: "14px 36px", background: C.accent, border: "none", borderRadius: 50, color: "#f1eef2", fontSize: 15, cursor: "pointer", marginBottom: 24 }}>
@@ -1463,12 +1459,13 @@ function ReflectionScreen() {
             </div>
           ))}
         </div>
-        <button onClick={() => setView("intro")} style={{ padding: "12px 32px", background: C.accent, border: "none", borderRadius: 30, color: "#f1eef2", fontSize: 14, cursor: "pointer" }}>Готово</button>
+        <button onClick={() => setView("intro")} style={{ padding: "12px 32px", background: C.accent, border: "none", borderRadius: 30, color: "#f1eef2", fontSize: 14, cursor: "pointer" }}>{t.reflection.finish}</button>
       </div>
     );
   }
 
-  const current = NVC_STEPS[step];
+  const nvcSteps = t.reflection.steps.map((s, i) => ({ id: ["event","thought","emotion","need","action"][i], title: s.title, prompt: s.hint, placeholder: s.placeholder }));
+    const current = nvcSteps[step];
   return (
     <div style={{ padding: "0 1.5rem 1.5rem" }}>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 28, paddingTop: 8 }}>
@@ -1476,7 +1473,7 @@ function ReflectionScreen() {
           {step === 0 ? "Отмена" : "← Назад"}
         </button>
         <div style={{ display: "flex", gap: 6 }}>
-          {NVC_STEPS.map((_, i) => (
+          {nvcSteps.map((_, i) => (
             <div key={i} style={{ width: i === step ? 20 : 6, height: 6, borderRadius: 3, background: i <= step ? C.accent : C.border, transition: "all 0.3s" }} />
           ))}
         </div>
@@ -1486,7 +1483,7 @@ function ReflectionScreen() {
       <div style={{ fontSize: 18, fontWeight: 500, color: C.text, marginBottom: 20, lineHeight: 1.5 }}>{current.prompt}</div>
       <textarea value={answers[current.id] || ""} onChange={e => setAnswer(e.target.value)} placeholder={current.placeholder} rows={5} style={{ ...taStyle, marginBottom: 24 }} />
       <button onClick={next} style={{ width: "100%", padding: "14px", background: C.accent, border: "none", borderRadius: 16, color: "#f1eef2", fontSize: 15, cursor: "pointer" }}>
-        {step < NVC_STEPS.length - 1 ? "Далее →" : "Завершить ✓"}
+        {step < nvcSteps.length - 1 ? "Далее →" : "Завершить ✓"}
       </button>
     </div>
   );
@@ -1494,7 +1491,7 @@ function ReflectionScreen() {
 
 // ─── Pattern Map Screen — "Карта моих паттернов" + "Что изменилось" ────────────
 
-function PatternMapScreen() {
+function PatternMapScreen({ t = T.ru }) {
   const [tab, setTab] = useState("patterns");
 
   // Aggregate pattern tags from journal seed entries (in a full backend this would span all stored entries)
@@ -1518,7 +1515,7 @@ function PatternMapScreen() {
   return (
     <div style={{ padding: "0 0 1.5rem" }}>
       <div style={{ display: "flex", padding: "0 1.5rem", borderBottom: `1px solid ${C.border}`, marginBottom: 16 }}>
-        {[["patterns","Карта паттернов"],["changes","Что изменилось"]].map(([id,label]) => (
+        {[["patterns", t.patterns.tabs.patterns],["changes", t.patterns.tabs.changes]].map(([id,label]) => (
           <button key={id} onClick={() => setTab(id)} style={{
             padding: "10px 14px", fontSize: 13, color: tab === id ? C.accent : C.muted,
             background: "none", border: "none", cursor: "pointer",
@@ -1530,7 +1527,7 @@ function PatternMapScreen() {
       {tab === "patterns" && (
         <div style={{ padding: "0 1.5rem" }}>
           <div style={{ fontSize: 13, color: C.muted, lineHeight: 1.6, marginBottom: 20 }}>
-            То, что повторяется чаще всего в твоих записях за последнее время — без оценки, просто наблюдение.
+            {t.patterns.intro}
           </div>
           {sortedPatterns.length === 0 ? (
             <div style={{ fontSize: 14, color: C.muted, textAlign: "center", padding: "2rem 0" }}>
@@ -1565,7 +1562,7 @@ function PatternMapScreen() {
       {tab === "changes" && (
         <div style={{ padding: "0 1.5rem" }}>
           <div style={{ fontSize: 13, color: C.muted, lineHeight: 1.6, marginBottom: 20 }}>
-            Сравнение прошлого месяца и текущего — какие состояния стали реже, а какие чаще.
+            {t.patterns.changesIntro}
           </div>
           <div style={{ display: "grid", gap: 16 }}>
             {monthCompare.map(({ tag, prev, now }) => {
@@ -1573,9 +1570,9 @@ function PatternMapScreen() {
               const improving = diff > 0 && ["спокойствие", "гордость собой", "ресурс"].includes(tag);
               const worsening = diff > 0 && !improving;
               const better = diff < 0 && !["спокойствие", "гордость собой", "ресурс"].includes(tag);
-              let badge = "Без изменений", badgeColor = C.muted;
-              if (improving || better) { badge = "Стало легче"; badgeColor = "#9bbf9e"; }
-              else if (worsening || (diff < 0 && ["спокойствие","гордость собой","ресурс"].includes(tag))) { badge = "Стоит заметить"; badgeColor = C.accent; }
+              let badge = t.patterns.noChange, badgeColor = C.muted;
+              if (improving || better) { badge = t.patterns.better; badgeColor = "#9bbf9e"; }
+              else if (worsening || (diff < 0 && ["спокойствие","гордость собой","ресурс"].includes(tag))) { badge = t.patterns.watch; badgeColor = C.accent; }
               return (
                 <div key={tag} style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 16, padding: "14px 16px", backdropFilter: "blur(8px)" }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
@@ -1601,7 +1598,7 @@ function PatternMapScreen() {
             })}
           </div>
           <div style={{ marginTop: 20, fontSize: 12, color: C.muted, lineHeight: 1.6, textAlign: "center" }}>
-            Сравнение становится точнее по мере того как ты ведёшь записи дольше.
+            {t.patterns.note}
           </div>
         </div>
       )}
