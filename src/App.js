@@ -547,11 +547,14 @@ function SplashScreen({ onStart }) {
       />
       <div style={{ position: "absolute", inset: 0, background: `linear-gradient(to bottom, rgba(28,34,42,0.15) 0%, ${C.dark} 100%)` }} />
       <div style={{ position: "relative", padding: "2rem 2rem 3rem" }}>
-        <div style={{ fontSize: 38, fontWeight: 300, color: "#f1eef2", lineHeight: 1.2, marginBottom: 12, fontFamily: "'Nunito', sans-serif" }}>
+        <div style={{ fontSize: 38, fontWeight: 300, color: "#f1eef2", lineHeight: 1.2, marginBottom: 8, fontFamily: "'Nunito', sans-serif" }}>
           Ocean<span style={{ color: "#d6cdd1" }}>Mind</span>
         </div>
-        <div style={{ fontSize: 15, color: "rgba(241,238,242,0.75)", marginBottom: 40, fontWeight: 300, fontFamily: "'Nunito', sans-serif" }}>
+        <div style={{ fontSize: 16, color: "rgba(241,238,242,0.9)", marginBottom: 4, fontWeight: 300, fontFamily: "'Nunito', sans-serif" }}>
           Пространство твоей глубины
+        </div>
+        <div style={{ fontSize: 14, color: "rgba(241,238,242,0.6)", marginBottom: 36, fontWeight: 300, fontFamily: "'Nunito', sans-serif", fontStyle: "italic" }}>
+          A space for your depths
         </div>
         <button onClick={onStart} style={{
           width: "100%", padding: "18px", borderRadius: 50,
@@ -559,7 +562,7 @@ function SplashScreen({ onStart }) {
           border: "1px solid rgba(241,238,242,0.35)", color: "#f1eef2",
           fontSize: 17, fontFamily: "'Nunito', sans-serif", cursor: "pointer", letterSpacing: "0.02em"
         }}>
-          Начать
+          Start · Начать
         </button>
       </div>
     </div>
@@ -1062,7 +1065,7 @@ function JournalScreen({ t = T.ru }) {
   return (
     <div style={{ padding: "0 0 1.5rem" }}>
       <div style={{ display: "flex", padding: "0 1.5rem", borderBottom: `1px solid ${C.border}`, marginBottom: 16 }}>
-        {[["journal", (t && t.journal) ? t.journal.tabs.journal : "Дневник"],["gratitude", (t && t.journal) ? t.journal.tabs.gratitude : "Благодарность"]].map(([id,label]) => (
+        {[["journal", t && t.journal ? t.journal.tabs.journal : "Дневник"],["gratitude", t && t.journal ? t.journal.tabs.gratitude : "Благодарность"]].map(([id,label]) => (
           <button key={id} onClick={() => setTab(id)} style={{
             padding: "10px 16px", fontSize: 14, color: tab === id ? C.accent : C.muted,
             background: "none", border: "none", cursor: "pointer",
@@ -1182,9 +1185,9 @@ function JournalListAndEntry({ t = T.ru,
         <div style={{ marginTop: 28 }}>
           {step < 4
             ? <button onClick={() => setStep(s => s + 1)} disabled={!canNext} style={{ width: "100%", padding: "14px", background: canNext ? C.accent : C.border, border: "none", borderRadius: 16, color: canNext ? "#f1eef2" : C.muted, fontSize: 15, cursor: canNext ? "pointer" : "not-allowed" }}>{(t && t.journal) ? t.journal.next : "Далее →"}</button>
-            : <button onClick={saveEntry} style={{ width: "100%", padding: "14px", background: C.accent, border: "none", borderRadius: 16, color: "#f1eef2", fontSize: 15, cursor: "pointer" }}>Сохранить ✓</button>
+            : <button onClick={saveEntry} style={{ width: "100%", padding: "14px", background: C.accent, border: "none", borderRadius: 16, color: "#f1eef2", fontSize: 15, cursor: "pointer" }}>{(t && t.journal) ? t.journal.save : "Сохранить ✓"}</button>
           }
-          {step > 0 && step < 4 && <button onClick={() => setStep(s => s + 1)} style={{ width: "100%", padding: "10px", background: "none", border: "none", color: C.muted, fontSize: 13, cursor: "pointer", marginTop: 8 }}>Пропустить</button>}
+          {step > 0 && step < 4 && <button onClick={() => setStep(s => s + 1)} style={{ width: "100%", padding: "10px", background: "none", border: "none", color: C.muted, fontSize: 13, cursor: "pointer", marginTop: 8 }}>{(t && t.journal) ? t.journal.skip : "Пропустить"}</button>}
         </div>
       </div>
     );
@@ -1198,7 +1201,7 @@ function JournalListAndEntry({ t = T.ru,
         <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 20 }}>
           <div style={{ fontSize: 36 }}>{MOODS[e.mood]}</div>
           <div>
-            <div style={{ fontSize: 16, fontWeight: 500, color: C.text }}>{MOOD_LABELS[e.mood]}</div>
+            <div style={{ fontSize: 16, fontWeight: 500, color: C.text }}>{(t && t.moodLabels ? t.moodLabels : MOOD_LABELS)[e.mood]}</div>
             <div style={{ fontSize: 13, color: C.muted }}>{formatEntryDate(e.date, t)}</div>
           </div>
         </div>
@@ -1612,35 +1615,44 @@ export default function App() {
   if (onboarding) return (
     <div style={{ background: C.bg, minHeight: "100vh", fontFamily: "'Nunito', sans-serif", maxWidth: 430, margin: "0 auto", padding: "2rem 1.5rem", display: "flex", flexDirection: "column" }}>
       <style>{`* { box-sizing: border-box; margin: 0; padding: 0; } ::-webkit-scrollbar { display: none; }`}</style>
-      <div style={{ fontSize: 24, fontWeight: 500, color: C.text, marginBottom: 6 }}>
-        Добро пожаловать в Ocean<span style={{ color: C.accent2 }}>Mind</span>
+      <div style={{ fontSize: 24, fontWeight: 500, color: C.text, marginBottom: 4 }}>
+        Добро пожаловать · Welcome
       </div>
-      <div style={{ fontSize: 14, color: C.muted, marginBottom: 32, lineHeight: 1.6 }}>
+      <div style={{ fontSize: 22, fontWeight: 500, color: C.text, marginBottom: 6 }}>
+        Ocean<span style={{ color: C.accent2 }}>Mind</span>
+      </div>
+      <div style={{ fontSize: 13, color: C.muted, marginBottom: 4, lineHeight: 1.6 }}>
         Пространство твоей глубины — инструменты для самопознания и внутренней работы.
       </div>
-      <div style={{ display: "grid", gap: 12, marginBottom: 32 }}>
+      <div style={{ fontSize: 12, color: C.muted, marginBottom: 28, lineHeight: 1.6, fontStyle: "italic" }}>
+        A space for self-therapy and inner depth.
+      </div>
+      <div style={{ display: "grid", gap: 10, marginBottom: 28 }}>
         {[
-          { icon: "🎧", title: "Звуки", desc: "Природные звуки для фона и отдыха" },
-          { icon: "〰️", title: t.nav.practices, desc: t.onboarding.items[1].desc },
-          { icon: "✍️", title: "Практики", desc: "Письменные упражнения для работы с эмоциями и паттернами" },
-          { icon: "💬", title: "Аффирмации", desc: "Короткие фразы для поддержки в течение дня" },
-          { icon: "📓", title: "Дневник", desc: "Записи состояний и дневник благодарности" },
-          { icon: "🌊", title: "Разбор", desc: "НВО-метод: от события до потребности" },
-          { icon: "💌", title: "Письма", desc: "Напиши себе в будущее — письмо откроется через выбранное время" },
-          { icon: "🗺️", title: "Карта", desc: "Твои паттерны на основе записей дневника" },
+          { icon: "🎧", ru: "Звуки",       en: "Sounds",        descRu: "Природные звуки для фона и отдыха",                        descEn: "Nature sounds for background and rest" },
+          { icon: "〰️", ru: "Частоты",     en: "Frequencies",   descRu: "Бинауральные ритмы. Только в наушниках.",                  descEn: "Binaural beats. Headphones required." },
+          { icon: "✍️", ru: "Практики",    en: "Practices",     descRu: "Письменные упражнения для работы с эмоциями",              descEn: "Written exercises for emotions and patterns" },
+          { icon: "💬", ru: "Аффирмации",  en: "Affirmations",  descRu: "Короткие фразы для поддержки",                            descEn: "Short phrases for daily support" },
+          { icon: "📓", ru: "Дневник",     en: "Journal",       descRu: "Записи состояний и дневник благодарности",                descEn: "Mood entries and gratitude journal" },
+          { icon: "🌊", ru: "Разбор",      en: "Reflect",       descRu: "НВО-метод: от события до потребности",                    descEn: "From event to need — NVC method" },
+          { icon: "💌", ru: "Письма",      en: "Letters",       descRu: "Напиши себе в будущее",                                   descEn: "Write to your future self" },
+          { icon: "🗺️", ru: "Карта",       en: "Patterns",      descRu: "Твои паттерны из записей дневника",                       descEn: "Your patterns from journal entries" },
         ].map(item => (
           <div key={item.icon} style={{ display: "flex", gap: 14, alignItems: "flex-start", background: C.surface, border: `1px solid ${C.border}`, borderRadius: 16, padding: "12px 14px", backdropFilter: "blur(8px)" }}>
-            <span style={{ fontSize: 22, flexShrink: 0 }}>{item.icon}</span>
-            <div>
-              <div style={{ fontSize: 14, fontWeight: 500, color: C.text, marginBottom: 2 }}>{item.title}</div>
-              <div style={{ fontSize: 12, color: C.muted, lineHeight: 1.5 }}>{item.desc}</div>
+            <span style={{ fontSize: 20, flexShrink: 0 }}>{item.icon}</span>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: 13, fontWeight: 500, color: C.text, marginBottom: 2 }}>
+                {item.ru} · {item.en}
+              </div>
+              <div style={{ fontSize: 11, color: C.muted, lineHeight: 1.5 }}>{item.descRu}</div>
+              <div style={{ fontSize: 11, color: C.muted, lineHeight: 1.5, fontStyle: "italic" }}>{item.descEn}</div>
             </div>
           </div>
         ))}
       </div>
       <button onClick={() => { localStorage.setItem("om_onboarded", "1"); setOnboarding(false); }}
         style={{ width: "100%", padding: "16px", background: C.accent, border: "none", borderRadius: 16, color: "#f1eef2", fontSize: 16, cursor: "pointer", fontFamily: "'Nunito', sans-serif" }}>
-        Начать 🌊
+        Начать · Start 🌊
       </button>
     </div>
   );
