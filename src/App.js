@@ -93,7 +93,7 @@ const T = {
         "За что я благодарен(а) сегодня?",
       ],
       anotherPrompt: "другой вопрос",
-      whatHappened: "Что произошло", whatFelt: "Что почувствовал(а)", whatHelped: "Что помогло", insight: "Осознание", patterns: "Паттерны",
+      whatHappened: t.journal.whatHappened, whatFelt: t.journal.whatFelt, whatHelped: t.journal.whatHelped, insight: t.journal.insight, patterns: "Паттерны",
     },
     // Reflection
     reflection: {
@@ -1197,7 +1197,7 @@ function JournalListAndEntry({ t = T.ru,
     const e = selected;
     return (
       <div style={{ padding: "0 1.5rem 1.5rem" }}>
-        <button onClick={() => setView("list")} style={{ background: "none", border: "none", color: C.muted, cursor: "pointer", fontSize: 13, padding: "0 0 1rem" }}>← Назад</button>
+        <button onClick={() => setView("list")} style={{ background: "none", border: "none", color: C.muted, cursor: "pointer", fontSize: 13, padding: "0 0 1rem" }}>← Back</button>
         <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 20 }}>
           <div style={{ fontSize: 36 }}>{MOODS[e.mood]}</div>
           <div>
@@ -1517,7 +1517,7 @@ function PatternMapScreen({ t = T.ru }) {
             </div>
           )}
           <div style={{ marginTop: 28, background: C.surface, border: `1px solid ${C.border}`, borderRadius: 18, padding: "16px", backdropFilter: "blur(8px)" }}>
-            <div style={{ fontSize: 13, color: C.accent, fontWeight: 500, marginBottom: 6 }}>💭 Мягкое наблюдение</div>
+            <div style={{ fontSize: 13, color: C.accent, fontWeight: 500, marginBottom: 6 }}>{t.patterns.observation}</div>
             <div style={{ fontSize: 13, color: C.text, lineHeight: 1.6 }}>
               {sortedPatterns[0]
                 ? (t === T.en ? `"${sortedPatterns[0][0]}" appears most often in your entries. This is not a diagnosis — just something worth noticing with kindness.` : `«${sortedPatterns[0][0]}» встречается у тебя чаще всего. Это не диагноз и не повод для критики — просто то, на что стоит обратить внимание с добротой.`)
