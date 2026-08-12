@@ -1035,7 +1035,7 @@ function AffirmationsScreen({ t = T.ru }) {
 function JournalScreen({ t = T.ru }) {
   const [tab, setTab] = useState("journal");
   const [view, setView] = useState("list");
-  const seedEntries = t === T.en ? SEED_ENTRIES_EN : SEED_ENTRIES_RU;
+  const seedEntries = [];
   const [entries, setEntries] = useState(() => {
     const stored = loadFromStorage("om_entries", null);
     if (!stored) return seedEntries;
@@ -1056,7 +1056,7 @@ function JournalScreen({ t = T.ru }) {
   const [promptIdx, setPromptIdx] = useState(0);
   const [step, setStep] = useState(0);
 
-  const seedGratitude = t === T.en ? GRATITUDE_SEED_EN : GRATITUDE_SEED_RU;
+  const seedGratitude = [];
   const [gratitudeEntries, setGratitudeEntries] = useState(() => {
     const stored = loadFromStorage("om_gratitude", null);
     if (!stored) return seedGratitude;
