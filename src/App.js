@@ -1709,7 +1709,7 @@ export default function App() {
         {screen === "meditations"  && <MeditationsScreen t={t} />}
 
         {screen === "affirmations" && <AffirmationsScreen t={t} />}
-        {screen === "journal"      && <JournalScreen t={t} />}
+        {screen === "journal"      && <JournalScreen key={lang} t={t} />}
         {screen === "patterns"     && <PatternMapScreen t={t} />}
         {screen === "reflection"   && <ReflectionScreen t={t} />}
         {screen === "letters"      && <FutureLetterScreen t={t} />}
