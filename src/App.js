@@ -69,8 +69,8 @@ const T = {
     journal: {
       tabs: { journal: "Дневник", gratitude: "Благодарность" },
       newEntry: "{t.journal.newEntry}",
-      exampleNote: "{t.journal.exampleNote}",
-      exampleLabel: {t.journal.exampleLabel},
+      exampleNote: "💡 Записи ниже — это примеры. Создай свою первую запись нажав «+ Новая запись».",
+      exampleLabel: "Пример записи",
       steps: [
         { title: "Как ты сейчас?" },
         { title: "Что произошло?", hint: "Пиши свободно..." },
@@ -1242,7 +1242,7 @@ function JournalListAndEntry({ t = T.ru,
           <button key={e.id} onClick={() => { setSelected(e); setView("entry"); }}
             style={{ background: C.surface, border: `1px solid ${(e.id === "e1" || e.id === "e2") ? "rgba(177,156,163,0.2)" : C.border}`, borderRadius: 18, padding: "16px", textAlign: "left", cursor: "pointer", color: C.text, width: "100%", backdropFilter: "blur(8px)", opacity: (e.id === "e1" || e.id === "e2") ? 0.7 : 1 }}>
             {(e.id === "e1" || e.id === "e2") && (
-              <div style={{ fontSize: 10, color: C.muted, marginBottom: 8, textTransform: "uppercase", letterSpacing: "0.08em" }}>Пример записи</div>
+              <div style={{ fontSize: 10, color: C.muted, marginBottom: 8, textTransform: "uppercase", letterSpacing: "0.08em" }}>{t.journal.exampleLabel}</div>
             )}
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
