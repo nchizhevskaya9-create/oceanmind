@@ -146,7 +146,7 @@ const T = {
     // Practices
     practices: {
       tabs: { frequencies: "〰️ Частоты", practices: "✍️ Практики" },
-      intro: "{t.practices.intro}",
+      intro: "Письменные практики помогают разобраться в себе — не просто успокоиться, а понять что происходит внутри.",
       practiceList: [
         { id: "fear",    icon: "🌊", title: "Избавление от страха",    desc: "Письменная практика для работы со страхом",
           steps: [
@@ -598,8 +598,8 @@ function HomeScreen({ mood, setMood, currentSound, setCurrentSound, onNavigate, 
 
       <div style={{ padding: "0 1.5rem", marginBottom: "1.25rem" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-          <div style={{ fontSize: 17, fontWeight: 500, color: C.text }}>Быстрый запуск</div>
-          <button onClick={() => onNavigate("sounds")} style={{ fontSize: 13, color: C.accent, background: "none", border: "none", cursor: "pointer" }}>Все →</button>
+          <div style={{ fontSize: 17, fontWeight: 500, color: C.text }}>{t.home.quickstart}</div>
+          <button onClick={() => onNavigate("sounds")} style={{ fontSize: 13, color: C.accent, background: "none", border: "none", cursor: "pointer" }}>{t.home.all}</button>
         </div>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 10 }}>
           {SOUNDS.slice(0, 3).map(s => (
@@ -620,7 +620,7 @@ function HomeScreen({ mood, setMood, currentSound, setCurrentSound, onNavigate, 
           «{aff.text}»
         </div>
         <button onClick={nextAff} style={{ fontSize: 13, color: C.accent, background: "none", border: `1px solid ${C.border}`, padding: "8px 20px", borderRadius: 30, cursor: "pointer" }}>
-          Следующая →
+          {t.home.next}
         </button>
       </div>
 
@@ -1184,7 +1184,7 @@ function JournalListAndEntry({ t = T.ru,
         )}
         <div style={{ marginTop: 28 }}>
           {step < 4
-            ? <button onClick={() => setStep(s => s + 1)} disabled={!canNext} style={{ width: "100%", padding: "14px", background: canNext ? C.accent : C.border, border: "none", borderRadius: 16, color: canNext ? "#f1eef2" : C.muted, fontSize: 15, cursor: canNext ? "pointer" : "not-allowed" }}>{(t && t.journal) ? t.journal.next : "Next →"}</button>
+            ? <button onClick={() => setStep(s => s + 1)} disabled={!canNext} style={{ width: "100%", padding: "14px", background: canNext ? C.accent : C.border, border: "none", borderRadius: 16, color: canNext ? "#f1eef2" : C.muted, fontSize: 15, cursor: canNext ? "pointer" : "not-allowed" }}>{t.journal.next}</button>
             : <button onClick={saveEntry} style={{ width: "100%", padding: "14px", background: C.accent, border: "none", borderRadius: 16, color: "#f1eef2", fontSize: 15, cursor: "pointer" }}>{(t && t.journal) ? t.journal.save : "Save ✓"}</button>
           }
           {step > 0 && step < 4 && <button onClick={() => setStep(s => s + 1)} style={{ width: "100%", padding: "10px", background: "none", border: "none", color: C.muted, fontSize: 13, cursor: "pointer", marginTop: 8 }}>{(t && t.journal) ? t.journal.skip : "Skip"}</button>}
@@ -1201,7 +1201,7 @@ function JournalListAndEntry({ t = T.ru,
         <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 20 }}>
           <div style={{ fontSize: 36 }}>{MOODS[e.mood]}</div>
           <div>
-            <div style={{ fontSize: 16, fontWeight: 500, color: C.text }}>{t.moodLabels[e.mood]}</div>
+            <div style={{ fontSize: 16, fontWeight: 500, color: C.text }}>{(t.moodLabels || MOOD_LABELS)[e.mood]}</div>
             <div style={{ fontSize: 13, color: C.muted }}>{formatEntryDate(e.date, t)}</div>
           </div>
         </div>
@@ -1608,7 +1608,7 @@ export default function App() {
   const [mood, setMood] = useState(null);
   const [currentSound, setCurrentSound] = useState(SOUNDS[0]);
 
-  const screenTitles = { home: getGreeting(t), sounds: "Звуки", meditations: "Практики", affirmations: "Аффирмации", journal: "Дневник", patterns: "Карта паттернов", reflection: "Разбор", letters: "Письма" };
+  const screenTitles = { home: getGreeting(t), sounds: t.nav.sounds, meditations: t.nav.practices, affirmations: t.nav.affirmations, journal: t.nav.journal, patterns: t.nav.patterns, reflection: t.nav.reflection, letters: t.nav.letters };
 
   if (splash) return <SplashScreen onStart={() => setSplash(false)} />;
 
