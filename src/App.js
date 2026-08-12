@@ -553,7 +553,7 @@ function SplashScreen({ onStart }) {
         <div style={{ fontSize: 16, color: "rgba(241,238,242,0.9)", marginBottom: 4, fontWeight: 300, fontFamily: "'Nunito', sans-serif" }}>
           Пространство твоей глубины
         </div>
-        <div style={{ fontSize: 14, color: "rgba(241,238,242,0.6)", marginBottom: 36, fontWeight: 300, fontFamily: "'Nunito', sans-serif", fontStyle: "italic" }}>
+        <div style={{ fontSize: 16, color: "rgba(241,238,242,0.75)", marginBottom: 36, fontWeight: 300, fontFamily: "'Nunito', sans-serif" }}>
           A space for your depths
         </div>
         <button onClick={onStart} style={{
@@ -931,7 +931,7 @@ function MeditationsScreen({ t = T.ru }) {
                         <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
                           <span style={{ fontSize: 14 }}>{track.icon}</span>
                           <span style={{ background: "rgba(177,156,163,0.3)", color: "#f1eef2", fontSize: 11, padding: "2px 10px", borderRadius: 20 }}>{track.hz}</span>
-                          <span style={{ marginLeft: "auto", color: "rgba(241,238,242,0.7)", fontSize: 11 }}>{track.duration}</span>
+                          <span style={{ marginLeft: "auto", color: "rgba(241,238,242,0.7)", fontSize: 11 }}>{(t.freq.tracks.find(x => x.id === track.id) || track).duration}</span>
                         </div>
                         <div style={{ fontSize: 15, fontWeight: 500, color: "#f1eef2", marginBottom: 2 }}>{(t && t.freq && t.freq.tracks ? (t.freq.tracks.find(x => x.id === track.id) || track) : track).title}</div>
                         <div style={{ fontSize: 12, color: "rgba(241,238,242,0.7)" }}>{(t && t.freq && t.freq.tracks ? (t.freq.tracks.find(x => x.id === track.id) || track) : track).desc}</div>
@@ -1065,7 +1065,7 @@ function JournalScreen({ t = T.ru }) {
   return (
     <div style={{ padding: "0 0 1.5rem" }}>
       <div style={{ display: "flex", padding: "0 1.5rem", borderBottom: `1px solid ${C.border}`, marginBottom: 16 }}>
-        {[["journal", t && t.journal ? t.journal.tabs.journal : "Дневник"],["gratitude", t && t.journal ? t.journal.tabs.gratitude : "Благодарность"]].map(([id,label]) => (
+        {[["journal", t.journal.tabs.journal],["gratitude", t.journal.tabs.gratitude]].map(([id,label]) => (
           <button key={id} onClick={() => setTab(id)} style={{
             padding: "10px 16px", fontSize: 14, color: tab === id ? C.accent : C.muted,
             background: "none", border: "none", cursor: "pointer",
@@ -1201,7 +1201,7 @@ function JournalListAndEntry({ t = T.ru,
         <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 20 }}>
           <div style={{ fontSize: 36 }}>{MOODS[e.mood]}</div>
           <div>
-            <div style={{ fontSize: 16, fontWeight: 500, color: C.text }}>{(t && t.moodLabels ? t.moodLabels : MOOD_LABELS)[e.mood]}</div>
+            <div style={{ fontSize: 16, fontWeight: 500, color: C.text }}>{t.moodLabels[e.mood]}</div>
             <div style={{ fontSize: 13, color: C.muted }}>{formatEntryDate(e.date, t)}</div>
           </div>
         </div>
