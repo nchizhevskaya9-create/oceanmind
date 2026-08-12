@@ -68,7 +68,7 @@ const T = {
     // Journal
     journal: {
       tabs: { journal: "Дневник", gratitude: "Благодарность" },
-      newEntry: "{t.journal.newEntry}",
+      newEntry: "+ Новая запись",
       exampleNote: "💡 Записи ниже — это примеры. Создай свою первую запись нажав «+ Новая запись».",
       exampleLabel: "Пример записи",
       steps: [
@@ -1233,7 +1233,7 @@ function JournalListAndEntry({ t = T.ru,
       {entries.some(e => e.id === "e1" || e.id === "e2") && (
         <div style={{ margin: "0 1.5rem 12px", background: "rgba(177,156,163,0.12)", border: `1px solid ${C.border}`, borderRadius: 14, padding: "10px 14px" }}>
           <div style={{ fontSize: 12, color: C.muted, lineHeight: 1.6 }}>
-            💡 Записи ниже — это примеры. Создай свою первую запись нажав «{t.journal.newEntry}».
+            {t.journal.exampleNote}
           </div>
         </div>
       )}
