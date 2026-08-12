@@ -1104,7 +1104,7 @@ function JournalScreen({ t = T.ru }) {
 
       {tab === "journal" && (
         <JournalListAndEntry
-          view={view} setView={setView} entries={entries} setEntries={setEntries}
+          t={t} view={view} setView={setView} entries={entries} setEntries={setEntries}
           selected={selected} setSelected={setSelected}
           newMood={newMood} setNewMood={setNewMood} newWhat={newWhat} setNewWhat={setNewWhat}
           newFelt={newFelt} setNewFelt={setNewFelt} newHelped={newHelped} setNewHelped={setNewHelped}
