@@ -1039,16 +1039,10 @@ function JournalScreen({ t = T.ru }) {
   const [entries, setEntries] = useState(() => {
     const stored = loadFromStorage("om_entries", null);
     if (!stored) return seedEntries;
-    // If stored has seed entries in wrong language, replace with correct ones
     const hasSeed = stored.some(e => e.id === "e1" || e.id === "e2");
     if (hasSeed) {
-      const firstEntry = stored.find(e => e.id === "e1");
-      const isEnglish = firstEntry && firstEntry.what_happened && firstEntry.what_happened.includes("conflict");
-      const needsEn = t === T.en;
-      if (needsEn !== isEnglish) {
-        const nonSeed = stored.filter(e => e.id !== "e1" && e.id !== "e2");
-        return [...seedEntries, ...nonSeed];
-      }
+      const nonSeed = stored.filter(e => e.id !== "e1" && e.id !== "e2");
+      return [...seedEntries, ...nonSeed];
     }
     return stored;
   });
@@ -1063,7 +1057,11 @@ function JournalScreen({ t = T.ru }) {
   const [step, setStep] = useState(0);
 
   const seedGratitude = t === T.en ? GRATITUDE_SEED_EN : GRATITUDE_SEED_RU;
-  const [gratitudeEntries, setGratitudeEntries] = useState(() => loadFromStorage("om_gratitude", seedGratitude));
+  const [gratitudeEntries, setGratitudeEntries] = useState(() => {
+    const stored = loadFromStorage("om_gratitude", null);
+    if (!stored) return seedGratitude;
+    return seedGratitude.concat(stored.filter(e => e.id !== "g1"));
+  });
   const [gItems, setGItems] = useState(["", "", ""]);
 
   function saveGratitude() {
