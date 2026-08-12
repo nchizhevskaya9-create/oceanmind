@@ -1036,7 +1036,22 @@ function JournalScreen({ t = T.ru }) {
   const [tab, setTab] = useState("journal");
   const [view, setView] = useState("list");
   const seedEntries = t === T.en ? SEED_ENTRIES_EN : SEED_ENTRIES_RU;
-  const [entries, setEntries] = useState(() => loadFromStorage("om_entries", seedEntries));
+  const [entries, setEntries] = useState(() => {
+    const stored = loadFromStorage("om_entries", null);
+    if (!stored) return seedEntries;
+    // If stored has seed entries in wrong language, replace with correct ones
+    const hasSeed = stored.some(e => e.id === "e1" || e.id === "e2");
+    if (hasSeed) {
+      const firstEntry = stored.find(e => e.id === "e1");
+      const isEnglish = firstEntry && firstEntry.what_happened && firstEntry.what_happened.includes("conflict");
+      const needsEn = t === T.en;
+      if (needsEn !== isEnglish) {
+        const nonSeed = stored.filter(e => e.id !== "e1" && e.id !== "e2");
+        return [...seedEntries, ...nonSeed];
+      }
+    }
+    return stored;
+  });
   const [selected, setSelected] = useState(null);
   const [newMood, setNewMood] = useState(null);
   const [newWhat, setNewWhat] = useState("");
