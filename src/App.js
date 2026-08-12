@@ -1601,6 +1601,17 @@ export default function App() {
     const next = lang === "ru" ? "en" : "ru";
     setLang(next);
     localStorage.setItem("om_lang", next);
+    // Clear cached seed entries so they reload in new language
+    const stored = localStorage.getItem("om_entries");
+    if (stored) {
+      try {
+        const parsed = JSON.parse(stored);
+        const hasSeed = parsed.some(e => e.id === "e1" || e.id === "e2");
+        if (hasSeed) localStorage.removeItem("om_entries");
+      } catch(e) {}
+    }
+    localStorage.removeItem("om_gratitude");
+    localStorage.removeItem("om_letters");
   }
   const [splash, setSplash] = useState(true);
   const [onboarding, setOnboarding] = useState(() => !localStorage.getItem("om_onboarded"));
