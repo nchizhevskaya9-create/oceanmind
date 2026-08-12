@@ -68,9 +68,9 @@ const T = {
     // Journal
     journal: {
       tabs: { journal: "Дневник", gratitude: "Благодарность" },
-      newEntry: "+ Новая запись",
-      exampleNote: "💡 Записи ниже — это примеры. Создай свою первую запись нажав «+ Новая запись».",
-      exampleLabel: "Пример записи",
+      newEntry: "{t.journal.newEntry}",
+      exampleNote: "{t.journal.exampleNote}",
+      exampleLabel: {t.journal.exampleLabel},
       steps: [
         { title: "Как ты сейчас?" },
         { title: "Что произошло?", hint: "Пиши свободно..." },
