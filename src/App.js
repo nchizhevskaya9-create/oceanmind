@@ -1050,7 +1050,6 @@ function JournalScreen({ t = T.ru }) {
   const [promptIdx, setPromptIdx] = useState(0);
   const [step, setStep] = useState(0);
 
-  const seedGratitude = [];
   const [gratitudeEntries, setGratitudeEntries] = useState(() => {
     const stored = loadFromStorage("om_gratitude", null);
     if (!stored) return [];
