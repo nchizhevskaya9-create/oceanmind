@@ -863,7 +863,7 @@ function MeditationsScreen({ t = T.ru }) {
         <textarea
           value={practiceAnswers[practiceStep] || ""}
           onChange={e => setPracticeAnswers(a => ({ ...a, [practiceStep]: e.target.value }))}
-          placeholder="Пиши свободно..."
+          placeholder={t === T.en ? "Write freely..." : "Пиши свободно..."}
           rows={6}
           style={taStyle}
         />
@@ -964,7 +964,7 @@ function MeditationsScreen({ t = T.ru }) {
                 <div style={{ flex: 1 }}>
                   <div style={{ fontSize: 15, fontWeight: 500, color: C.text, marginBottom: 4 }}>{p.title}</div>
                   <div style={{ fontSize: 12, color: C.muted }}>{p.desc}</div>
-                  <div style={{ fontSize: 11, color: C.accent, marginTop: 4 }}>{p.steps.length} шага</div>
+                  <div style={{ fontSize: 11, color: C.accent, marginTop: 4 }}>{p.steps.length} {t === T.en ? "steps" : "шага"}</div>
                 </div>
                 <div style={{ color: C.muted, fontSize: 20 }}>›</div>
               </button>
@@ -1053,8 +1053,8 @@ function JournalScreen({ t = T.ru }) {
   const seedGratitude = [];
   const [gratitudeEntries, setGratitudeEntries] = useState(() => {
     const stored = loadFromStorage("om_gratitude", null);
-    if (!stored) return seedGratitude;
-    return seedGratitude.concat(stored.filter(e => e.id !== "g1"));
+    if (!stored) return [];
+    return stored.filter(e => e.id !== "g1");
   });
   const [gItems, setGItems] = useState(["", "", ""]);
 
@@ -1175,7 +1175,7 @@ function JournalListAndEntry({ t = T.ru,
             ))}
           </div>
         )}
-        {step === 1 && <textarea value={newWhat} onChange={e => setNewWhat(e.target.value)} placeholder="Пиши свободно..." rows={5} style={taStyle} />}
+        {step === 1 && <textarea value={newWhat} onChange={e => setNewWhat(e.target.value)} placeholder={t === T.en ? "Write freely..." : "Пиши свободно..."} rows={5} style={taStyle} />}
         {step === 2 && <textarea value={newFelt} onChange={e => setNewFelt(e.target.value)} placeholder="Тревога, усталость, злость..." rows={4} style={taStyle} />}
         {step === 3 && <textarea value={newHelped} onChange={e => setNewHelped(e.target.value)} placeholder="Медитация, звуки, прогулка..." rows={4} style={taStyle} />}
         {step === 4 && (
