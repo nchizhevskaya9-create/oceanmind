@@ -208,7 +208,7 @@ const T = {
 
   en: {
     nav: { home: "Home", sounds: "Sounds", practices: "Practices", affirmations: "Affirmations", journal: "Journal", reflection: "Reflect", letters: "Letters", patterns: "Patterns" },
-    splash: { tagline: "A space for your depths", subtitle: "Allow yourself to rest", start: "Begin" },
+    splash: { tagline: "The space of your depth", subtitle: "Allow yourself to rest", start: "Begin" },
     home: { quickstart: "Quick start", all: "All →", affirmations: "Affirmations", next: "Next →", donation: "🌊 OceanMind is free.\nIf it helps you — support its growth.", sbp: "Card (Russia):", paypal: "PayPal:" },
     greetings: ["Good night", "Good morning", "Good afternoon", "Good evening"],
     days: ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"],
@@ -554,7 +554,7 @@ function SplashScreen({ onStart }) {
           Пространство твоей глубины
         </div>
         <div style={{ fontSize: 16, color: "rgba(241,238,242,0.75)", marginBottom: 36, fontWeight: 300, fontFamily: "'Nunito', sans-serif" }}>
-          A space for your depths
+          The space of your depth
         </div>
         <button onClick={onStart} style={{
           width: "100%", padding: "18px", borderRadius: 50,
