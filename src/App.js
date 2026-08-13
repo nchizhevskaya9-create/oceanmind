@@ -93,7 +93,7 @@ const T = {
         "За что я благодарен(а) сегодня?",
       ],
       anotherPrompt: "другой вопрос",
-      whatHappened: t.journal.whatHappened, whatFelt: t.journal.whatFelt, whatHelped: t.journal.whatHelped, insight: t.journal.insight, patterns: "Паттерны",
+      whatHappened: "Что произошло", whatFelt: "Что почувствовал(а)", whatHelped: "Что помогло", insight: "Осознание", patterns: "Паттерны",
     },
     // Reflection
     reflection: {
