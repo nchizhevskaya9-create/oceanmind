@@ -434,12 +434,6 @@ const SEED_ENTRIES_EN = [
   { id: "e1", date: new Date(Date.now() - 86400000*2), mood: 2, what_happened: "Had a conflict with someone close. Once again felt like I wasn't being heard.", what_felt: "Anger, then guilt, then exhaustion from this cycle.", what_helped: "Listened to rain sounds for 20 minutes. It helped a little.", pattern_tags: ["people-pleasing", "guilt"], insight: "I noticed that I get angry first, then immediately blame myself." },
   { id: "e2", date: new Date(Date.now() - 86400000), mood: 3, what_happened: "Finished a project on time. Got praised at work.", what_felt: "Relief — didn't expect it to go so well.", what_helped: "A morning intention helped me focus.", pattern_tags: ["perfectionism", "pride"], insight: "Confirmed again: once I start, it gets easier." },
 ];
-const GRATITUDE_SEED_RU = [
-  { id: "g1", date: new Date(Date.now() - 86400000), items: ["Утренний кофе в тишине", "Звонок от друга", "Солнце после трёх дождливых дней"] },
-];
-const GRATITUDE_SEED_EN = [
-  { id: "g1", date: new Date(Date.now() - 86400000), items: ["Morning coffee in silence", "A call from a friend", "Sunshine after three rainy days"] },
-];
 const SEED_LETTERS_RU = [
   { id: "l1", createdAt: new Date(Date.now() - 86400000*30), deliverAt: new Date(Date.now() + 86400000*60), text: "Привет, я из прошлого. Надеюсь когда ты это читаешь — стало немного легче.", delivered: false },
 ];
