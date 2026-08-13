@@ -1598,7 +1598,21 @@ const taStyle = { width: "100%", background: C.surface, border: `1px solid ${C.b
 // ─── App ───────────────────────────────────────────────────────────────────────
 
 export default function App() {
-  const [lang, setLang] = useState(() => localStorage.getItem("om_lang") || "ru");
+  const [lang, setLang] = useState(() => {
+    const savedLang = localStorage.getItem("om_lang") || "ru";
+    // Clear old seed entries so they reload fresh
+    try {
+      const stored = localStorage.getItem("om_entries");
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (parsed.some(e => e.id === "e1" || e.id === "e2")) {
+          localStorage.removeItem("om_entries");
+        }
+      }
+      localStorage.removeItem("om_gratitude");
+    } catch(e) {}
+    return savedLang;
+  });
   const t = T[lang];
   const NAV = [
   { id: "home",         icon: "🏠", label: t.nav.home },
