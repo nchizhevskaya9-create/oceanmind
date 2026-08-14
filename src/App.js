@@ -626,8 +626,14 @@ function HomeScreen({ mood, setMood, currentSound, setCurrentSound, onNavigate, 
         <div style={{ fontSize: 12, color: C.text, marginBottom: 4 }}>
           СБП (любой банк): <span style={{ color: C.accent, userSelect: "all" }}>+7 922 291 44 10</span>
         </div>
-        <div style={{ fontSize: 12, color: C.text }}>
+        <div style={{ fontSize: 12, color: C.text, marginBottom: 4 }}>
           PayPal: <span style={{ color: C.accent, userSelect: "all" }}>nchizhevskaya9@gmail.com</span>
+        </div>
+        <div style={{ fontSize: 12, color: C.text, marginBottom: 2 }}>
+          USDT BSC (BEP20):
+        </div>
+        <div style={{ fontSize: 11, color: C.accent, userSelect: "all", wordBreak: "break-all" }}>
+          0x9b0fb4e5ac625a0c6f3d1dd2f74d7339939771dd
         </div>
       </div>
     </div>
