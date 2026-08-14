@@ -1,4 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
+import { getJournalInsight } from "./lib/ai";
+import { useAuth, signInWithEmail, signOut } from "./lib/auth";
+import { migrateLocalDataIfNeeded } from "./lib/migrateLocalData";
 
 // ─── Data ──────────────────────────────────────────────────────────────────────
 
@@ -1128,6 +1131,117 @@ function JournalScreen({ t = T.ru }) {
   );
 }
 
+// ─── Экран входа (необязательный, гостевой режим доступен без него) ────────────
+function AuthScreen({ lang, onClose }) {
+  const [email, setEmail] = useState("");
+  const [sent, setSent] = useState(false);
+  const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(false);
+
+  async function handleSend() {
+    if (!email.trim()) return;
+    setLoading(true);
+    setError(null);
+    try {
+      await signInWithEmail(email.trim(), lang);
+      setSent(true);
+    } catch (err) {
+      setError(err.message || (lang === "en" ? "Something went wrong" : "Что-то пошло не так"));
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <div style={{ padding: "1.5rem", display: "flex", flexDirection: "column", minHeight: "100%" }}>
+      <button onClick={onClose} style={{ background: "none", border: "none", color: C.muted, cursor: "pointer", fontSize: 13, alignSelf: "flex-start", marginBottom: 20 }}>
+        {lang === "en" ? "← Back" : "← Назад"}
+      </button>
+      <div style={{ fontSize: 20, fontWeight: 500, color: C.text, marginBottom: 8 }}>
+        {lang === "en" ? "Sync your data" : "Синхронизировать данные"}
+      </div>
+      <div style={{ fontSize: 13, color: C.muted, marginBottom: 24, lineHeight: 1.6 }}>
+        {lang === "en"
+          ? "Sign in with email to keep your journal safe across devices. Your entries stay private to you."
+          : "Войди по email, чтобы твой дневник сохранился и был доступен на всех устройствах. Записи видны только тебе."}
+      </div>
+      {!sent ? (
+        <>
+          <input
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder={lang === "en" ? "your@email.com" : "твой@email.com"}
+            style={{ width: "100%", background: C.surface, border: `1px solid ${C.border}`, borderRadius: 14, padding: "13px 14px", color: C.text, fontSize: 14, marginBottom: 12, outline: "none", fontFamily: "'Nunito', sans-serif" }}
+          />
+          {error && <div style={{ fontSize: 12, color: "#c98080", marginBottom: 12 }}>{error}</div>}
+          <button onClick={handleSend} disabled={loading} style={{ width: "100%", padding: "14px", background: C.accent, border: "none", borderRadius: 16, color: "#f1eef2", fontSize: 15, cursor: loading ? "default" : "pointer" }}>
+            {loading ? (lang === "en" ? "Sending…" : "Отправляю…") : (lang === "en" ? "Send magic link" : "Отправить ссылку для входа")}
+          </button>
+        </>
+      ) : (
+        <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 16, padding: "16px", fontSize: 14, color: C.text, lineHeight: 1.6 }}>
+          {lang === "en"
+            ? `Check your inbox at ${email} — click the link to sign in.`
+            : `Проверь почту ${email} — перейди по ссылке для входа.`}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── ИИ-рефлексия по записи дневника ────────────────────────────────────────────
+function AiInsightBlock({ entry, lang }) {
+  const [insight, setInsight] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  async function handleAsk() {
+    setLoading(true);
+    setError(null);
+    try {
+      const text = await getJournalInsight([{
+        mood: entry.mood,
+        what_happened: entry.what_happened,
+        what_felt: entry.what_felt,
+        what_helped: entry.what_helped,
+        insight: entry.insight,
+        pattern_tags: entry.pattern_tags,
+      }], lang);
+      setInsight(text);
+    } catch (err) {
+      setError(lang === "en" ? "Couldn't reach AI. Try again later." : "Не получилось связаться с ИИ. Попробуй позже.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <div style={{ marginTop: 4 }}>
+      {!insight && (
+        <button onClick={handleAsk} disabled={loading} style={{
+          width: "100%", padding: "13px", background: loading ? C.border : "rgba(177,156,163,0.18)",
+          border: `1px solid ${C.accent}`, borderRadius: 16, color: C.text, fontSize: 14,
+          cursor: loading ? "default" : "pointer", fontFamily: "'Nunito', sans-serif"
+        }}>
+          {loading
+            ? (lang === "en" ? "Thinking…" : "Думаю…")
+            : (lang === "en" ? "🌊 Ask AI for reflection" : "🌊 Спросить ИИ")}
+        </button>
+      )}
+      {error && <div style={{ fontSize: 12, color: "#c98080", marginTop: 8 }}>{error}</div>}
+      {insight && (
+        <div style={{ background: "rgba(177,156,163,0.12)", border: `1px solid ${C.border}`, borderRadius: 16, padding: "14px 16px", marginTop: 4 }}>
+          <div style={{ fontSize: 11, color: C.muted, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 8 }}>
+            {lang === "en" ? "AI Reflection" : "Рефлексия от ИИ"}
+          </div>
+          <div style={{ fontSize: 14, lineHeight: 1.7, color: C.text, whiteSpace: "pre-wrap" }}>{insight}</div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function JournalListAndEntry({ t = T.ru,
   view, setView, entries, setEntries, selected, setSelected,
   newMood, setNewMood, newWhat, setNewWhat, newFelt, setNewFelt,
@@ -1207,6 +1321,7 @@ function JournalListAndEntry({ t = T.ru,
 
   if (view === "entry" && selected) {
     const e = selected;
+    const lang = t === T.en ? "en" : "ru";
     return (
       <div style={{ padding: "0 1.5rem 1.5rem" }}>
         <button onClick={() => setView("list")} style={{ background: "none", border: "none", color: C.muted, cursor: "pointer", fontSize: 13, padding: "0 0 1rem" }}>← Back</button>
@@ -1224,13 +1339,14 @@ function JournalListAndEntry({ t = T.ru,
           </div>
         ))}
         {e.pattern_tags?.length > 0 && (
-          <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 16, padding: "14px 16px", backdropFilter: "blur(8px)" }}>
+          <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 16, padding: "14px 16px", marginBottom: 10, backdropFilter: "blur(8px)" }}>
             <div style={{ fontSize: 11, color: C.muted, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 10 }}>Паттерны</div>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
               {e.pattern_tags.map(t => <span key={t} style={{ background: "rgba(177,156,163,0.2)", color: C.text, fontSize: 12, padding: "4px 12px", borderRadius: 20 }}>{t}</span>)}
             </div>
           </div>
         )}
+        <AiInsightBlock entry={e} lang={lang} />
       </div>
     );
   }
@@ -1642,6 +1758,12 @@ export default function App() {
   const [screen, setScreen] = useState("home");
   const [mood, setMood] = useState(null);
   const [currentSound, setCurrentSound] = useState(SOUNDS[0]);
+  const [showAuth, setShowAuth] = useState(false);
+  const { user } = useAuth();
+
+  useEffect(() => {
+    if (user) migrateLocalDataIfNeeded(user.id);
+  }, [user]);
 
   const screenTitles = { home: getGreeting(t), sounds: t.nav.sounds, meditations: t.nav.practices, affirmations: t.nav.affirmations, journal: t.nav.journal, patterns: t.nav.patterns, reflection: t.nav.reflection, letters: t.nav.letters };
 
@@ -1710,9 +1832,19 @@ export default function App() {
           <button onClick={toggleLang} style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 20, padding: "4px 12px", fontSize: 12, color: C.text, cursor: "pointer", fontFamily: "'Nunito', sans-serif", backdropFilter: "blur(8px)" }}>
             {lang === "ru" ? "EN" : "RU"}
           </button>
+          <button onClick={() => user ? signOut() : setShowAuth(true)} title={user ? user.email : (lang === "ru" ? "Войти" : "Sign in")}
+            style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 20, padding: "4px 10px", fontSize: 14, color: C.text, cursor: "pointer", backdropFilter: "blur(8px)" }}>
+            {user ? "☁️" : "👤"}
+          </button>
           <div style={{ fontSize: 13, color: C.muted }}>{screenTitles[screen]}</div>
         </div>
       </div>
+
+      {showAuth && (
+        <div style={{ position: "fixed", inset: 0, background: C.bg, maxWidth: 430, margin: "0 auto", zIndex: 50, overflowY: "auto" }}>
+          <AuthScreen lang={lang} onClose={() => setShowAuth(false)} />
+        </div>
+      )}
 
       <div style={{ flex: 1, overflowY: "auto" }}>
         {screen === "home"         && <HomeScreen mood={mood} setMood={setMood} currentSound={currentSound} setCurrentSound={setCurrentSound} onNavigate={setScreen} t={t} />}
