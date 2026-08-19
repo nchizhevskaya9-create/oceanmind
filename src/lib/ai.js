@@ -23,3 +23,8 @@ export async function getJournalInsight(entries, lang = "ru") {
 export async function chatWithAssistant(message, history, lang = "ru") {
   return callAI("chat", message, lang, history);
 }
+
+// Персонализированная практика на основе последних записей дневника
+export async function getPersonalizedPractice(entries, lang = "ru") {
+  return callAI("practice_suggestion", entries, lang);
+}

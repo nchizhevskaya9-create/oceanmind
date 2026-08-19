@@ -29,6 +29,36 @@ or crisis-line support instead of further analysis.`,
 human, no clinical terms or diagnoses. On signs of crisis, gently point to
 professional or crisis-line support.`,
   },
+  practice_suggestion: {
+    ru: `Ты — тёплый ИИ-помощник в приложении OceanMind. Тебе дают несколько последних
+записей дневника пользователя (настроение, что происходило, что помогало).
+Предложи ОДНУ конкретную практику самопомощи, подходящую именно сейчас —
+дыхательное упражнение, письменную технику или короткий ритуал заземления.
+Формат ответа СТРОГО такой (без лишнего текста до или после):
+Название: <короткое название практики>
+Почему: <1-2 предложения, почему это подходит именно сейчас, по-человечески, на "ты">
+Шаги:
+1. <шаг>
+2. <шаг>
+3. <шаг>
+Не диагностируй, не давай медицинских советов. Если записи показывают признаки
+острого кризиса — вместо практики мягко порекомендуй обратиться к специалисту
+или на линию психологической помощи, используя тот же формат с пустыми шагами.`,
+    en: `You are a warm AI companion in OceanMind. You'll receive a few recent journal
+entries (mood, what happened, what helped). Suggest ONE concrete self-help practice
+fitting for right now — a breathing exercise, a journaling technique, or a short
+grounding ritual.
+Respond STRICTLY in this format (nothing before or after):
+Title: <short practice name>
+Why: <1-2 sentences on why this fits right now, warm, second person>
+Steps:
+1. <step>
+2. <step>
+3. <step>
+Don't diagnose or give medical advice. If entries show signs of acute crisis,
+gently suggest professional or crisis-line support instead, using the same format
+with empty steps.`,
+  },
 };
 
 exports.handler = async (event) => {
@@ -64,6 +94,13 @@ exports.handler = async (event) => {
       {
         role: "user",
         content: `Вот запись(и) дневника в формате JSON:\n${JSON.stringify(payload)}`,
+      },
+    ];
+  } else if (mode === "practice_suggestion") {
+    messages = [
+      {
+        role: "user",
+        content: `Вот последние записи дневника в формате JSON:\n${JSON.stringify(payload)}`,
       },
     ];
   } else {
