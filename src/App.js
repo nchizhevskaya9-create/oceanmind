@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { getJournalInsight, chatWithAssistant, getPersonalizedPractice } from "./lib/ai";
+import { chatWithAssistant } from "./lib/ai";
 import { useAuth, signInWithEmail, signOut } from "./lib/auth";
 import { migrateLocalDataIfNeeded } from "./lib/migrateLocalData";
 
@@ -794,66 +794,34 @@ function SoundsScreen({ currentSound, setCurrentSound, t }) {
 
 // ─── Meditations Screen ────────────────────────────────────────────────────────
 
-// ─── Персональная рекомендация практики на основе дневника ─────────────────────
-function PersonalizedPracticeSuggestion({ lang }) {
-  const [suggestion, setSuggestion] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-
-  async function handleAsk() {
-    setLoading(true);
-    setError(null);
-    try {
-      const stored = loadFromStorage("om_entries", []);
-      const recent = (Array.isArray(stored) ? stored : []).slice(0, 5).map(e => ({
-        mood: e.mood,
-        what_happened: e.what_happened,
-        what_felt: e.what_felt,
-        what_helped: e.what_helped,
-        insight: e.insight,
-      }));
-      const payload = recent.length > 0 ? recent : [{ note: lang === "en" ? "No journal entries yet" : "Записей в дневнике пока нет" }];
-      const text = await getPersonalizedPractice(payload, lang);
-      setSuggestion(text);
-    } catch (err) {
-      setError(lang === "en" ? "Couldn't reach AI. Try again later." : "Не получилось связаться с ИИ. Попробуй позже.");
-    } finally {
-      setLoading(false);
-    }
+// ─── Кнопка перехода в чат с ИИ, с контекстом последних записей ────────────────
+function AskAIPracticeButton({ lang, onAskAI }) {
+  function handleClick() {
+    const stored = loadFromStorage("om_entries", []);
+    const recent = (Array.isArray(stored) ? stored : []).slice(0, 5);
+    const summary = recent.length
+      ? recent.map(e => `— ${e.what_happened || ""} ${e.what_felt ? "(" + e.what_felt + ")" : ""}`.trim()).join("\n")
+      : (lang === "en" ? "No journal entries yet." : "Записей в дневнике пока нет.");
+    const msg = lang === "en"
+      ? `Based on my recent journal entries below, suggest one concrete self-help practice for me right now:\n${summary}`
+      : `Вот мои последние записи дневника. Подбери мне одну конкретную практику самопомощи, подходящую сейчас:\n${summary}`;
+    onAskAI(msg);
   }
 
   return (
     <div style={{ padding: "0 1.5rem 16px" }}>
-      {!suggestion && (
-        <button onClick={handleAsk} disabled={loading} style={{
-          width: "100%", padding: "14px", background: loading ? C.border : "rgba(177,156,163,0.18)",
-          border: `1px solid ${C.accent}`, borderRadius: 16, color: C.text, fontSize: 14,
-          cursor: loading ? "default" : "pointer", fontFamily: "'Nunito', sans-serif"
-        }}>
-          {loading
-            ? (lang === "en" ? "Thinking…" : "Думаю…")
-            : (lang === "en" ? "✨ Suggest a practice for me" : "✨ Подобрать практику для меня")}
-        </button>
-      )}
-      {error && <div style={{ fontSize: 12, color: "#c98080", marginTop: 8 }}>{error}</div>}
-      {suggestion && (
-        <div style={{ background: "rgba(177,156,163,0.12)", border: `1px solid ${C.border}`, borderRadius: 16, padding: "16px 18px" }}>
-          <div style={{ fontSize: 11, color: C.muted, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 10 }}>
-            {lang === "en" ? "Suggested for you" : "Подобрано для тебя"}
-          </div>
-          <div style={{ fontSize: 14, lineHeight: 1.8, color: C.text, whiteSpace: "pre-wrap" }}>{suggestion}</div>
-          <button onClick={() => setSuggestion(null)} style={{
-            marginTop: 14, background: "none", border: "none", color: C.accent, fontSize: 12, cursor: "pointer", padding: 0
-          }}>
-            {lang === "en" ? "Ask again" : "Спросить ещё раз"}
-          </button>
-        </div>
-      )}
+      <button onClick={handleClick} style={{
+        width: "100%", padding: "14px", background: "rgba(177,156,163,0.18)",
+        border: `1px solid ${C.accent}`, borderRadius: 16, color: C.text, fontSize: 14,
+        cursor: "pointer", fontFamily: "'Nunito', sans-serif"
+      }}>
+        {lang === "en" ? "✨ Ask AI for a practice" : "✨ Спросить у ИИ практику"}
+      </button>
     </div>
   );
 }
 
-function MeditationsScreen({ t = T.ru }) {
+function MeditationsScreen({ t = T.ru, onAskAI }) {
   const [tab, setTab] = useState("frequencies");
   const [playing, setPlaying] = useState(null);
   const [expanded, setExpanded] = useState(null);
@@ -895,7 +863,7 @@ function MeditationsScreen({ t = T.ru }) {
       return (
         <div style={{ padding: "2rem 1.5rem", textAlign: "center" }}>
           <div style={{ fontSize: 48, marginBottom: 16 }}>🌿</div>
-          <div style={{ fontSize: 18, fontWeight: 500, color: C.text, marginBottom: 24 }}>Практика завершена</div>
+          <div style={{ fontSize: 18, fontWeight: 500, color: C.text, marginBottom: 24 }}>{t.practices ? t.practices.done : "Практика завершена"}</div>
           <div style={{ display: "grid", gap: 10, marginBottom: 28, textAlign: "left" }}>
             {p.steps.map((s, i) => practiceAnswers[i] && (
               <div key={i} style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 14, padding: "12px 14px", backdropFilter: "blur(8px)" }}>
@@ -906,7 +874,7 @@ function MeditationsScreen({ t = T.ru }) {
           </div>
           <button onClick={() => { setPracticeIdx(null); setPracticeStep(0); setPracticeAnswers({}); }}
             style={{ padding: "12px 32px", background: C.accent, border: "none", borderRadius: 30, color: "#f1eef2", fontSize: 14, cursor: "pointer" }}>
-            Завершить
+            {t.practices ? t.practices.finish : "Завершить"}
           </button>
         </div>
       );
@@ -939,13 +907,13 @@ function MeditationsScreen({ t = T.ru }) {
         <div style={{ marginTop: 20, display: "flex", gap: 10 }}>
           <button onClick={() => setPracticeStep(s => s + 1)}
             style={{ flex: 1, padding: "14px", background: C.accent, border: "none", borderRadius: 16, color: "#f1eef2", fontSize: 15, cursor: "pointer" }}>
-            {practiceStep < p.steps.length - 1 ? "Next →" : "Done ✓"}
+            {practiceStep < p.steps.length - 1 ? (t.practices ? t.practices.next : "Далее →") : (t.practices ? t.practices.finish : "Готово ✓")}
           </button>
         </div>
         {practiceStep < p.steps.length - 1 && (
           <button onClick={() => setPracticeStep(s => s + 1)}
             style={{ width: "100%", padding: "10px", background: "none", border: "none", color: C.muted, fontSize: 13, cursor: "pointer", marginTop: 8 }}>
-            Пропустить
+            {t.practices ? t.practices.skip : "Пропустить"}
           </button>
         )}
       </div>
@@ -965,7 +933,7 @@ function MeditationsScreen({ t = T.ru }) {
         ))}
       </div>
 
-      <PersonalizedPracticeSuggestion lang={lang} />
+      <AskAIPracticeButton lang={lang} onAskAI={onAskAI} />
 
       {/* Frequencies tab */}
       {tab === "frequencies" && (
@@ -1097,7 +1065,7 @@ function AffirmationsScreen({ t = T.ru }) {
 
 // ─── Journal Screen ────────────────────────────────────────────────────────────
 
-function JournalScreen({ t = T.ru }) {
+function JournalScreen({ t = T.ru, onAskAI }) {
   const [tab, setTab] = useState("journal");
   const [view, setView] = useState("list");
   const seedEntries = [];
@@ -1187,6 +1155,7 @@ function JournalScreen({ t = T.ru }) {
           newFelt={newFelt} setNewFelt={setNewFelt} newHelped={newHelped} setNewHelped={setNewHelped}
           newInsight={newInsight} setNewInsight={setNewInsight} newTags={newTags} setNewTags={setNewTags}
           promptIdx={promptIdx} setPromptIdx={setPromptIdx} step={step} setStep={setStep}
+          onAskAI={onAskAI}
         />
       )}
     </div>
@@ -1194,7 +1163,7 @@ function JournalScreen({ t = T.ru }) {
 }
 
 // ─── Чат-ассистент ───────────────────────────────────────────────────────────
-function ChatAssistantScreen({ t = T.ru, lang = "ru" }) {
+function ChatAssistantScreen({ t = T.ru, lang = "ru", seed = null, onSeedConsumed }) {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
@@ -1205,8 +1174,16 @@ function ChatAssistantScreen({ t = T.ru, lang = "ru" }) {
     if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
   }, [messages, loading]);
 
-  async function handleSend() {
-    const text = input.trim();
+  useEffect(() => {
+    if (seed) {
+      handleSend(seed);
+      onSeedConsumed && onSeedConsumed();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [seed]);
+
+  async function handleSend(overrideText) {
+    const text = (overrideText ?? input).trim();
     if (!text || loading) return;
     const nextMessages = [...messages, { role: "user", content: text }];
     setMessages(nextMessages);
@@ -1279,7 +1256,7 @@ function ChatAssistantScreen({ t = T.ru, lang = "ru" }) {
             fontFamily: "'Nunito', sans-serif", maxHeight: 100
           }}
         />
-        <button onClick={handleSend} disabled={loading || !input.trim()} style={{
+        <button onClick={() => handleSend()} disabled={loading || !input.trim()} style={{
           width: 44, height: 44, borderRadius: "50%", border: "none",
           background: (loading || !input.trim()) ? C.border : C.accent,
           color: "#f1eef2", fontSize: 18, cursor: (loading || !input.trim()) ? "default" : "pointer",
@@ -1351,55 +1328,29 @@ function AuthScreen({ lang, onClose }) {
   );
 }
 
-// ─── ИИ-рефлексия по записи дневника ────────────────────────────────────────────
-function AiInsightBlock({ entry, lang }) {
-  const [insight, setInsight] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-
-  async function handleAsk() {
-    setLoading(true);
-    setError(null);
-    try {
-      const text = await getJournalInsight([{
-        mood: entry.mood,
-        what_happened: entry.what_happened,
-        what_felt: entry.what_felt,
-        what_helped: entry.what_helped,
-        insight: entry.insight,
-        pattern_tags: entry.pattern_tags,
-      }], lang);
-      setInsight(text);
-    } catch (err) {
-      setError(lang === "en" ? "Couldn't reach AI. Try again later." : "Не получилось связаться с ИИ. Попробуй позже.");
-    } finally {
-      setLoading(false);
-    }
+// ─── Кнопка перехода в чат с ИИ по конкретной записи дневника ──────────────────
+function AskAIAboutEntryButton({ entry, lang, onAskAI }) {
+  function handleClick() {
+    const parts = [
+      entry.what_happened && (lang === "en" ? "What happened: " : "Что произошло: ") + entry.what_happened,
+      entry.what_felt && (lang === "en" ? "What I felt: " : "Что я почувствовал(а): ") + entry.what_felt,
+      entry.what_helped && (lang === "en" ? "What helped: " : "Что помогло: ") + entry.what_helped,
+      entry.insight && (lang === "en" ? "Insight: " : "Осознание: ") + entry.insight,
+    ].filter(Boolean).join("\n");
+    const msg = lang === "en"
+      ? `Here's a journal entry of mine. Could you gently reflect on it?\n${parts}`
+      : `Вот моя запись из дневника. Помоги мне мягко её отрефлексировать:\n${parts}`;
+    onAskAI(msg);
   }
 
   return (
-    <div style={{ marginTop: 4 }}>
-      {!insight && (
-        <button onClick={handleAsk} disabled={loading} style={{
-          width: "100%", padding: "13px", background: loading ? C.border : "rgba(177,156,163,0.18)",
-          border: `1px solid ${C.accent}`, borderRadius: 16, color: C.text, fontSize: 14,
-          cursor: loading ? "default" : "pointer", fontFamily: "'Nunito', sans-serif"
-        }}>
-          {loading
-            ? (lang === "en" ? "Thinking…" : "Думаю…")
-            : (lang === "en" ? "🌊 Ask AI for reflection" : "🌊 Спросить ИИ")}
-        </button>
-      )}
-      {error && <div style={{ fontSize: 12, color: "#c98080", marginTop: 8 }}>{error}</div>}
-      {insight && (
-        <div style={{ background: "rgba(177,156,163,0.12)", border: `1px solid ${C.border}`, borderRadius: 16, padding: "14px 16px", marginTop: 4 }}>
-          <div style={{ fontSize: 11, color: C.muted, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 8 }}>
-            {lang === "en" ? "AI Reflection" : "Рефлексия от ИИ"}
-          </div>
-          <div style={{ fontSize: 14, lineHeight: 1.7, color: C.text, whiteSpace: "pre-wrap" }}>{insight}</div>
-        </div>
-      )}
-    </div>
+    <button onClick={handleClick} style={{
+      width: "100%", padding: "13px", background: "rgba(177,156,163,0.18)",
+      border: `1px solid ${C.accent}`, borderRadius: 16, color: C.text, fontSize: 14,
+      cursor: "pointer", fontFamily: "'Nunito', sans-serif", marginTop: 4
+    }}>
+      {lang === "en" ? "🌊 Ask AI about this entry" : "🌊 Спросить у ИИ об этой записи"}
+    </button>
   );
 }
 
@@ -1407,7 +1358,7 @@ function JournalListAndEntry({ t = T.ru,
   view, setView, entries, setEntries, selected, setSelected,
   newMood, setNewMood, newWhat, setNewWhat, newFelt, setNewFelt,
   newHelped, setNewHelped, newInsight, setNewInsight, newTags, setNewTags,
-  promptIdx, setPromptIdx, step, setStep
+  promptIdx, setPromptIdx, step, setStep, onAskAI
 }) {
   function saveEntry() {
     const e = { id: "e" + Date.now(), date: new Date(), mood: newMood ?? 2, what_happened: newWhat, what_felt: newFelt, what_helped: newHelped, pattern_tags: newTags, insight: newInsight };
@@ -1507,7 +1458,7 @@ function JournalListAndEntry({ t = T.ru,
             </div>
           </div>
         )}
-        <AiInsightBlock entry={e} lang={lang} />
+        <AskAIAboutEntryButton entry={e} lang={lang} onAskAI={onAskAI} />
       </div>
     );
   }
@@ -1921,6 +1872,11 @@ export default function App() {
   const [mood, setMood] = useState(null);
   const [currentSound, setCurrentSound] = useState(SOUNDS[0]);
   const [showAuth, setShowAuth] = useState(false);
+  const [chatSeed, setChatSeed] = useState(null);
+  function goToChat(seedText) {
+    setChatSeed(seedText);
+    setScreen("chat");
+  }
   const { user } = useAuth();
 
   useEffect(() => {
@@ -2011,14 +1967,14 @@ export default function App() {
       <div style={{ flex: 1, overflowY: "auto" }}>
         {screen === "home"         && <HomeScreen mood={mood} setMood={setMood} currentSound={currentSound} setCurrentSound={setCurrentSound} onNavigate={setScreen} t={t} />}
         {screen === "sounds"       && <SoundsScreen currentSound={currentSound} setCurrentSound={setCurrentSound} t={t} />}
-        {screen === "meditations"  && <MeditationsScreen t={t} />}
+        {screen === "meditations"  && <MeditationsScreen t={t} onAskAI={goToChat} />}
 
         {screen === "affirmations" && <AffirmationsScreen t={t} />}
-        {screen === "journal"      && <JournalScreen key={lang} t={t} />}
+        {screen === "journal"      && <JournalScreen key={lang} t={t} onAskAI={goToChat} />}
         {screen === "patterns"     && <PatternMapScreen t={t} />}
         {screen === "reflection"   && <ReflectionScreen t={t} />}
         {screen === "letters"      && <FutureLetterScreen t={t} />}
-        {screen === "chat"         && <ChatAssistantScreen t={t} lang={lang} />}
+        {screen === "chat"         && <ChatAssistantScreen t={t} lang={lang} seed={chatSeed} onSeedConsumed={() => setChatSeed(null)} />}
       </div>
 
       <div style={{ display: "flex", justifyContent: "space-between", gap: 0, padding: "10px 4px 12px", borderTop: `1px solid ${C.border}`, flexShrink: 0, background: "rgba(82,93,107,0.92)", backdropFilter: "blur(10px)" }}>
