@@ -25,6 +25,7 @@ const T = {
     // Sounds
     sounds: { filters: { all: "Все", sleep: "Сон", relax: "Расслабление", focus: "Фокус", meditate: "Медитация" } },
     soundList: [
+      { id: "rain",     name: "Дождь",        category: "Природа" },
       { id: "fire",     name: "Камин",        category: "Уют" },
       { id: "ocean",    name: "Океан",        category: "Волны" },
       { id: "forest",   name: "Лес",          category: "Природа" },
@@ -218,6 +219,7 @@ const T = {
     moodLabels: ["Hard", "Neutral", "OK", "Good", "Great"],
     sounds: { filters: { all: "All", sleep: "Sleep", relax: "Relax", focus: "Focus", meditate: "Meditate" } },
     soundList: [
+      { id: "rain",     name: "Rain",          category: "Nature" },
       { id: "fire",     name: "Fireplace",     category: "Cozy" },
       { id: "ocean",    name: "Ocean",         category: "Waves" },
       { id: "forest",   name: "Forest",        category: "Nature" },
@@ -394,6 +396,7 @@ const T = {
   },
 };
 const SOUNDS = [
+  { id: "rain",     name: "Дождь",        category: "Природа",   duration: 2160, tag: "sleep",   file: "rain.mp3",     photo: "https://images.unsplash.com/photo-1515694346937-94d85e41e6f0?w=400&q=80" },
   { id: "fire",     name: "Камин",        category: "Уют",       duration: 2700, tag: "relax",   file: "fire.mp3",     photo: "https://images.pexels.com/photos/11254616/pexels-photo-11254616.jpeg?auto=compress&w=800&q=80" },
   { id: "ocean",    name: "Океан",        category: "Волны",     duration: 3600, tag: "sleep",   file: "ocean.mp3",    photo: "https://images.unsplash.com/photo-1505118380757-91f5f5632de0?w=400&q=80" },
   { id: "forest",   name: "Лес",          category: "Природа",   duration: 2400, tag: "relax",   file: "forest.mp3",   photo: "https://images.unsplash.com/photo-1448375240586-882707db888b?w=400&q=80" },
