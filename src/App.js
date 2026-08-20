@@ -1321,6 +1321,10 @@ function AuthScreen({ lang, onClose }) {
           <button onClick={handleSend} disabled={loading} style={{ width: "100%", padding: "14px", background: C.accent, border: "none", borderRadius: 16, color: "#f1eef2", fontSize: 15, cursor: loading ? "default" : "pointer" }}>
             {loading ? (lang === "en" ? "Sending…" : "Отправляю…") : (lang === "en" ? "Send magic link" : "Отправить ссылку для входа")}
           </button>
+          <a href="/privacy.html" target="_blank" rel="noopener noreferrer"
+            style={{ display: "block", textAlign: "center", marginTop: 16, fontSize: 11, color: C.muted }}>
+            {lang === "en" ? "Privacy Policy" : "Политика конфиденциальности"}
+          </a>
         </>
       ) : (
         <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 16, padding: "16px", fontSize: 14, color: C.text, lineHeight: 1.6 }}>
