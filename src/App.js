@@ -1243,6 +1243,11 @@ function ChatAssistantScreen({ t = T.ru, lang = "ru", seed = null, onSeedConsume
         )}
         {error && <div style={{ fontSize: 12, color: "#c98080", textAlign: "center", marginTop: 8 }}>{error}</div>}
       </div>
+      <div style={{ fontSize: 10, color: C.muted, textAlign: "center", padding: "0 8px", lineHeight: 1.5 }}>
+        {lang === "en"
+          ? <>Messages are sent to Anthropic (Claude AI) to generate replies. AI, not a therapist. In crisis — <b style={{ color: C.accent }}>findahelpline.com</b></>
+          : <>Сообщения передаются Anthropic (Claude) для ответа. Это ИИ, а не терапевт. При кризисе — <b style={{ color: C.accent }}>8-800-100-49-94</b></>}
+      </div>
       <div style={{ display: "flex", gap: 8, padding: "10px 0 16px", flexShrink: 0 }}>
         <textarea
           value={input}
@@ -1924,6 +1929,18 @@ export default function App() {
             </div>
           </div>
         ))}
+      </div>
+      <div style={{ background: "rgba(177,156,163,0.12)", border: `1px solid ${C.border}`, borderRadius: 16, padding: "14px 16px", marginBottom: 20, fontSize: 12, color: C.muted, lineHeight: 1.6 }}>
+        <div style={{ marginBottom: 6 }}>
+          OceanMind не заменяет профессиональную психологическую или медицинскую помощь.
+          Если тебе тяжело прямо сейчас — обратись к специалисту или на линию поддержки:
+          <b style={{ color: C.text }}> 8-800-100-49-94</b> (Россия, бесплатно, круглосуточно).
+        </div>
+        <div style={{ fontStyle: "italic" }}>
+          OceanMind is not a substitute for professional mental health or medical care.
+          If you're struggling right now, please reach out to a professional or a crisis line
+          (e.g. <b style={{ color: C.text }}>findahelpline.com</b> for international options).
+        </div>
       </div>
       <button onClick={() => { localStorage.setItem("om_onboarded", "1"); setOnboarding(false); }}
         style={{ width: "100%", padding: "16px", background: C.accent, border: "none", borderRadius: 16, color: "#f1eef2", fontSize: 16, cursor: "pointer", fontFamily: "'Nunito', sans-serif" }}>
