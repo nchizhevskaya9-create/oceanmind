@@ -626,57 +626,84 @@ function HomeScreen({ mood, setMood, currentSound, setCurrentSound, onNavigate, 
   );
 }
 
-const CROSSFADE_SECONDS = 1.2;
+const PRELOAD_LEAD_SECONDS = 8;
+const CROSSFADE_SECONDS = 1.5;
 
-// Создаёт "плеер" с бесшовным зацикливанием: под конец трека запускает вторую копию
-// с начала и плавно перетекает громкость между ними, маскируя щелчок/паузу на стыке
-// (mp3 сам по себе не гарантирует идеально бесшовную петлю).
+// Создаёт "плеер" с бесшовным зацикливанием: заранее (за PRELOAD_LEAD_SECONDS до конца)
+// начинает подгружать вторую копию трека, а непосредственно перед стыком (CROSSFADE_SECONDS)
+// плавно перетекает громкость между ними. Если вторая копия по какой-то причине
+// не смогла начать воспроизведение вовремя (типично для мобильных браузеров) —
+// вместо тишины просто перезапускает текущий трек с начала, чтобы звук не пропадал.
 function createLoopingPlayer(src, initialVolume) {
   let current = new Audio(src);
+  current.preload = "auto";
   let next = null;
+  let crossfadeStarted = false;
   let volume = initialVolume;
   let destroyed = false;
   let rafId = null;
 
   current.volume = volume;
 
-  function attachCrossfadeWatcher(audio) {
+  function attachWatcher(audio) {
     function onTimeUpdate() {
       if (destroyed) return;
       const dur = audio.duration;
-      if (!dur || isNaN(dur)) return;
-      if (!next && dur - audio.currentTime <= CROSSFADE_SECONDS) {
+      if (!dur || isNaN(dur) || !isFinite(dur)) return;
+      const remaining = dur - audio.currentTime;
+      if (!next && remaining <= PRELOAD_LEAD_SECONDS) {
         next = new Audio(src);
+        next.preload = "auto";
         next.volume = 0;
-        next.play().catch(() => {});
-        attachCrossfadeWatcher(next);
-        startCrossfade(audio, next);
+      }
+      if (next && !crossfadeStarted && remaining <= CROSSFADE_SECONDS) {
+        crossfadeStarted = true;
+        beginCrossfade(audio, next);
       }
     }
     audio.addEventListener("timeupdate", onTimeUpdate);
-    audio._omTimeUpdateHandler = onTimeUpdate;
+    audio._omHandler = onTimeUpdate;
   }
 
-  function startCrossfade(fromAudio, toAudio) {
-    const startedAt = performance.now();
-    function step(now) {
-      if (destroyed) return;
-      const t = Math.min((now - startedAt) / 1000 / CROSSFADE_SECONDS, 1);
-      fromAudio.volume = Math.max(volume * (1 - t), 0);
-      toAudio.volume = Math.min(volume * t, volume);
-      if (t < 1) {
-        rafId = requestAnimationFrame(step);
-      } else {
-        fromAudio.pause();
-        if (fromAudio._omTimeUpdateHandler) fromAudio.removeEventListener("timeupdate", fromAudio._omTimeUpdateHandler);
-        current = toAudio;
-        next = null;
+  function beginCrossfade(fromAudio, toAudio) {
+    const playPromise = toAudio.play();
+
+    function runFade() {
+      attachWatcher(toAudio);
+      const startedAt = performance.now();
+      function step(now) {
+        if (destroyed) return;
+        const t = Math.min((now - startedAt) / 1000 / CROSSFADE_SECONDS, 1);
+        fromAudio.volume = Math.max(volume * (1 - t), 0);
+        toAudio.volume = Math.min(volume * t, volume);
+        if (t < 1) {
+          rafId = requestAnimationFrame(step);
+        } else {
+          fromAudio.pause();
+          if (fromAudio._omHandler) fromAudio.removeEventListener("timeupdate", fromAudio._omHandler);
+          current = toAudio;
+          next = null;
+          crossfadeStarted = false;
+        }
       }
+      rafId = requestAnimationFrame(step);
     }
-    rafId = requestAnimationFrame(step);
+
+    if (playPromise && typeof playPromise.then === "function") {
+      playPromise.then(runFade).catch(() => {
+        // Не удалось вовремя запустить следующую копию — лучше перезапустить
+        // текущий трек с начала, чем оставить тишину.
+        next = null;
+        crossfadeStarted = false;
+        fromAudio.currentTime = 0;
+        fromAudio.play().catch(() => {});
+      });
+    } else {
+      runFade();
+    }
   }
 
-  attachCrossfadeWatcher(current);
+  attachWatcher(current);
 
   return {
     play() { current.play().catch(() => {}); },
@@ -690,7 +717,7 @@ function createLoopingPlayer(src, initialVolume) {
       destroyed = true;
       if (rafId) cancelAnimationFrame(rafId);
       current.pause();
-      if (current._omTimeUpdateHandler) current.removeEventListener("timeupdate", current._omTimeUpdateHandler);
+      if (current._omHandler) current.removeEventListener("timeupdate", current._omHandler);
       if (next) next.pause();
     },
   };
