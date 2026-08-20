@@ -621,7 +621,24 @@ function HomeScreen({ mood, setMood, currentSound, setCurrentSound, onNavigate, 
         </button>
       </div>
 
-      {/* Donation-блок убран по решению Наташи (19.08.2026) */}
+      {/* Donation */}
+      <div style={{ margin: "1.25rem 1.5rem 0.5rem", background: C.surface, border: `1px solid ${C.border}`, borderRadius: 18, padding: "14px 16px", backdropFilter: "blur(8px)", textAlign: "center" }}>
+        <div style={{ fontSize: 12, color: C.muted, marginBottom: 8, lineHeight: 1.6 }}>
+          {t && t.home ? (t === T.en ? "🌊 OceanMind is free. If it helps you — support its growth." : "🌊 OceanMind — бесплатное приложение. Если оно тебе помогает — поддержи развитие.") : "🌊 OceanMind — бесплатное приложение."}
+        </div>
+        <div style={{ fontSize: 12, color: C.text, marginBottom: 4 }}>
+          СБП (любой банк): <span style={{ color: C.accent, userSelect: "all" }}>+7 922 291 44 10</span>
+        </div>
+        <div style={{ fontSize: 12, color: C.text, marginBottom: 4 }}>
+          PayPal: <span style={{ color: C.accent, userSelect: "all" }}>nchizhevskaya9@gmail.com</span>
+        </div>
+        <div style={{ fontSize: 12, color: C.text, marginBottom: 2 }}>
+          USDT BSC (BEP20):
+        </div>
+        <div style={{ fontSize: 11, color: C.accent, userSelect: "all", wordBreak: "break-all" }}>
+          0x9b0fb4e5ac625a0c6f3d1dd2f74d7339939771dd
+        </div>
+      </div>
     </div>
   );
 }
