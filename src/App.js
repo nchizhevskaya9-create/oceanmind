@@ -621,106 +621,26 @@ function HomeScreen({ mood, setMood, currentSound, setCurrentSound, onNavigate, 
         </button>
       </div>
 
-      {/* Donation-блок убран по решению Наташи (19.08.2026) */}
+      {/* Donation */}
+      <div style={{ margin: "1.25rem 1.5rem 0.5rem", background: C.surface, border: `1px solid ${C.border}`, borderRadius: 18, padding: "14px 16px", backdropFilter: "blur(8px)", textAlign: "center" }}>
+        <div style={{ fontSize: 12, color: C.muted, marginBottom: 8, lineHeight: 1.6 }}>
+          {t && t.home ? (t === T.en ? "🌊 OceanMind is free. If it helps you — support its growth." : "🌊 OceanMind — бесплатное приложение. Если оно тебе помогает — поддержи развитие.") : "🌊 OceanMind — бесплатное приложение."}
+        </div>
+        <div style={{ fontSize: 12, color: C.text, marginBottom: 4 }}>
+          СБП (любой банк): <span style={{ color: C.accent, userSelect: "all" }}>+7 922 291 44 10</span>
+        </div>
+        <div style={{ fontSize: 12, color: C.text, marginBottom: 4 }}>
+          PayPal: <span style={{ color: C.accent, userSelect: "all" }}>nchizhevskaya9@gmail.com</span>
+        </div>
+        <div style={{ fontSize: 12, color: C.text, marginBottom: 2 }}>
+          USDT BSC (BEP20):
+        </div>
+        <div style={{ fontSize: 11, color: C.accent, userSelect: "all", wordBreak: "break-all" }}>
+          0x9b0fb4e5ac625a0c6f3d1dd2f74d7339939771dd
+        </div>
+      </div>
     </div>
   );
-}
-
-const PRELOAD_LEAD_SECONDS = 8;
-const CROSSFADE_SECONDS = 1.5;
-
-// Создаёт "плеер" с бесшовным зацикливанием: заранее (за PRELOAD_LEAD_SECONDS до конца)
-// начинает подгружать вторую копию трека, а непосредственно перед стыком (CROSSFADE_SECONDS)
-// плавно перетекает громкость между ними. Если вторая копия по какой-то причине
-// не смогла начать воспроизведение вовремя (типично для мобильных браузеров) —
-// вместо тишины просто перезапускает текущий трек с начала, чтобы звук не пропадал.
-function createLoopingPlayer(src, initialVolume) {
-  let current = new Audio(src);
-  current.preload = "auto";
-  let next = null;
-  let crossfadeStarted = false;
-  let volume = initialVolume;
-  let destroyed = false;
-  let rafId = null;
-
-  current.volume = volume;
-
-  function attachWatcher(audio) {
-    function onTimeUpdate() {
-      if (destroyed) return;
-      const dur = audio.duration;
-      if (!dur || isNaN(dur) || !isFinite(dur)) return;
-      const remaining = dur - audio.currentTime;
-      if (!next && remaining <= PRELOAD_LEAD_SECONDS) {
-        next = new Audio(src);
-        next.preload = "auto";
-        next.volume = 0;
-      }
-      if (next && !crossfadeStarted && remaining <= CROSSFADE_SECONDS) {
-        crossfadeStarted = true;
-        beginCrossfade(audio, next);
-      }
-    }
-    audio.addEventListener("timeupdate", onTimeUpdate);
-    audio._omHandler = onTimeUpdate;
-  }
-
-  function beginCrossfade(fromAudio, toAudio) {
-    const playPromise = toAudio.play();
-
-    function runFade() {
-      attachWatcher(toAudio);
-      const startedAt = performance.now();
-      function step(now) {
-        if (destroyed) return;
-        const t = Math.min((now - startedAt) / 1000 / CROSSFADE_SECONDS, 1);
-        fromAudio.volume = Math.max(volume * (1 - t), 0);
-        toAudio.volume = Math.min(volume * t, volume);
-        if (t < 1) {
-          rafId = requestAnimationFrame(step);
-        } else {
-          fromAudio.pause();
-          if (fromAudio._omHandler) fromAudio.removeEventListener("timeupdate", fromAudio._omHandler);
-          current = toAudio;
-          next = null;
-          crossfadeStarted = false;
-        }
-      }
-      rafId = requestAnimationFrame(step);
-    }
-
-    if (playPromise && typeof playPromise.then === "function") {
-      playPromise.then(runFade).catch(() => {
-        // Не удалось вовремя запустить следующую копию — лучше перезапустить
-        // текущий трек с начала, чем оставить тишину.
-        next = null;
-        crossfadeStarted = false;
-        fromAudio.currentTime = 0;
-        fromAudio.play().catch(() => {});
-      });
-    } else {
-      runFade();
-    }
-  }
-
-  attachWatcher(current);
-
-  return {
-    play() { current.play().catch(() => {}); },
-    pause() { current.pause(); if (next) next.pause(); },
-    setVolume(v) {
-      volume = v;
-      current.volume = v;
-      if (next) next.volume = v;
-    },
-    destroy() {
-      destroyed = true;
-      if (rafId) cancelAnimationFrame(rafId);
-      current.pause();
-      if (current._omHandler) current.removeEventListener("timeupdate", current._omHandler);
-      if (next) next.pause();
-    },
-  };
 }
 
 // ─── Sounds Screen ─────────────────────────────────────────────────────────────
@@ -744,7 +664,7 @@ function SoundsScreen({ currentSound, setCurrentSound, t }) {
 
   // Keep volume in sync with the audio element
   useEffect(() => {
-    if (audioRef.current) audioRef.current.setVolume(volume / 100);
+    if (audioRef.current) audioRef.current.volume = volume / 100;
   }, [volume]);
 
   const startTimer = useCallback((isPlaying) => {
@@ -764,24 +684,26 @@ function SoundsScreen({ currentSound, setCurrentSound, t }) {
 
   // Cleanup audio on unmount
   useEffect(() => {
-    return () => { if (audioRef.current) { audioRef.current.destroy(); audioRef.current = null; } };
+    return () => { if (audioRef.current) { audioRef.current.pause(); audioRef.current = null; } };
   }, []);
 
   function playAudioFile(s) {
     if (audioRef.current) {
-      audioRef.current.destroy();
+      audioRef.current.pause();
       audioRef.current = null;
     }
-    const player = createLoopingPlayer(`/audio/${s.file}`, volume / 100);
-    player.play();
-    audioRef.current = player;
+    const audio = new Audio(`/audio/${s.file}`);
+    audio.loop = true;
+    audio.volume = volume / 100;
+    audio.play().catch(() => { /* file may not exist yet — silent fail */ });
+    audioRef.current = audio;
   }
 
   function togglePlay() {
     setPlaying(p => {
       const next = !p;
       if (audioRef.current) {
-        if (next) audioRef.current.play(); else audioRef.current.pause();
+        if (next) audioRef.current.play().catch(() => {}); else audioRef.current.pause();
       }
       startTimer(next);
       return next;
@@ -918,15 +840,17 @@ function MeditationsScreen({ t = T.ru, onAskAI }) {
       setPlaying(null);
       return;
     }
-    if (audioRef.current) { audioRef.current.destroy(); audioRef.current = null; }
-    const player = createLoopingPlayer(`/audio/${track.file}`, 0.7);
-    player.play();
-    audioRef.current = player;
+    if (audioRef.current) { audioRef.current.pause(); audioRef.current = null; }
+    const audio = new Audio(`/audio/${track.file}`);
+    audio.loop = true;
+    audio.volume = 0.7;
+    audio.play().catch(() => {});
+    audioRef.current = audio;
     setPlaying(track.id);
   }
 
   useEffect(() => {
-    return () => { if (audioRef.current) { audioRef.current.destroy(); audioRef.current = null; } };
+    return () => { if (audioRef.current) { audioRef.current.pause(); audioRef.current = null; } };
   }, []);
 
   // Practice flow
