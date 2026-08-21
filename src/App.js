@@ -430,11 +430,11 @@ const MOOD_LABELS = T.ru.moodLabels; // fallback
 const PATTERN_TAGS = T.ru.patternTags;
 const FUTURE_LETTER_PROMPTS = T.ru.letters.prompts;
 const SEED_ENTRIES_RU = [
-  { id: "e1", date: new Date(Date.now() - 86400000*2), mood: 2, what_happened: "Конфликт с близким человеком. Снова почувствовал(а) что меня не слышат.", what_felt: "Злость, потом вина, потом усталость от этого круга.", what_helped: "Послушал(а) звуки океана 20 минут. Немного отпустило.", pattern_tags: ["угождение другим", "вина"], insight: "Заметил(а) что сначала злюсь, а потом сразу виню себя." },
+  { id: "e1", date: new Date(Date.now() - 86400000*2), mood: 2, what_happened: "Конфликт с близким человеком. Снова почувствовал(а) что меня не слышат.", what_felt: "Злость, потом вина, потом усталость от этого круга.", what_helped: "Послушал(а) звуки дождя 20 минут. Немного отпустило.", pattern_tags: ["угождение другим", "вина"], insight: "Заметил(а) что сначала злюсь, а потом сразу виню себя." },
   { id: "e2", date: new Date(Date.now() - 86400000), mood: 3, what_happened: "Сдал(а) проект вовремя. Похвалили на работе.", what_felt: "Облегчение — не ожидал(а) что получилось так хорошо.", what_helped: "Утренний настрой помог сосредоточиться.", pattern_tags: ["перфекционизм", "гордость собой"], insight: "Снова убедился(ась): когда начинаю — становится легче." },
 ];
 const SEED_ENTRIES_EN = [
-  { id: "e1", date: new Date(Date.now() - 86400000*2), mood: 2, what_happened: "Had a conflict with someone close. Once again felt like I wasn't being heard.", what_felt: "Anger, then guilt, then exhaustion from this cycle.", what_helped: "Listened to ocean sounds for 20 minutes. It helped a little.", pattern_tags: ["people-pleasing", "guilt"], insight: "I noticed that I get angry first, then immediately blame myself." },
+  { id: "e1", date: new Date(Date.now() - 86400000*2), mood: 2, what_happened: "Had a conflict with someone close. Once again felt like I wasn't being heard.", what_felt: "Anger, then guilt, then exhaustion from this cycle.", what_helped: "Listened to rain sounds for 20 minutes. It helped a little.", pattern_tags: ["people-pleasing", "guilt"], insight: "I noticed that I get angry first, then immediately blame myself." },
   { id: "e2", date: new Date(Date.now() - 86400000), mood: 3, what_happened: "Finished a project on time. Got praised at work.", what_felt: "Relief — didn't expect it to go so well.", what_helped: "A morning intention helped me focus.", pattern_tags: ["perfectionism", "pride"], insight: "Confirmed again: once I start, it gets easier." },
 ];
 const SEED_LETTERS_RU = [
@@ -568,92 +568,10 @@ function SplashScreen({ onStart }) {
 
 // ─── Home Screen ───────────────────────────────────────────────────────────────
 
-// ─── Лунные фазы ─────────────────────────────────────────────────────────────
-// Простой астрономический расчёт по известному новолунию, без интернета и платных API.
-function getMoonPhase(date = new Date()) {
-  const synodicMonth = 29.53058867; // длина лунного месяца в днях
-  const knownNewMoon = Date.UTC(2000, 0, 6, 18, 14, 0);
-  const diffDays = (date.getTime() - knownNewMoon) / 86400000;
-  const fraction = (((diffDays % synodicMonth) + synodicMonth) % synodicMonth) / synodicMonth; // 0..1
-
-  let phase;
-  if (fraction < 0.06 || fraction > 0.94) phase = "new";
-  else if (fraction < 0.44) phase = "waxing";
-  else if (fraction < 0.56) phase = "full";
-  else phase = "waning";
-
-  return { phase, fraction };
-}
-
-const MOON_CONTENT = {
-  ru: {
-    new:    { icon: "🌑", title: "Новолуние",       theme: "Время для намерений и нового начала.", prompt: "Что ты хочешь начать или посадить в этом цикле?" },
-    waxing: { icon: "🌓", title: "Растущая луна",    theme: "Время роста и действия.",               prompt: "Какой маленький шаг ты можешь сделать сегодня к тому, что важно?" },
-    full:   { icon: "🌕", title: "Полнолуние",       theme: "Время кульминации и завершения.",        prompt: "Что в твоей жизни готово проявиться в полной мере или завершиться?" },
-    waning: { icon: "🌗", title: "Убывающая луна",   theme: "Время отдыха и отпускания.",             prompt: "Что ты можешь отпустить, чтобы освободить место для нового?" },
-  },
-  en: {
-    new:    { icon: "🌑", title: "New Moon",     theme: "A time for intentions and new beginnings.", prompt: "What do you want to start or plant this cycle?" },
-    waxing: { icon: "🌓", title: "Waxing Moon",  theme: "A time for growth and action.",              prompt: "What small step can you take today toward what matters?" },
-    full:   { icon: "🌕", title: "Full Moon",    theme: "A time for culmination and completion.",     prompt: "What in your life is ready to fully show up or come to an end?" },
-    waning: { icon: "🌗", title: "Waning Moon",  theme: "A time for rest and letting go.",             prompt: "What can you release to make room for something new?" },
-  },
-};
-
-function MoonPhaseCard({ lang }) {
-  const [expanded, setExpanded] = useState(false);
-  const [note, setNote] = useState("");
-  const [saved, setSaved] = useState(false);
-  const { phase } = getMoonPhase();
-  const content = MOON_CONTENT[lang][phase];
-
-  function handleSave() {
-    if (!note.trim()) return;
-    const entries = loadFromStorage("om_moon_notes", []);
-    entries.unshift({ date: new Date().toISOString(), phase, text: note.trim() });
-    saveToStorage("om_moon_notes", entries);
-    setNote("");
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
-  }
-
-  return (
-    <div style={{ margin: "0 1.5rem 1.25rem", background: C.surface, border: `1px solid ${C.border}`, borderRadius: 20, padding: "1.25rem", backdropFilter: "blur(8px)" }}>
-      <button onClick={() => setExpanded(e => !e)} style={{ width: "100%", background: "none", border: "none", cursor: "pointer", padding: 0, textAlign: "left", display: "flex", alignItems: "center", gap: 14 }}>
-        <div style={{ fontSize: 32, flexShrink: 0 }}>{content.icon}</div>
-        <div style={{ flex: 1 }}>
-          <div style={{ fontSize: 15, fontWeight: 500, color: C.text }}>{content.title}</div>
-          <div style={{ fontSize: 12, color: C.muted, lineHeight: 1.5 }}>{content.theme}</div>
-        </div>
-        <div style={{ color: C.muted, fontSize: 18 }}>{expanded ? "▲" : "▼"}</div>
-      </button>
-      {expanded && (
-        <div style={{ marginTop: 16, paddingTop: 16, borderTop: `1px solid ${C.border}` }}>
-          <div style={{ fontSize: 14, color: C.text, marginBottom: 12, lineHeight: 1.6 }}>{content.prompt}</div>
-          <textarea
-            value={note}
-            onChange={(e) => setNote(e.target.value)}
-            placeholder={lang === "en" ? "Write freely..." : "Пиши свободно..."}
-            rows={4}
-            style={taStyle}
-          />
-          <button onClick={handleSave} disabled={!note.trim()} style={{
-            marginTop: 10, width: "100%", padding: "12px", background: note.trim() ? C.accent : C.border,
-            border: "none", borderRadius: 16, color: "#f1eef2", fontSize: 14, cursor: note.trim() ? "pointer" : "default"
-          }}>
-            {saved ? (lang === "en" ? "Saved ✓" : "Сохранено ✓") : (lang === "en" ? "Save" : "Сохранить")}
-          </button>
-        </div>
-      )}
-    </div>
-  );
-}
-
 function HomeScreen({ mood, setMood, currentSound, setCurrentSound, onNavigate, t }) {
   const [clock, setClock] = useState(getClockStr());
   const [affIdx, setAffIdx] = useState(0);
   const [affFade, setAffFade] = useState(true);
-  const lang = t === T.en ? "en" : "ru";
 
   useEffect(() => {
     const t = setInterval(() => setClock(getClockStr()), 30000);
@@ -703,29 +621,26 @@ function HomeScreen({ mood, setMood, currentSound, setCurrentSound, onNavigate, 
         </button>
       </div>
 
-      <MoonPhaseCard lang={lang} />
-
-      {/* Donation-блок убран по решению Наташи (19.08.2026) */}
+      {/* Donation */}
+      <div style={{ margin: "1.25rem 1.5rem 0.5rem", background: C.surface, border: `1px solid ${C.border}`, borderRadius: 18, padding: "14px 16px", backdropFilter: "blur(8px)", textAlign: "center" }}>
+        <div style={{ fontSize: 12, color: C.muted, marginBottom: 8, lineHeight: 1.6 }}>
+          {t && t.home ? (t === T.en ? "🌊 OceanMind is free. If it helps you — support its growth." : "🌊 OceanMind — бесплатное приложение. Если оно тебе помогает — поддержи развитие.") : "🌊 OceanMind — бесплатное приложение."}
+        </div>
+        <div style={{ fontSize: 12, color: C.text, marginBottom: 4 }}>
+          СБП (любой банк): <span style={{ color: C.accent, userSelect: "all" }}>+7 922 291 44 10</span>
+        </div>
+        <div style={{ fontSize: 12, color: C.text, marginBottom: 4 }}>
+          PayPal: <span style={{ color: C.accent, userSelect: "all" }}>nchizhevskaya9@gmail.com</span>
+        </div>
+        <div style={{ fontSize: 12, color: C.text, marginBottom: 2 }}>
+          USDT BSC (BEP20):
+        </div>
+        <div style={{ fontSize: 11, color: C.accent, userSelect: "all", wordBreak: "break-all" }}>
+          0x9b0fb4e5ac625a0c6f3d1dd2f74d7339939771dd
+        </div>
+      </div>
     </div>
   );
-}
-
-// Простое зацикливание через стандартный audio.loop.
-// (Раньше здесь была кастомная кроссфейд-логика для маскировки щелчка на стыке,
-// но она не решила проблему на практике и добавляла риск полной тишины при сбое —
-// откатили на нативный механизм браузера как более надёжный. Если щелчок на стыке
-// мешает — самый эффективный способ починить именно источник: взять аудиофайл
-// с изначально бесшовной петлёй.)
-function createLoopingPlayer(src, initialVolume) {
-  const audio = new Audio(src);
-  audio.loop = true;
-  audio.volume = initialVolume;
-  return {
-    play() { audio.play().catch(() => {}); },
-    pause() { audio.pause(); },
-    setVolume(v) { audio.volume = v; },
-    destroy() { audio.pause(); },
-  };
 }
 
 // ─── Sounds Screen ─────────────────────────────────────────────────────────────
@@ -749,7 +664,7 @@ function SoundsScreen({ currentSound, setCurrentSound, t }) {
 
   // Keep volume in sync with the audio element
   useEffect(() => {
-    if (audioRef.current) audioRef.current.setVolume(volume / 100);
+    if (audioRef.current) audioRef.current.volume = volume / 100;
   }, [volume]);
 
   const startTimer = useCallback((isPlaying) => {
@@ -769,24 +684,26 @@ function SoundsScreen({ currentSound, setCurrentSound, t }) {
 
   // Cleanup audio on unmount
   useEffect(() => {
-    return () => { if (audioRef.current) { audioRef.current.destroy(); audioRef.current = null; } };
+    return () => { if (audioRef.current) { audioRef.current.pause(); audioRef.current = null; } };
   }, []);
 
   function playAudioFile(s) {
     if (audioRef.current) {
-      audioRef.current.destroy();
+      audioRef.current.pause();
       audioRef.current = null;
     }
-    const player = createLoopingPlayer(`/audio/${s.file}`, volume / 100);
-    player.play();
-    audioRef.current = player;
+    const audio = new Audio(`/audio/${s.file}`);
+    audio.loop = true;
+    audio.volume = volume / 100;
+    audio.play().catch(() => { /* file may not exist yet — silent fail */ });
+    audioRef.current = audio;
   }
 
   function togglePlay() {
     setPlaying(p => {
       const next = !p;
       if (audioRef.current) {
-        if (next) audioRef.current.play(); else audioRef.current.pause();
+        if (next) audioRef.current.play().catch(() => {}); else audioRef.current.pause();
       }
       startTimer(next);
       return next;
@@ -923,15 +840,17 @@ function MeditationsScreen({ t = T.ru, onAskAI }) {
       setPlaying(null);
       return;
     }
-    if (audioRef.current) { audioRef.current.destroy(); audioRef.current = null; }
-    const player = createLoopingPlayer(`/audio/${track.file}`, 0.7);
-    player.play();
-    audioRef.current = player;
+    if (audioRef.current) { audioRef.current.pause(); audioRef.current = null; }
+    const audio = new Audio(`/audio/${track.file}`);
+    audio.loop = true;
+    audio.volume = 0.7;
+    audio.play().catch(() => {});
+    audioRef.current = audio;
     setPlaying(track.id);
   }
 
   useEffect(() => {
-    return () => { if (audioRef.current) { audioRef.current.destroy(); audioRef.current = null; } };
+    return () => { if (audioRef.current) { audioRef.current.pause(); audioRef.current = null; } };
   }, []);
 
   // Practice flow
@@ -1244,7 +1163,7 @@ function JournalScreen({ t = T.ru, onAskAI }) {
 }
 
 // ─── Чат-ассистент ───────────────────────────────────────────────────────────
-function ChatAssistantScreen({ t = T.ru, lang = "ru", seed = null, onSeedConsumed, isPro = false }) {
+function ChatAssistantScreen({ t = T.ru, lang = "ru", seed = null, onSeedConsumed }) {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
@@ -1256,10 +1175,8 @@ function ChatAssistantScreen({ t = T.ru, lang = "ru", seed = null, onSeedConsume
   }, [messages, loading]);
 
   useEffect(() => {
-    if (seed && isPro) {
+    if (seed) {
       handleSend(seed);
-      onSeedConsumed && onSeedConsumed();
-    } else if (seed && !isPro) {
       onSeedConsumed && onSeedConsumed();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -1289,25 +1206,6 @@ function ChatAssistantScreen({ t = T.ru, lang = "ru", seed = null, onSeedConsume
       e.preventDefault();
       handleSend();
     }
-  }
-
-  if (!isPro) {
-    return (
-      <div style={{ padding: "2rem 1.5rem", textAlign: "center" }}>
-        <div style={{ fontSize: 40, marginBottom: 16 }}>🔒</div>
-        <div style={{ fontSize: 17, fontWeight: 500, color: C.text, marginBottom: 10 }}>
-          {lang === "en" ? "Pro feature" : "Функция Pro"}
-        </div>
-        <div style={{ fontSize: 14, color: C.muted, lineHeight: 1.7, marginBottom: 4 }}>
-          {lang === "en"
-            ? "The AI chat and reflection assistant are part of OceanMind Pro."
-            : "Чат и ИИ-рефлексия — часть OceanMind Pro."}
-        </div>
-        <div style={{ fontSize: 13, color: C.muted, lineHeight: 1.7 }}>
-          {lang === "en" ? "Subscriptions are coming soon." : "Подписка появится в приложении совсем скоро."}
-        </div>
-      </div>
-    );
   }
 
   return (
@@ -1988,7 +1886,7 @@ export default function App() {
     setChatSeed(seedText);
     setScreen("chat");
   }
-  const { user, isPro } = useAuth();
+  const { user } = useAuth();
 
   useEffect(() => {
     if (user) migrateLocalDataIfNeeded(user.id);
@@ -2097,7 +1995,7 @@ export default function App() {
         {screen === "patterns"     && <PatternMapScreen t={t} />}
         {screen === "reflection"   && <ReflectionScreen t={t} />}
         {screen === "letters"      && <FutureLetterScreen t={t} />}
-        {screen === "chat"         && <ChatAssistantScreen t={t} lang={lang} seed={chatSeed} onSeedConsumed={() => setChatSeed(null)} isPro={isPro} />}
+        {screen === "chat"         && <ChatAssistantScreen t={t} lang={lang} seed={chatSeed} onSeedConsumed={() => setChatSeed(null)} />}
       </div>
 
       <div style={{ display: "flex", justifyContent: "space-between", gap: 0, padding: "10px 4px 12px", borderTop: `1px solid ${C.border}`, flexShrink: 0, background: "rgba(82,93,107,0.92)", backdropFilter: "blur(10px)" }}>
