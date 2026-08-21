@@ -1244,7 +1244,7 @@ function JournalScreen({ t = T.ru, onAskAI }) {
 }
 
 // ─── Чат-ассистент ───────────────────────────────────────────────────────────
-function ChatAssistantScreen({ t = T.ru, lang = "ru", seed = null, onSeedConsumed }) {
+function ChatAssistantScreen({ t = T.ru, lang = "ru", seed = null, onSeedConsumed, isPro = false }) {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
@@ -1256,8 +1256,10 @@ function ChatAssistantScreen({ t = T.ru, lang = "ru", seed = null, onSeedConsume
   }, [messages, loading]);
 
   useEffect(() => {
-    if (seed) {
+    if (seed && isPro) {
       handleSend(seed);
+      onSeedConsumed && onSeedConsumed();
+    } else if (seed && !isPro) {
       onSeedConsumed && onSeedConsumed();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -1287,6 +1289,25 @@ function ChatAssistantScreen({ t = T.ru, lang = "ru", seed = null, onSeedConsume
       e.preventDefault();
       handleSend();
     }
+  }
+
+  if (!isPro) {
+    return (
+      <div style={{ padding: "2rem 1.5rem", textAlign: "center" }}>
+        <div style={{ fontSize: 40, marginBottom: 16 }}>🔒</div>
+        <div style={{ fontSize: 17, fontWeight: 500, color: C.text, marginBottom: 10 }}>
+          {lang === "en" ? "Pro feature" : "Функция Pro"}
+        </div>
+        <div style={{ fontSize: 14, color: C.muted, lineHeight: 1.7, marginBottom: 4 }}>
+          {lang === "en"
+            ? "The AI chat and reflection assistant are part of OceanMind Pro."
+            : "Чат и ИИ-рефлексия — часть OceanMind Pro."}
+        </div>
+        <div style={{ fontSize: 13, color: C.muted, lineHeight: 1.7 }}>
+          {lang === "en" ? "Subscriptions are coming soon." : "Подписка появится в приложении совсем скоро."}
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -1967,7 +1988,7 @@ export default function App() {
     setChatSeed(seedText);
     setScreen("chat");
   }
-  const { user } = useAuth();
+  const { user, isPro } = useAuth();
 
   useEffect(() => {
     if (user) migrateLocalDataIfNeeded(user.id);
@@ -2076,7 +2097,7 @@ export default function App() {
         {screen === "patterns"     && <PatternMapScreen t={t} />}
         {screen === "reflection"   && <ReflectionScreen t={t} />}
         {screen === "letters"      && <FutureLetterScreen t={t} />}
-        {screen === "chat"         && <ChatAssistantScreen t={t} lang={lang} seed={chatSeed} onSeedConsumed={() => setChatSeed(null)} />}
+        {screen === "chat"         && <ChatAssistantScreen t={t} lang={lang} seed={chatSeed} onSeedConsumed={() => setChatSeed(null)} isPro={isPro} />}
       </div>
 
       <div style={{ display: "flex", justifyContent: "space-between", gap: 0, padding: "10px 4px 12px", borderTop: `1px solid ${C.border}`, flexShrink: 0, background: "rgba(82,93,107,0.92)", backdropFilter: "blur(10px)" }}>
