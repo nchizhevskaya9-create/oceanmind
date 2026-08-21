@@ -1374,8 +1374,8 @@ function ChatAssistantScreen({ t = T.ru, lang = "ru", seed = null, onSeedConsume
         <>
           <div style={{ fontSize: 10, color: C.muted, textAlign: "center", padding: "0 8px", lineHeight: 1.5 }}>
             {lang === "en"
-              ? <>Messages are sent to Anthropic (Claude AI) to generate replies. AI, not a therapist. In crisis — <b style={{ color: C.accent }}>findahelpline.com</b></>
-              : <>Сообщения передаются Anthropic (Claude) для ответа. Это ИИ, а не терапевт. При кризисе — <b style={{ color: C.accent }}>8-800-100-49-94</b></>}
+              ? <>Messages are processed by an AI service to generate replies. AI, not a therapist. In crisis — <b style={{ color: C.accent }}>findahelpline.com</b></>
+              : <>Сообщения обрабатываются ИИ-сервисом для ответа. Это ИИ, а не терапевт. При кризисе — <b style={{ color: C.accent }}>8-800-100-49-94</b></>}
           </div>
           {!isPro && (
             <div style={{ fontSize: 11, color: C.muted, textAlign: "center", padding: "4px 0 0" }}>
