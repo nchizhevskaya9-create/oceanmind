@@ -601,34 +601,13 @@ const MOON_CONTENT = {
 };
 
 const MOON_TRACK_MAP = { new: "theta", waxing: "beta", full: "alpha", waning: "delta" };
-// Эксклюзивные Pro-треки под лунные фазы (отдельные от бесплатных 4 частот).
-const MOON_AUDIO_MAP = { new: "moon-theta.mp3", waxing: "moon-beta.mp3", full: "moon-alpha.mp3", waning: "moon-delta.mp3" };
 
-function MoonPhaseCard({ lang, onListen, isPro = false, onOpenProInfo }) {
+function MoonPhaseCard({ lang, onListen }) {
   const [expanded, setExpanded] = useState(false);
   const [note, setNote] = useState("");
   const [saved, setSaved] = useState(false);
-  const [exclusivePlaying, setExclusivePlaying] = useState(false);
-  const exclusiveAudioRef = useRef(null);
   const { phase } = getMoonPhase();
   const content = MOON_CONTENT[lang][phase];
-
-  useEffect(() => {
-    return () => { if (exclusiveAudioRef.current) { exclusiveAudioRef.current.destroy(); exclusiveAudioRef.current = null; } };
-  }, []);
-
-  function toggleExclusiveTrack() {
-    if (exclusivePlaying) {
-      exclusiveAudioRef.current?.pause();
-      setExclusivePlaying(false);
-      return;
-    }
-    if (exclusiveAudioRef.current) { exclusiveAudioRef.current.destroy(); exclusiveAudioRef.current = null; }
-    const player = createLoopingPlayer(`/audio/${MOON_AUDIO_MAP[phase]}`, 0.7);
-    player.play();
-    exclusiveAudioRef.current = player;
-    setExclusivePlaying(true);
-  }
 
   function handleSave() {
     if (!note.trim()) return;
@@ -674,33 +653,13 @@ function MoonPhaseCard({ lang, onListen, isPro = false, onOpenProInfo }) {
               {lang === "en" ? "🎧 Listen to a matching frequency" : "🎧 Послушать подходящую частоту"}
             </button>
           )}
-
-          {isPro ? (
-            <button onClick={toggleExclusiveTrack} style={{
-              marginTop: 10, width: "100%", padding: "12px", background: exclusivePlaying ? C.accent : "rgba(177,156,163,0.18)",
-              border: `1px solid ${C.accent}`, borderRadius: 16, color: exclusivePlaying ? "#f1eef2" : C.text, fontSize: 13, cursor: "pointer"
-            }}>
-              {exclusivePlaying
-                ? (lang === "en" ? "⏸ Pause exclusive track" : "⏸ Пауза эксклюзивного трека")
-                : (lang === "en" ? "✦ Play exclusive Pro track" : "✦ Включить эксклюзивный трек")}
-            </button>
-          ) : (
-            <button onClick={onOpenProInfo} style={{
-              marginTop: 10, width: "100%", padding: "12px", background: "rgba(177,156,163,0.08)",
-              border: `1px dashed ${C.border}`, borderRadius: 16, color: C.muted, fontSize: 12, textAlign: "center", lineHeight: 1.5, cursor: onOpenProInfo ? "pointer" : "default"
-            }}>
-              {lang === "en"
-                ? "🔒 An exclusive track made for this phase is part of OceanMind Pro (299 ₽/mo)"
-                : "🔒 Эксклюзивный трек под эту фазу — часть OceanMind Pro (299 ₽/мес)"}
-            </button>
-          )}
         </div>
       )}
     </div>
   );
 }
 
-function HomeScreen({ mood, setMood, currentSound, setCurrentSound, onNavigate, t, onListenMoonTrack, isPro, onOpenProInfo }) {
+function HomeScreen({ mood, setMood, currentSound, setCurrentSound, onNavigate, t, onListenMoonTrack }) {
   const [clock, setClock] = useState(getClockStr());
   const [affIdx, setAffIdx] = useState(0);
   const [affFade, setAffFade] = useState(true);
@@ -754,7 +713,7 @@ function HomeScreen({ mood, setMood, currentSound, setCurrentSound, onNavigate, 
         </button>
       </div>
 
-      <MoonPhaseCard lang={lang} onListen={onListenMoonTrack} isPro={isPro} onOpenProInfo={onOpenProInfo} />
+      <MoonPhaseCard lang={lang} onListen={onListenMoonTrack} />
 
       {/* Donation-блок убран по решению Наташи (19.08.2026) */}
     </div>
@@ -1317,93 +1276,7 @@ function incrementFreeChatCount() {
   return next;
 }
 
-// ─── Экран "О подписке Pro" — цена, что входит, способы оплаты ─────────────────
-function ProInfoScreen({ lang, onBack }) {
-  const [copied, setCopied] = useState(false);
-  const wallet = "0x9b0fb4e5ac625a0c6f3d1dd2f74d7339939771dd";
-
-  function handleCopy() {
-    navigator.clipboard?.writeText(wallet);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  }
-
-  return (
-    <div style={{ padding: "0 1.5rem 2rem" }}>
-      <button onClick={onBack} style={{ background: "none", border: "none", color: C.muted, cursor: "pointer", fontSize: 13, padding: "0 0 1rem" }}>
-        {lang === "en" ? "← Back" : "← Назад"}
-      </button>
-
-      <div style={{ textAlign: "center", marginBottom: 24 }}>
-        <div style={{ fontSize: 32, marginBottom: 8 }}>✦</div>
-        <div style={{ fontSize: 20, fontWeight: 500, color: C.text }}>OceanMind Pro</div>
-        <div style={{ fontSize: 24, fontWeight: 600, color: C.accent, marginTop: 6 }}>
-          299 ₽ {lang === "en" ? "/ month" : "/ мес"}
-        </div>
-      </div>
-
-      <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 16, padding: "16px 18px", marginBottom: 20 }}>
-        <div style={{ fontSize: 12, color: C.muted, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 10 }}>
-          {lang === "en" ? "What's included" : "Что входит"}
-        </div>
-        {[
-          lang === "en" ? "Unlimited AI chat & reflection" : "Безлимитный чат и рефлексия с ИИ",
-          lang === "en" ? "Exclusive tracks for each moon phase" : "Эксклюзивные треки под каждую фазу луны",
-          lang === "en" ? "Cloud sync across devices" : "Синхронизация между устройствами",
-        ].map((item, i) => (
-          <div key={i} style={{ fontSize: 14, color: C.text, padding: "6px 0", display: "flex", gap: 8 }}>
-            <span style={{ color: C.accent }}>✓</span> {item}
-          </div>
-        ))}
-      </div>
-
-      <div style={{ fontSize: 13, color: C.muted, marginBottom: 12 }}>
-        {lang === "en" ? "Payment methods" : "Способы оплаты"}
-      </div>
-
-      <div style={{ background: "rgba(177,156,163,0.08)", border: `1px dashed ${C.border}`, borderRadius: 16, padding: "16px 18px", marginBottom: 14 }}>
-        <div style={{ fontSize: 14, fontWeight: 500, color: C.text, marginBottom: 4 }}>
-          💳 {lang === "en" ? "Russian bank card" : "Российская карта"}
-        </div>
-        <div style={{ fontSize: 12, color: C.muted }}>
-          {lang === "en" ? "Coming very soon" : "Появится совсем скоро"}
-        </div>
-      </div>
-
-      <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 16, padding: "16px 18px" }}>
-        <div style={{ fontSize: 14, fontWeight: 500, color: C.text, marginBottom: 10 }}>
-          ₮ {lang === "en" ? "Crypto (USDT, BSC/BEP20)" : "Криптовалюта (USDT, сеть BSC/BEP20)"}
-        </div>
-        <div style={{ fontSize: 13, color: C.muted, lineHeight: 1.6, marginBottom: 12 }}>
-          {lang === "en"
-            ? "Send the equivalent of 299 ₽ (~$3.5) to the wallet below, then message the transaction ID (TXID) to activate Pro:"
-            : "Переведи сумму, эквивалентную 299 ₽ (~$3.5), на кошелёк ниже, затем пришли номер транзакции (TXID) для активации Pro:"}
-        </div>
-        <div style={{
-          fontSize: 11, color: C.text, background: "rgba(177,156,163,0.12)", borderRadius: 10,
-          padding: "10px 12px", wordBreak: "break-all", fontFamily: "monospace", marginBottom: 10
-        }}>
-          {wallet}
-        </div>
-        <button onClick={handleCopy} style={{
-          width: "100%", padding: "10px", background: copied ? C.accent : "none",
-          border: `1px solid ${C.accent}`, borderRadius: 12, color: copied ? "#f1eef2" : C.text,
-          fontSize: 13, cursor: "pointer", marginBottom: 12
-        }}>
-          {copied ? (lang === "en" ? "Copied ✓" : "Скопировано ✓") : (lang === "en" ? "Copy address" : "Скопировать адрес")}
-        </button>
-        <a href="https://t.me/nata_chi13" target="_blank" rel="noopener noreferrer" style={{
-          display: "block", textAlign: "center", padding: "12px", background: C.accent,
-          borderRadius: 12, color: "#f1eef2", fontSize: 14, textDecoration: "none"
-        }}>
-          {lang === "en" ? "Message @nata_chi13 with TXID" : "Написать @nata_chi13 с номером транзакции"}
-        </a>
-      </div>
-    </div>
-  );
-}
-
-function ChatAssistantScreen({ t = T.ru, lang = "ru", seed = null, onSeedConsumed, isPro = false, onOpenProInfo }) {
+function ChatAssistantScreen({ t = T.ru, lang = "ru", seed = null, onSeedConsumed, isPro = false }) {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
@@ -1493,24 +1366,16 @@ function ChatAssistantScreen({ t = T.ru, lang = "ru", seed = null, onSeedConsume
           <div style={{ fontSize: 14, fontWeight: 500, color: C.text, marginBottom: 6 }}>
             {lang === "en" ? `You've used your ${FREE_CHAT_LIMIT} free messages` : `Бесплатные ${FREE_CHAT_LIMIT} сообщений закончились`}
           </div>
-          <div style={{ fontSize: 12, color: C.muted, lineHeight: 1.6, marginBottom: 12 }}>
-            {lang === "en" ? "Unlimited chat is part of OceanMind Pro (299 ₽/mo)." : "Безлимитный чат — часть OceanMind Pro (299 ₽/мес)."}
+          <div style={{ fontSize: 12, color: C.muted, lineHeight: 1.6 }}>
+            {lang === "en" ? "Unlimited chat is part of OceanMind Pro. Subscriptions are coming soon." : "Безлимитный чат — часть OceanMind Pro. Подписка появится совсем скоро."}
           </div>
-          {onOpenProInfo && (
-            <button onClick={onOpenProInfo} style={{
-              padding: "10px 20px", background: C.accent, border: "none", borderRadius: 14,
-              color: "#f1eef2", fontSize: 13, cursor: "pointer"
-            }}>
-              {lang === "en" ? "See Pro options" : "Посмотреть варианты Pro"}
-            </button>
-          )}
         </div>
       ) : (
         <>
           <div style={{ fontSize: 10, color: C.muted, textAlign: "center", padding: "0 8px", lineHeight: 1.5 }}>
             {lang === "en"
-              ? <>Messages are processed by an AI service to generate replies. AI, not a therapist. In crisis — <b style={{ color: C.accent }}>findahelpline.com</b></>
-              : <>Сообщения обрабатываются ИИ-сервисом для ответа. Это ИИ, а не терапевт. При кризисе — <b style={{ color: C.accent }}>8-800-100-49-94</b></>}
+              ? <>Messages are sent to Anthropic (Claude AI) to generate replies. AI, not a therapist. In crisis — <b style={{ color: C.accent }}>findahelpline.com</b></>
+              : <>Сообщения передаются Anthropic (Claude) для ответа. Это ИИ, а не терапевт. При кризисе — <b style={{ color: C.accent }}>8-800-100-49-94</b></>}
           </div>
           {!isPro && (
             <div style={{ fontSize: 11, color: C.muted, textAlign: "center", padding: "4px 0 0" }}>
@@ -1602,11 +1467,6 @@ function AuthScreen({ lang, onClose }) {
           {lang === "en"
             ? `Check your inbox at ${email} — click the link to sign in.`
             : `Проверь почту ${email} — перейди по ссылке для входа.`}
-          <div style={{ fontSize: 12, color: C.muted, marginTop: 10 }}>
-            {lang === "en"
-              ? "Don't see it? Check your Spam folder — this is a new sender."
-              : "Не пришло? Загляни в папку «Спам» — это новый отправитель для твоей почты."}
-          </div>
         </div>
       )}
     </div>
@@ -2167,9 +2027,6 @@ export default function App() {
     setMoonTrackId(trackId);
     setScreen("meditations");
   }
-  function goToProInfo() {
-    setScreen("pro");
-  }
   const { user, isPro } = useAuth();
 
   useEffect(() => {
@@ -2270,7 +2127,7 @@ export default function App() {
       )}
 
       <div style={{ flex: 1, overflowY: "auto" }}>
-        {screen === "home"         && <HomeScreen mood={mood} setMood={setMood} currentSound={currentSound} setCurrentSound={setCurrentSound} onNavigate={setScreen} t={t} onListenMoonTrack={goToMoonTrack} isPro={isPro} onOpenProInfo={goToProInfo} />}
+        {screen === "home"         && <HomeScreen mood={mood} setMood={setMood} currentSound={currentSound} setCurrentSound={setCurrentSound} onNavigate={setScreen} t={t} onListenMoonTrack={goToMoonTrack} />}
         {screen === "sounds"       && <SoundsScreen currentSound={currentSound} setCurrentSound={setCurrentSound} t={t} />}
         {screen === "meditations"  && <MeditationsScreen t={t} onAskAI={goToChat} autoplayTrackId={moonTrackId} onAutoplayConsumed={() => setMoonTrackId(null)} />}
 
@@ -2279,8 +2136,7 @@ export default function App() {
         {screen === "patterns"     && <PatternMapScreen t={t} />}
         {screen === "reflection"   && <ReflectionScreen t={t} />}
         {screen === "letters"      && <FutureLetterScreen t={t} />}
-        {screen === "chat"         && <ChatAssistantScreen t={t} lang={lang} seed={chatSeed} onSeedConsumed={() => setChatSeed(null)} isPro={isPro} onOpenProInfo={goToProInfo} />}
-        {screen === "pro"          && <ProInfoScreen lang={lang} onBack={() => setScreen("home")} />}
+        {screen === "chat"         && <ChatAssistantScreen t={t} lang={lang} seed={chatSeed} onSeedConsumed={() => setChatSeed(null)} isPro={isPro} />}
       </div>
 
       <div style={{ display: "flex", justifyContent: "space-between", gap: 0, padding: "10px 4px 12px", borderTop: `1px solid ${C.border}`, flexShrink: 0, background: "rgba(82,93,107,0.92)", backdropFilter: "blur(10px)" }}>
