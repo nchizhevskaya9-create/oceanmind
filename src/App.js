@@ -601,13 +601,34 @@ const MOON_CONTENT = {
 };
 
 const MOON_TRACK_MAP = { new: "theta", waxing: "beta", full: "alpha", waning: "delta" };
+// Эксклюзивные Pro-треки под лунные фазы (отдельные от бесплатных 4 частот).
+const MOON_AUDIO_MAP = { new: "moon-theta.mp3", waxing: "moon-beta.mp3", full: "moon-alpha.mp3", waning: "moon-delta.mp3" };
 
-function MoonPhaseCard({ lang, onListen }) {
+function MoonPhaseCard({ lang, onListen, isPro = false }) {
   const [expanded, setExpanded] = useState(false);
   const [note, setNote] = useState("");
   const [saved, setSaved] = useState(false);
+  const [exclusivePlaying, setExclusivePlaying] = useState(false);
+  const exclusiveAudioRef = useRef(null);
   const { phase } = getMoonPhase();
   const content = MOON_CONTENT[lang][phase];
+
+  useEffect(() => {
+    return () => { if (exclusiveAudioRef.current) { exclusiveAudioRef.current.destroy(); exclusiveAudioRef.current = null; } };
+  }, []);
+
+  function toggleExclusiveTrack() {
+    if (exclusivePlaying) {
+      exclusiveAudioRef.current?.pause();
+      setExclusivePlaying(false);
+      return;
+    }
+    if (exclusiveAudioRef.current) { exclusiveAudioRef.current.destroy(); exclusiveAudioRef.current = null; }
+    const player = createLoopingPlayer(`/audio/${MOON_AUDIO_MAP[phase]}`, 0.7);
+    player.play();
+    exclusiveAudioRef.current = player;
+    setExclusivePlaying(true);
+  }
 
   function handleSave() {
     if (!note.trim()) return;
@@ -653,13 +674,33 @@ function MoonPhaseCard({ lang, onListen }) {
               {lang === "en" ? "🎧 Listen to a matching frequency" : "🎧 Послушать подходящую частоту"}
             </button>
           )}
+
+          {isPro ? (
+            <button onClick={toggleExclusiveTrack} style={{
+              marginTop: 10, width: "100%", padding: "12px", background: exclusivePlaying ? C.accent : "rgba(177,156,163,0.18)",
+              border: `1px solid ${C.accent}`, borderRadius: 16, color: exclusivePlaying ? "#f1eef2" : C.text, fontSize: 13, cursor: "pointer"
+            }}>
+              {exclusivePlaying
+                ? (lang === "en" ? "⏸ Pause exclusive track" : "⏸ Пауза эксклюзивного трека")
+                : (lang === "en" ? "✦ Play exclusive Pro track" : "✦ Включить эксклюзивный трек")}
+            </button>
+          ) : (
+            <div style={{
+              marginTop: 10, width: "100%", padding: "12px", background: "rgba(177,156,163,0.08)",
+              border: `1px dashed ${C.border}`, borderRadius: 16, color: C.muted, fontSize: 12, textAlign: "center", lineHeight: 1.5
+            }}>
+              {lang === "en"
+                ? "🔒 An exclusive track made for this phase is part of OceanMind Pro ($3.5/mo)"
+                : "🔒 Эксклюзивный трек под эту фазу — часть OceanMind Pro (299 ₽/мес)"}
+            </div>
+          )}
         </div>
       )}
     </div>
   );
 }
 
-function HomeScreen({ mood, setMood, currentSound, setCurrentSound, onNavigate, t, onListenMoonTrack }) {
+function HomeScreen({ mood, setMood, currentSound, setCurrentSound, onNavigate, t, onListenMoonTrack, isPro }) {
   const [clock, setClock] = useState(getClockStr());
   const [affIdx, setAffIdx] = useState(0);
   const [affFade, setAffFade] = useState(true);
@@ -713,7 +754,7 @@ function HomeScreen({ mood, setMood, currentSound, setCurrentSound, onNavigate, 
         </button>
       </div>
 
-      <MoonPhaseCard lang={lang} onListen={onListenMoonTrack} />
+      <MoonPhaseCard lang={lang} onListen={onListenMoonTrack} isPro={isPro} />
 
       {/* Donation-блок убран по решению Наташи (19.08.2026) */}
     </div>
@@ -1367,7 +1408,7 @@ function ChatAssistantScreen({ t = T.ru, lang = "ru", seed = null, onSeedConsume
             {lang === "en" ? `You've used your ${FREE_CHAT_LIMIT} free messages` : `Бесплатные ${FREE_CHAT_LIMIT} сообщений закончились`}
           </div>
           <div style={{ fontSize: 12, color: C.muted, lineHeight: 1.6 }}>
-            {lang === "en" ? "Unlimited chat is part of OceanMind Pro. Subscriptions are coming soon." : "Безлимитный чат — часть OceanMind Pro. Подписка появится совсем скоро."}
+            {lang === "en" ? "Unlimited chat is part of OceanMind Pro (299 ₽/mo). Subscriptions are coming soon." : "Безлимитный чат — часть OceanMind Pro (299 ₽/мес). Подписка появится совсем скоро."}
           </div>
         </div>
       ) : (
@@ -2127,7 +2168,7 @@ export default function App() {
       )}
 
       <div style={{ flex: 1, overflowY: "auto" }}>
-        {screen === "home"         && <HomeScreen mood={mood} setMood={setMood} currentSound={currentSound} setCurrentSound={setCurrentSound} onNavigate={setScreen} t={t} onListenMoonTrack={goToMoonTrack} />}
+        {screen === "home"         && <HomeScreen mood={mood} setMood={setMood} currentSound={currentSound} setCurrentSound={setCurrentSound} onNavigate={setScreen} t={t} onListenMoonTrack={goToMoonTrack} isPro={isPro} />}
         {screen === "sounds"       && <SoundsScreen currentSound={currentSound} setCurrentSound={setCurrentSound} t={t} />}
         {screen === "meditations"  && <MeditationsScreen t={t} onAskAI={goToChat} autoplayTrackId={moonTrackId} onAutoplayConsumed={() => setMoonTrackId(null)} />}
 
