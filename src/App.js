@@ -406,8 +406,6 @@ const SOUNDS = [
   { id: "mountain", name: "Горы",         category: "Ветер",     duration: 2100, tag: "relax",   file: "mountain.mp3", photo: "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=400&q=80" },
   { id: "thunder",  name: "Гроза",        category: "Природа",   duration: 2400, tag: "sleep",   file: "thunder.mp3",  photo: "https://images.unsplash.com/photo-1505672678657-cc7037095e60?w=400&q=80" },
   { id: "river",    name: "Горный ручей", category: "Природа",   duration: 2700, tag: "relax",   file: "river.mp3",    photo: "https://images.unsplash.com/photo-1455218873509-8097305ee378?w=400&q=80" },
-  { id: "hz432", tag: "hz432", title: "Натуральный строй", duration: "30 мин", hz: "432 Hz", file: "432.mp3", photo: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&q=80", icon: "♩", desc: "Теплее и мягче стандартного звука" },
-  { id: "hz528", tag: "hz528", title: "Частота резонанса", duration: "30 мин", hz: "528 Hz", file: "528.mp3", photo: "https://images.unsplash.com/photo-1518241353330-0f7941c2d9b5?w=400&q=80", icon: "◎", desc: "Для глубокого покоя и внутренней гармонии" },
 ];
 
 const FREQ_SCIENCE = {
@@ -426,6 +424,9 @@ const MUSIC_TRACKS = [
   { id: "alpha", tag: "alpha", title: "Покой и расслабление",   duration: "30 мин", hz: "8–10 Hz",   file: "alpha.mp3",  photo: "https://images.unsplash.com/photo-1518241353330-0f7941c2d9b5?w=400&q=80", icon: "☁️", desc: "Снятие тревоги и стресса, восстановление" },
   { id: "beta",  tag: "beta",  title: "Фокус и концентрация",   duration: "30 мин", hz: "18–20 Hz",  file: "beta.mp3",   photo: "https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?w=400&q=80", icon: "⚡", desc: "Для работы и учёбы — ясность и продуктивность" },
   { id: "gamma", tag: "gamma", title: "Состояние потока",        duration: "25 мин", hz: "40 Hz",     file: "gamma.mp3",  photo: "https://images.unsplash.com/photo-1470252649378-9c29740c9fa8?w=400&q=80", icon: "✦", desc: "Пиковая концентрация — исследовано в MIT" },
+
+  { id: "hz432", tag: "hz432", title: "Натуральный строй", duration: "30 мин", hz: "432 Hz", file: "432.mp3", photo: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&q=80", icon: "♩", desc: "Теплее и мягче стандартного звука" },
+  { id: "hz528", tag: "hz528", title: "Частота резонанса", duration: "30 мин", hz: "528 Hz", file: "528.mp3", photo: "https://images.unsplash.com/photo-1518241353330-0f7941c2d9b5?w=400&q=80", icon: "◎", desc: "Для глубокого покоя и внутренней гармонии" },
 ];
 // ─── Fallback constants (used in components before t is available) ──────────────
 const AFFIRMATIONS = T.ru.affirmations;
