@@ -1,4 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
+import { chatWithAssistant } from "./lib/ai";
+import { useAuth, signInWithEmail, signOut } from "./lib/auth";
+import { migrateLocalDataIfNeeded } from "./lib/migrateLocalData";
 
 // ─── Data ──────────────────────────────────────────────────────────────────────
 
@@ -427,11 +430,11 @@ const MOOD_LABELS = T.ru.moodLabels; // fallback
 const PATTERN_TAGS = T.ru.patternTags;
 const FUTURE_LETTER_PROMPTS = T.ru.letters.prompts;
 const SEED_ENTRIES_RU = [
-  { id: "e1", date: new Date(Date.now() - 86400000*2), mood: 2, what_happened: "Конфликт с близким человеком. Снова почувствовал(а) что меня не слышат.", what_felt: "Злость, потом вина, потом усталость от этого круга.", what_helped: "Послушал(а) звуки дождя 20 минут. Немного отпустило.", pattern_tags: ["угождение другим", "вина"], insight: "Заметил(а) что сначала злюсь, а потом сразу виню себя." },
+  { id: "e1", date: new Date(Date.now() - 86400000*2), mood: 2, what_happened: "Конфликт с близким человеком. Снова почувствовал(а) что меня не слышат.", what_felt: "Злость, потом вина, потом усталость от этого круга.", what_helped: "Послушал(а) звуки океана 20 минут. Немного отпустило.", pattern_tags: ["угождение другим", "вина"], insight: "Заметил(а) что сначала злюсь, а потом сразу виню себя." },
   { id: "e2", date: new Date(Date.now() - 86400000), mood: 3, what_happened: "Сдал(а) проект вовремя. Похвалили на работе.", what_felt: "Облегчение — не ожидал(а) что получилось так хорошо.", what_helped: "Утренний настрой помог сосредоточиться.", pattern_tags: ["перфекционизм", "гордость собой"], insight: "Снова убедился(ась): когда начинаю — становится легче." },
 ];
 const SEED_ENTRIES_EN = [
-  { id: "e1", date: new Date(Date.now() - 86400000*2), mood: 2, what_happened: "Had a conflict with someone close. Once again felt like I wasn't being heard.", what_felt: "Anger, then guilt, then exhaustion from this cycle.", what_helped: "Listened to rain sounds for 20 minutes. It helped a little.", pattern_tags: ["people-pleasing", "guilt"], insight: "I noticed that I get angry first, then immediately blame myself." },
+  { id: "e1", date: new Date(Date.now() - 86400000*2), mood: 2, what_happened: "Had a conflict with someone close. Once again felt like I wasn't being heard.", what_felt: "Anger, then guilt, then exhaustion from this cycle.", what_helped: "Listened to ocean sounds for 20 minutes. It helped a little.", pattern_tags: ["people-pleasing", "guilt"], insight: "I noticed that I get angry first, then immediately blame myself." },
   { id: "e2", date: new Date(Date.now() - 86400000), mood: 3, what_happened: "Finished a project on time. Got praised at work.", what_felt: "Relief — didn't expect it to go so well.", what_helped: "A morning intention helped me focus.", pattern_tags: ["perfectionism", "pride"], insight: "Confirmed again: once I start, it gets easier." },
 ];
 const SEED_LETTERS_RU = [
@@ -565,10 +568,143 @@ function SplashScreen({ onStart }) {
 
 // ─── Home Screen ───────────────────────────────────────────────────────────────
 
-function HomeScreen({ mood, setMood, currentSound, setCurrentSound, onNavigate, t }) {
+// ─── Лунные фазы ─────────────────────────────────────────────────────────────
+// Простой астрономический расчёт по известному новолунию, без интернета и платных API.
+function getMoonPhase(date = new Date()) {
+  const synodicMonth = 29.53058867; // длина лунного месяца в днях
+  const knownNewMoon = Date.UTC(2000, 0, 6, 18, 14, 0);
+  const diffDays = (date.getTime() - knownNewMoon) / 86400000;
+  const fraction = (((diffDays % synodicMonth) + synodicMonth) % synodicMonth) / synodicMonth; // 0..1
+
+  let phase;
+  if (fraction < 0.06 || fraction > 0.94) phase = "new";
+  else if (fraction < 0.44) phase = "waxing";
+  else if (fraction < 0.56) phase = "full";
+  else phase = "waning";
+
+  return { phase, fraction };
+}
+
+const MOON_CONTENT = {
+  ru: {
+    new:    { icon: "🌑", title: "Новолуние",       theme: "Время для намерений и нового начала.", prompt: "Что ты хочешь начать или посадить в этом цикле?" },
+    waxing: { icon: "🌓", title: "Растущая луна",    theme: "Время роста и действия.",               prompt: "Какой маленький шаг ты можешь сделать сегодня к тому, что важно?" },
+    full:   { icon: "🌕", title: "Полнолуние",       theme: "Время кульминации и завершения.",        prompt: "Что в твоей жизни готово проявиться в полной мере или завершиться?" },
+    waning: { icon: "🌗", title: "Убывающая луна",   theme: "Время отдыха и отпускания.",             prompt: "Что ты можешь отпустить, чтобы освободить место для нового?" },
+  },
+  en: {
+    new:    { icon: "🌑", title: "New Moon",     theme: "A time for intentions and new beginnings.", prompt: "What do you want to start or plant this cycle?" },
+    waxing: { icon: "🌓", title: "Waxing Moon",  theme: "A time for growth and action.",              prompt: "What small step can you take today toward what matters?" },
+    full:   { icon: "🌕", title: "Full Moon",    theme: "A time for culmination and completion.",     prompt: "What in your life is ready to fully show up or come to an end?" },
+    waning: { icon: "🌗", title: "Waning Moon",  theme: "A time for rest and letting go.",             prompt: "What can you release to make room for something new?" },
+  },
+};
+
+const MOON_TRACK_MAP = { new: "theta", waxing: "beta", full: "alpha", waning: "delta" };
+// Эксклюзивные Pro-треки под лунные фазы (отдельные от бесплатных 4 частот).
+const MOON_AUDIO_MAP = { new: "moon-theta.mp3", waxing: "moon-beta.mp3", full: "moon-alpha.mp3", waning: "moon-delta.mp3" };
+
+function MoonPhaseCard({ lang, onListen, isPro = false, onOpenProInfo }) {
+  const [expanded, setExpanded] = useState(false);
+  const [note, setNote] = useState("");
+  const [saved, setSaved] = useState(false);
+  const [exclusivePlaying, setExclusivePlaying] = useState(false);
+  const exclusiveAudioRef = useRef(null);
+  const { phase } = getMoonPhase();
+  const content = MOON_CONTENT[lang][phase];
+
+  useEffect(() => {
+    return () => { if (exclusiveAudioRef.current) { exclusiveAudioRef.current.destroy(); exclusiveAudioRef.current = null; } };
+  }, []);
+
+  function toggleExclusiveTrack() {
+    if (exclusivePlaying) {
+      exclusiveAudioRef.current?.pause();
+      setExclusivePlaying(false);
+      return;
+    }
+    if (exclusiveAudioRef.current) { exclusiveAudioRef.current.destroy(); exclusiveAudioRef.current = null; }
+    const player = createLoopingPlayer(`/audio/${MOON_AUDIO_MAP[phase]}`, 0.7);
+    player.play();
+    exclusiveAudioRef.current = player;
+    setExclusivePlaying(true);
+  }
+
+  function handleSave() {
+    if (!note.trim()) return;
+    const entries = loadFromStorage("om_moon_notes", []);
+    entries.unshift({ date: new Date().toISOString(), phase, text: note.trim() });
+    saveToStorage("om_moon_notes", entries);
+    setNote("");
+    setSaved(true);
+    setTimeout(() => setSaved(false), 2000);
+  }
+
+  return (
+    <div style={{ margin: "0 1.5rem 1.25rem", background: C.surface, border: `1px solid ${C.border}`, borderRadius: 20, padding: "1.25rem", backdropFilter: "blur(8px)" }}>
+      <button onClick={() => setExpanded(e => !e)} style={{ width: "100%", background: "none", border: "none", cursor: "pointer", padding: 0, textAlign: "left", display: "flex", alignItems: "center", gap: 14 }}>
+        <div style={{ fontSize: 32, flexShrink: 0 }}>{content.icon}</div>
+        <div style={{ flex: 1 }}>
+          <div style={{ fontSize: 15, fontWeight: 500, color: C.text }}>{content.title}</div>
+          <div style={{ fontSize: 12, color: C.muted, lineHeight: 1.5 }}>{content.theme}</div>
+        </div>
+        <div style={{ color: C.muted, fontSize: 18 }}>{expanded ? "▲" : "▼"}</div>
+      </button>
+      {expanded && (
+        <div style={{ marginTop: 16, paddingTop: 16, borderTop: `1px solid ${C.border}` }}>
+          <div style={{ fontSize: 14, color: C.text, marginBottom: 12, lineHeight: 1.6 }}>{content.prompt}</div>
+          <textarea
+            value={note}
+            onChange={(e) => setNote(e.target.value)}
+            placeholder={lang === "en" ? "Write freely..." : "Пиши свободно..."}
+            rows={4}
+            style={taStyle}
+          />
+          <button onClick={handleSave} disabled={!note.trim()} style={{
+            marginTop: 10, width: "100%", padding: "12px", background: note.trim() ? C.accent : C.border,
+            border: "none", borderRadius: 16, color: "#f1eef2", fontSize: 14, cursor: note.trim() ? "pointer" : "default"
+          }}>
+            {saved ? (lang === "en" ? "Saved ✓" : "Сохранено ✓") : (lang === "en" ? "Save" : "Сохранить")}
+          </button>
+          {onListen && (
+            <button onClick={() => onListen(MOON_TRACK_MAP[phase])} style={{
+              marginTop: 10, width: "100%", padding: "12px", background: "none",
+              border: `1px solid ${C.border}`, borderRadius: 16, color: C.text, fontSize: 13, cursor: "pointer"
+            }}>
+              {lang === "en" ? "🎧 Listen to a matching frequency" : "🎧 Послушать подходящую частоту"}
+            </button>
+          )}
+
+          {isPro ? (
+            <button onClick={toggleExclusiveTrack} style={{
+              marginTop: 10, width: "100%", padding: "12px", background: exclusivePlaying ? C.accent : "rgba(177,156,163,0.18)",
+              border: `1px solid ${C.accent}`, borderRadius: 16, color: exclusivePlaying ? "#f1eef2" : C.text, fontSize: 13, cursor: "pointer"
+            }}>
+              {exclusivePlaying
+                ? (lang === "en" ? "⏸ Pause exclusive track" : "⏸ Пауза эксклюзивного трека")
+                : (lang === "en" ? "✦ Play exclusive Pro track" : "✦ Включить эксклюзивный трек")}
+            </button>
+          ) : (
+            <button onClick={onOpenProInfo} style={{
+              marginTop: 10, width: "100%", padding: "12px", background: "rgba(177,156,163,0.08)",
+              border: `1px dashed ${C.border}`, borderRadius: 16, color: C.muted, fontSize: 12, textAlign: "center", lineHeight: 1.5, cursor: onOpenProInfo ? "pointer" : "default"
+            }}>
+              {lang === "en"
+                ? "🔒 An exclusive track made for this phase is part of OceanMind Pro (299 ₽/mo)"
+                : "🔒 Эксклюзивный трек под эту фазу — часть OceanMind Pro (299 ₽/мес)"}
+            </button>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function HomeScreen({ mood, setMood, currentSound, setCurrentSound, onNavigate, t, onListenMoonTrack, isPro, onOpenProInfo }) {
   const [clock, setClock] = useState(getClockStr());
   const [affIdx, setAffIdx] = useState(0);
   const [affFade, setAffFade] = useState(true);
+  const lang = t === T.en ? "en" : "ru";
 
   useEffect(() => {
     const t = setInterval(() => setClock(getClockStr()), 30000);
@@ -618,26 +754,29 @@ function HomeScreen({ mood, setMood, currentSound, setCurrentSound, onNavigate, 
         </button>
       </div>
 
-      {/* Donation */}
-      <div style={{ margin: "1.25rem 1.5rem 0.5rem", background: C.surface, border: `1px solid ${C.border}`, borderRadius: 18, padding: "14px 16px", backdropFilter: "blur(8px)", textAlign: "center" }}>
-        <div style={{ fontSize: 12, color: C.muted, marginBottom: 8, lineHeight: 1.6 }}>
-          {t && t.home ? (t === T.en ? "🌊 OceanMind is free. If it helps you — support its growth." : "🌊 OceanMind — бесплатное приложение. Если оно тебе помогает — поддержи развитие.") : "🌊 OceanMind — бесплатное приложение."}
-        </div>
-        <div style={{ fontSize: 12, color: C.text, marginBottom: 4 }}>
-          СБП (любой банк): <span style={{ color: C.accent, userSelect: "all" }}>+7 922 291 44 10</span>
-        </div>
-        <div style={{ fontSize: 12, color: C.text, marginBottom: 4 }}>
-          PayPal: <span style={{ color: C.accent, userSelect: "all" }}>nchizhevskaya9@gmail.com</span>
-        </div>
-        <div style={{ fontSize: 12, color: C.text, marginBottom: 2 }}>
-          USDT BSC (BEP20):
-        </div>
-        <div style={{ fontSize: 11, color: C.accent, userSelect: "all", wordBreak: "break-all" }}>
-          0x9b0fb4e5ac625a0c6f3d1dd2f74d7339939771dd
-        </div>
-      </div>
+      <MoonPhaseCard lang={lang} onListen={onListenMoonTrack} isPro={isPro} onOpenProInfo={onOpenProInfo} />
+
+      {/* Donation-блок убран по решению Наташи (19.08.2026) */}
     </div>
   );
+}
+
+// Простое зацикливание через стандартный audio.loop.
+// (Раньше здесь была кастомная кроссфейд-логика для маскировки щелчка на стыке,
+// но она не решила проблему на практике и добавляла риск полной тишины при сбое —
+// откатили на нативный механизм браузера как более надёжный. Если щелчок на стыке
+// мешает — самый эффективный способ починить именно источник: взять аудиофайл
+// с изначально бесшовной петлёй.)
+function createLoopingPlayer(src, initialVolume) {
+  const audio = new Audio(src);
+  audio.loop = true;
+  audio.volume = initialVolume;
+  return {
+    play() { audio.play().catch(() => {}); },
+    pause() { audio.pause(); },
+    setVolume(v) { audio.volume = v; },
+    destroy() { audio.pause(); },
+  };
 }
 
 // ─── Sounds Screen ─────────────────────────────────────────────────────────────
@@ -661,7 +800,7 @@ function SoundsScreen({ currentSound, setCurrentSound, t }) {
 
   // Keep volume in sync with the audio element
   useEffect(() => {
-    if (audioRef.current) audioRef.current.volume = volume / 100;
+    if (audioRef.current) audioRef.current.setVolume(volume / 100);
   }, [volume]);
 
   const startTimer = useCallback((isPlaying) => {
@@ -681,26 +820,24 @@ function SoundsScreen({ currentSound, setCurrentSound, t }) {
 
   // Cleanup audio on unmount
   useEffect(() => {
-    return () => { if (audioRef.current) { audioRef.current.pause(); audioRef.current = null; } };
+    return () => { if (audioRef.current) { audioRef.current.destroy(); audioRef.current = null; } };
   }, []);
 
   function playAudioFile(s) {
     if (audioRef.current) {
-      audioRef.current.pause();
+      audioRef.current.destroy();
       audioRef.current = null;
     }
-    const audio = new Audio(`/audio/${s.file}`);
-    audio.loop = true;
-    audio.volume = volume / 100;
-    audio.play().catch(() => { /* file may not exist yet — silent fail */ });
-    audioRef.current = audio;
+    const player = createLoopingPlayer(`/audio/${s.file}`, volume / 100);
+    player.play();
+    audioRef.current = player;
   }
 
   function togglePlay() {
     setPlaying(p => {
       const next = !p;
       if (audioRef.current) {
-        if (next) audioRef.current.play().catch(() => {}); else audioRef.current.pause();
+        if (next) audioRef.current.play(); else audioRef.current.pause();
       }
       startTimer(next);
       return next;
@@ -791,7 +928,34 @@ function SoundsScreen({ currentSound, setCurrentSound, t }) {
 
 // ─── Meditations Screen ────────────────────────────────────────────────────────
 
-function MeditationsScreen({ t = T.ru }) {
+// ─── Кнопка перехода в чат с ИИ, с контекстом последних записей ────────────────
+function AskAIPracticeButton({ lang, onAskAI }) {
+  function handleClick() {
+    const stored = loadFromStorage("om_entries", []);
+    const recent = (Array.isArray(stored) ? stored : []).slice(0, 5);
+    const summary = recent.length
+      ? recent.map(e => `— ${e.what_happened || ""} ${e.what_felt ? "(" + e.what_felt + ")" : ""}`.trim()).join("\n")
+      : (lang === "en" ? "No journal entries yet." : "Записей в дневнике пока нет.");
+    const msg = lang === "en"
+      ? `Based on my recent journal entries below, suggest one concrete self-help practice for me right now:\n${summary}`
+      : `Вот мои последние записи дневника. Подбери мне одну конкретную практику самопомощи, подходящую сейчас:\n${summary}`;
+    onAskAI(msg);
+  }
+
+  return (
+    <div style={{ padding: "0 1.5rem 16px" }}>
+      <button onClick={handleClick} style={{
+        width: "100%", padding: "14px", background: "rgba(177,156,163,0.18)",
+        border: `1px solid ${C.accent}`, borderRadius: 16, color: C.text, fontSize: 14,
+        cursor: "pointer", fontFamily: "'Nunito', sans-serif"
+      }}>
+        {lang === "en" ? "✨ Ask AI for a practice" : "✨ Спросить у ИИ практику"}
+      </button>
+    </div>
+  );
+}
+
+function MeditationsScreen({ t = T.ru, onAskAI, autoplayTrackId = null, onAutoplayConsumed }) {
   const [tab, setTab] = useState("frequencies");
   const [playing, setPlaying] = useState(null);
   const [expanded, setExpanded] = useState(null);
@@ -799,6 +963,7 @@ function MeditationsScreen({ t = T.ru }) {
   const [practiceStep, setPracticeStep] = useState(0);
   const [practiceAnswers, setPracticeAnswers] = useState({});
   const audioRef = useRef(null);
+  const lang = t === T.en ? "en" : "ru";
 
   const WRITTEN_PRACTICES = t.practices.practiceList;
 
@@ -809,18 +974,28 @@ function MeditationsScreen({ t = T.ru }) {
       setPlaying(null);
       return;
     }
-    if (audioRef.current) { audioRef.current.pause(); audioRef.current = null; }
-    const audio = new Audio(`/audio/${track.file}`);
-    audio.loop = true;
-    audio.volume = 0.7;
-    audio.play().catch(() => {});
-    audioRef.current = audio;
+    if (audioRef.current) { audioRef.current.destroy(); audioRef.current = null; }
+    const player = createLoopingPlayer(`/audio/${track.file}`, 0.7);
+    player.play();
+    audioRef.current = player;
     setPlaying(track.id);
   }
 
   useEffect(() => {
-    return () => { if (audioRef.current) { audioRef.current.pause(); audioRef.current = null; } };
+    return () => { if (audioRef.current) { audioRef.current.destroy(); audioRef.current = null; } };
   }, []);
+
+  // Пришли из карточки лунной фазы с просьбой включить конкретный трек
+  useEffect(() => {
+    if (!autoplayTrackId) return;
+    const track = MUSIC_TRACKS.find(tr => tr.id === autoplayTrackId);
+    if (track) {
+      setTab("frequencies");
+      togglePlay(track);
+    }
+    onAutoplayConsumed && onAutoplayConsumed();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoplayTrackId]);
 
   // Practice flow
   if (practiceIdx !== null) {
@@ -832,7 +1007,7 @@ function MeditationsScreen({ t = T.ru }) {
       return (
         <div style={{ padding: "2rem 1.5rem", textAlign: "center" }}>
           <div style={{ fontSize: 48, marginBottom: 16 }}>🌿</div>
-          <div style={{ fontSize: 18, fontWeight: 500, color: C.text, marginBottom: 24 }}>Практика завершена</div>
+          <div style={{ fontSize: 18, fontWeight: 500, color: C.text, marginBottom: 24 }}>{t.practices ? t.practices.done : "Практика завершена"}</div>
           <div style={{ display: "grid", gap: 10, marginBottom: 28, textAlign: "left" }}>
             {p.steps.map((s, i) => practiceAnswers[i] && (
               <div key={i} style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 14, padding: "12px 14px", backdropFilter: "blur(8px)" }}>
@@ -843,7 +1018,7 @@ function MeditationsScreen({ t = T.ru }) {
           </div>
           <button onClick={() => { setPracticeIdx(null); setPracticeStep(0); setPracticeAnswers({}); }}
             style={{ padding: "12px 32px", background: C.accent, border: "none", borderRadius: 30, color: "#f1eef2", fontSize: 14, cursor: "pointer" }}>
-            Завершить
+            {t.practices ? t.practices.finish : "Завершить"}
           </button>
         </div>
       );
@@ -876,13 +1051,13 @@ function MeditationsScreen({ t = T.ru }) {
         <div style={{ marginTop: 20, display: "flex", gap: 10 }}>
           <button onClick={() => setPracticeStep(s => s + 1)}
             style={{ flex: 1, padding: "14px", background: C.accent, border: "none", borderRadius: 16, color: "#f1eef2", fontSize: 15, cursor: "pointer" }}>
-            {practiceStep < p.steps.length - 1 ? "Next →" : "Done ✓"}
+            {practiceStep < p.steps.length - 1 ? (t.practices ? t.practices.next : "Далее →") : (t.practices ? t.practices.finish : "Готово ✓")}
           </button>
         </div>
         {practiceStep < p.steps.length - 1 && (
           <button onClick={() => setPracticeStep(s => s + 1)}
             style={{ width: "100%", padding: "10px", background: "none", border: "none", color: C.muted, fontSize: 13, cursor: "pointer", marginTop: 8 }}>
-            Пропустить
+            {t.practices ? t.practices.skip : "Пропустить"}
           </button>
         )}
       </div>
@@ -901,6 +1076,8 @@ function MeditationsScreen({ t = T.ru }) {
           }}>{label}</button>
         ))}
       </div>
+
+      <AskAIPracticeButton lang={lang} onAskAI={onAskAI} />
 
       {/* Frequencies tab */}
       {tab === "frequencies" && (
@@ -1032,7 +1209,7 @@ function AffirmationsScreen({ t = T.ru }) {
 
 // ─── Journal Screen ────────────────────────────────────────────────────────────
 
-function JournalScreen({ t = T.ru }) {
+function JournalScreen({ t = T.ru, onAskAI }) {
   const [tab, setTab] = useState("journal");
   const [view, setView] = useState("list");
   const seedEntries = [];
@@ -1122,9 +1299,343 @@ function JournalScreen({ t = T.ru }) {
           newFelt={newFelt} setNewFelt={setNewFelt} newHelped={newHelped} setNewHelped={setNewHelped}
           newInsight={newInsight} setNewInsight={setNewInsight} newTags={newTags} setNewTags={setNewTags}
           promptIdx={promptIdx} setPromptIdx={setPromptIdx} step={step} setStep={setStep}
+          onAskAI={onAskAI}
         />
       )}
     </div>
+  );
+}
+
+// ─── Чат-ассистент ───────────────────────────────────────────────────────────
+const FREE_CHAT_LIMIT = 5;
+function getFreeChatCount() {
+  return parseInt(localStorage.getItem("om_chat_free_count") || "0", 10);
+}
+function incrementFreeChatCount() {
+  const next = getFreeChatCount() + 1;
+  localStorage.setItem("om_chat_free_count", String(next));
+  return next;
+}
+
+// ─── Экран "О подписке Pro" — цена, что входит, способы оплаты ─────────────────
+function ProInfoScreen({ lang, onBack }) {
+  const [copied, setCopied] = useState(false);
+  const wallet = "0x9b0fb4e5ac625a0c6f3d1dd2f74d7339939771dd";
+
+  function handleCopy() {
+    navigator.clipboard?.writeText(wallet);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  }
+
+  return (
+    <div style={{ padding: "0 1.5rem 2rem" }}>
+      <button onClick={onBack} style={{ background: "none", border: "none", color: C.muted, cursor: "pointer", fontSize: 13, padding: "0 0 1rem" }}>
+        {lang === "en" ? "← Back" : "← Назад"}
+      </button>
+
+      <div style={{ textAlign: "center", marginBottom: 24 }}>
+        <div style={{ fontSize: 32, marginBottom: 8 }}>✦</div>
+        <div style={{ fontSize: 20, fontWeight: 500, color: C.text }}>OceanMind Pro</div>
+        <div style={{ fontSize: 24, fontWeight: 600, color: C.accent, marginTop: 6 }}>
+          299 ₽ {lang === "en" ? "/ month" : "/ мес"}
+        </div>
+      </div>
+
+      <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 16, padding: "16px 18px", marginBottom: 20 }}>
+        <div style={{ fontSize: 12, color: C.muted, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 10 }}>
+          {lang === "en" ? "What's included" : "Что входит"}
+        </div>
+        {[
+          lang === "en" ? "Unlimited AI chat & reflection" : "Безлимитный чат и рефлексия с ИИ",
+          lang === "en" ? "Exclusive tracks for each moon phase" : "Эксклюзивные треки под каждую фазу луны",
+          lang === "en" ? "Cloud sync across devices" : "Синхронизация между устройствами",
+        ].map((item, i) => (
+          <div key={i} style={{ fontSize: 14, color: C.text, padding: "6px 0", display: "flex", gap: 8 }}>
+            <span style={{ color: C.accent }}>✓</span> {item}
+          </div>
+        ))}
+      </div>
+
+      <div style={{ fontSize: 13, color: C.muted, marginBottom: 12 }}>
+        {lang === "en" ? "Payment methods" : "Способы оплаты"}
+      </div>
+
+      <div style={{ background: "rgba(177,156,163,0.08)", border: `1px dashed ${C.border}`, borderRadius: 16, padding: "16px 18px", marginBottom: 14 }}>
+        <div style={{ fontSize: 14, fontWeight: 500, color: C.text, marginBottom: 4 }}>
+          💳 {lang === "en" ? "Russian bank card" : "Российская карта"}
+        </div>
+        <div style={{ fontSize: 12, color: C.muted }}>
+          {lang === "en" ? "Coming very soon" : "Появится совсем скоро"}
+        </div>
+      </div>
+
+      <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 16, padding: "16px 18px" }}>
+        <div style={{ fontSize: 14, fontWeight: 500, color: C.text, marginBottom: 10 }}>
+          ₮ {lang === "en" ? "Crypto (USDT, BSC/BEP20)" : "Криптовалюта (USDT, сеть BSC/BEP20)"}
+        </div>
+        <div style={{ fontSize: 13, color: C.muted, lineHeight: 1.6, marginBottom: 12 }}>
+          {lang === "en"
+            ? "Send the equivalent of 299 ₽ (~$3.5) to the wallet below, then message the transaction ID (TXID) to activate Pro:"
+            : "Переведи сумму, эквивалентную 299 ₽ (~$3.5), на кошелёк ниже, затем пришли номер транзакции (TXID) для активации Pro:"}
+        </div>
+        <div style={{
+          fontSize: 11, color: C.text, background: "rgba(177,156,163,0.12)", borderRadius: 10,
+          padding: "10px 12px", wordBreak: "break-all", fontFamily: "monospace", marginBottom: 10
+        }}>
+          {wallet}
+        </div>
+        <button onClick={handleCopy} style={{
+          width: "100%", padding: "10px", background: copied ? C.accent : "none",
+          border: `1px solid ${C.accent}`, borderRadius: 12, color: copied ? "#f1eef2" : C.text,
+          fontSize: 13, cursor: "pointer", marginBottom: 12
+        }}>
+          {copied ? (lang === "en" ? "Copied ✓" : "Скопировано ✓") : (lang === "en" ? "Copy address" : "Скопировать адрес")}
+        </button>
+        <a href="https://t.me/nata_chi13" target="_blank" rel="noopener noreferrer" style={{
+          display: "block", textAlign: "center", padding: "12px", background: C.accent,
+          borderRadius: 12, color: "#f1eef2", fontSize: 14, textDecoration: "none"
+        }}>
+          {lang === "en" ? "Message @nata_chi13 with TXID" : "Написать @nata_chi13 с номером транзакции"}
+        </a>
+      </div>
+    </div>
+  );
+}
+
+function ChatAssistantScreen({ t = T.ru, lang = "ru", seed = null, onSeedConsumed, isPro = false, onOpenProInfo }) {
+  const [messages, setMessages] = useState([]);
+  const [input, setInput] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [freeCount, setFreeCount] = useState(() => getFreeChatCount());
+  const scrollRef = useRef(null);
+  const limitReached = !isPro && freeCount >= FREE_CHAT_LIMIT;
+
+  useEffect(() => {
+    if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+  }, [messages, loading]);
+
+  useEffect(() => {
+    if (seed && !limitReached) {
+      handleSend(seed);
+    }
+    if (seed) onSeedConsumed && onSeedConsumed();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [seed]);
+
+  async function handleSend(overrideText) {
+    const text = (overrideText ?? input).trim();
+    if (!text || loading || limitReached) return;
+    const nextMessages = [...messages, { role: "user", content: text }];
+    setMessages(nextMessages);
+    setInput("");
+    setLoading(true);
+    setError(null);
+    try {
+      const history = nextMessages.map(m => ({ role: m.role, content: m.content }));
+      const reply = await chatWithAssistant(text, history.slice(0, -1), lang);
+      setMessages(m => [...m, { role: "assistant", content: reply }]);
+      if (!isPro) setFreeCount(incrementFreeChatCount());
+    } catch (err) {
+      setError(lang === "en" ? "Couldn't reach AI. Try again later." : "Не получилось связаться с ИИ. Попробуй позже.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  function handleKeyDown(e) {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      handleSend();
+    }
+  }
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", height: "100%", padding: "0 1.5rem" }}>
+      <div ref={scrollRef} style={{ flex: 1, overflowY: "auto", paddingBottom: 12 }}>
+        {messages.length === 0 && (
+          <div style={{ textAlign: "center", padding: "2rem 0.5rem", color: C.muted, fontSize: 14, lineHeight: 1.7 }}>
+            <div style={{ fontSize: 36, marginBottom: 12 }}>💬</div>
+            {lang === "en"
+              ? "Ask about breathing exercises, journaling prompts, or working through anxiety."
+              : "Спроси про дыхательные практики, письменные техники или как справиться с тревогой."}
+          </div>
+        )}
+        {messages.map((m, i) => (
+          <div key={i} style={{
+            display: "flex", justifyContent: m.role === "user" ? "flex-end" : "flex-start", marginBottom: 10
+          }}>
+            <div style={{
+              maxWidth: "80%", padding: "11px 15px", borderRadius: 16,
+              background: m.role === "user" ? C.accent : C.surface,
+              color: m.role === "user" ? "#f1eef2" : C.text,
+              border: m.role === "user" ? "none" : `1px solid ${C.border}`,
+              fontSize: 14, lineHeight: 1.6, whiteSpace: "pre-wrap"
+            }}>
+              {m.content}
+            </div>
+          </div>
+        ))}
+        {loading && (
+          <div style={{ display: "flex", justifyContent: "flex-start", marginBottom: 10 }}>
+            <div style={{ padding: "11px 15px", borderRadius: 16, background: C.surface, border: `1px solid ${C.border}`, color: C.muted, fontSize: 14 }}>
+              {lang === "en" ? "Thinking…" : "Думаю…"}
+            </div>
+          </div>
+        )}
+        {error && <div style={{ fontSize: 12, color: "#c98080", textAlign: "center", marginTop: 8 }}>{error}</div>}
+      </div>
+
+      {limitReached ? (
+        <div style={{ background: "rgba(177,156,163,0.15)", border: `1px solid ${C.accent}`, borderRadius: 18, padding: "18px 16px", margin: "0 0 16px", textAlign: "center" }}>
+          <div style={{ fontSize: 28, marginBottom: 8 }}>🔒</div>
+          <div style={{ fontSize: 14, fontWeight: 500, color: C.text, marginBottom: 6 }}>
+            {lang === "en" ? `You've used your ${FREE_CHAT_LIMIT} free messages` : `Бесплатные ${FREE_CHAT_LIMIT} сообщений закончились`}
+          </div>
+          <div style={{ fontSize: 12, color: C.muted, lineHeight: 1.6, marginBottom: 12 }}>
+            {lang === "en" ? "Unlimited chat is part of OceanMind Pro (299 ₽/mo)." : "Безлимитный чат — часть OceanMind Pro (299 ₽/мес)."}
+          </div>
+          {onOpenProInfo && (
+            <button onClick={onOpenProInfo} style={{
+              padding: "10px 20px", background: C.accent, border: "none", borderRadius: 14,
+              color: "#f1eef2", fontSize: 13, cursor: "pointer"
+            }}>
+              {lang === "en" ? "See Pro options" : "Посмотреть варианты Pro"}
+            </button>
+          )}
+        </div>
+      ) : (
+        <>
+          <div style={{ fontSize: 10, color: C.muted, textAlign: "center", padding: "0 8px", lineHeight: 1.5 }}>
+            {lang === "en"
+              ? <>Messages are processed by an AI service to generate replies. AI, not a therapist. In crisis — <b style={{ color: C.accent }}>findahelpline.com</b></>
+              : <>Сообщения обрабатываются ИИ-сервисом для ответа. Это ИИ, а не терапевт. При кризисе — <b style={{ color: C.accent }}>8-800-100-49-94</b></>}
+          </div>
+          {!isPro && (
+            <div style={{ fontSize: 11, color: C.muted, textAlign: "center", padding: "4px 0 0" }}>
+              {lang === "en" ? `${FREE_CHAT_LIMIT - freeCount} of ${FREE_CHAT_LIMIT} free messages left` : `Осталось бесплатных сообщений: ${FREE_CHAT_LIMIT - freeCount} из ${FREE_CHAT_LIMIT}`}
+            </div>
+          )}
+          <div style={{ display: "flex", gap: 8, padding: "10px 0 16px", flexShrink: 0 }}>
+            <textarea
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={handleKeyDown}
+              placeholder={lang === "en" ? "Type a message…" : "Напиши сообщение…"}
+              rows={1}
+              style={{
+                flex: 1, resize: "none", background: C.surface, border: `1px solid ${C.border}`,
+                borderRadius: 16, padding: "12px 14px", color: C.text, fontSize: 14, outline: "none",
+                fontFamily: "'Nunito', sans-serif", maxHeight: 100
+              }}
+            />
+            <button onClick={() => handleSend()} disabled={loading || !input.trim()} style={{
+              width: 44, height: 44, borderRadius: "50%", border: "none",
+              background: (loading || !input.trim()) ? C.border : C.accent,
+              color: "#f1eef2", fontSize: 18, cursor: (loading || !input.trim()) ? "default" : "pointer",
+              flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center"
+            }}>
+              ↑
+            </button>
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
+// ─── Экран входа (необязательный, гостевой режим доступен без него) ────────────
+function AuthScreen({ lang, onClose }) {
+  const [email, setEmail] = useState("");
+  const [sent, setSent] = useState(false);
+  const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(false);
+
+  async function handleSend() {
+    if (!email.trim()) return;
+    setLoading(true);
+    setError(null);
+    try {
+      await signInWithEmail(email.trim(), lang);
+      setSent(true);
+    } catch (err) {
+      setError(err.message || (lang === "en" ? "Something went wrong" : "Что-то пошло не так"));
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <div style={{ padding: "1.5rem", display: "flex", flexDirection: "column", minHeight: "100%" }}>
+      <button onClick={onClose} style={{ background: "none", border: "none", color: C.muted, cursor: "pointer", fontSize: 13, alignSelf: "flex-start", marginBottom: 20 }}>
+        {lang === "en" ? "← Back" : "← Назад"}
+      </button>
+      <div style={{ fontSize: 20, fontWeight: 500, color: C.text, marginBottom: 8 }}>
+        {lang === "en" ? "Sync your data" : "Синхронизировать данные"}
+      </div>
+      <div style={{ fontSize: 13, color: C.muted, marginBottom: 24, lineHeight: 1.6 }}>
+        {lang === "en"
+          ? "Sign in with email to keep your journal safe across devices. Your entries stay private to you."
+          : "Войди по email, чтобы твой дневник сохранился и был доступен на всех устройствах. Записи видны только тебе."}
+      </div>
+      {!sent ? (
+        <>
+          <input
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder={lang === "en" ? "your@email.com" : "твой@email.com"}
+            style={{ width: "100%", background: C.surface, border: `1px solid ${C.border}`, borderRadius: 14, padding: "13px 14px", color: C.text, fontSize: 14, marginBottom: 12, outline: "none", fontFamily: "'Nunito', sans-serif" }}
+          />
+          {error && <div style={{ fontSize: 12, color: "#c98080", marginBottom: 12 }}>{error}</div>}
+          <button onClick={handleSend} disabled={loading} style={{ width: "100%", padding: "14px", background: C.accent, border: "none", borderRadius: 16, color: "#f1eef2", fontSize: 15, cursor: loading ? "default" : "pointer" }}>
+            {loading ? (lang === "en" ? "Sending…" : "Отправляю…") : (lang === "en" ? "Send magic link" : "Отправить ссылку для входа")}
+          </button>
+          <a href="/privacy.html" target="_blank" rel="noopener noreferrer"
+            style={{ display: "block", textAlign: "center", marginTop: 16, fontSize: 11, color: C.muted }}>
+            {lang === "en" ? "Privacy Policy" : "Политика конфиденциальности"}
+          </a>
+        </>
+      ) : (
+        <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 16, padding: "16px", fontSize: 14, color: C.text, lineHeight: 1.6 }}>
+          {lang === "en"
+            ? `Check your inbox at ${email} — click the link to sign in.`
+            : `Проверь почту ${email} — перейди по ссылке для входа.`}
+          <div style={{ fontSize: 12, color: C.muted, marginTop: 10 }}>
+            {lang === "en"
+              ? "Don't see it? Check your Spam folder — this is a new sender."
+              : "Не пришло? Загляни в папку «Спам» — это новый отправитель для твоей почты."}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── Кнопка перехода в чат с ИИ по конкретной записи дневника ──────────────────
+function AskAIAboutEntryButton({ entry, lang, onAskAI }) {
+  function handleClick() {
+    const parts = [
+      entry.what_happened && (lang === "en" ? "What happened: " : "Что произошло: ") + entry.what_happened,
+      entry.what_felt && (lang === "en" ? "What I felt: " : "Что я почувствовал(а): ") + entry.what_felt,
+      entry.what_helped && (lang === "en" ? "What helped: " : "Что помогло: ") + entry.what_helped,
+      entry.insight && (lang === "en" ? "Insight: " : "Осознание: ") + entry.insight,
+    ].filter(Boolean).join("\n");
+    const msg = lang === "en"
+      ? `Here's a journal entry of mine. Could you gently reflect on it?\n${parts}`
+      : `Вот моя запись из дневника. Помоги мне мягко её отрефлексировать:\n${parts}`;
+    onAskAI(msg);
+  }
+
+  return (
+    <button onClick={handleClick} style={{
+      width: "100%", padding: "13px", background: "rgba(177,156,163,0.18)",
+      border: `1px solid ${C.accent}`, borderRadius: 16, color: C.text, fontSize: 14,
+      cursor: "pointer", fontFamily: "'Nunito', sans-serif", marginTop: 4
+    }}>
+      {lang === "en" ? "🌊 Ask AI about this entry" : "🌊 Спросить у ИИ об этой записи"}
+    </button>
   );
 }
 
@@ -1132,7 +1643,7 @@ function JournalListAndEntry({ t = T.ru,
   view, setView, entries, setEntries, selected, setSelected,
   newMood, setNewMood, newWhat, setNewWhat, newFelt, setNewFelt,
   newHelped, setNewHelped, newInsight, setNewInsight, newTags, setNewTags,
-  promptIdx, setPromptIdx, step, setStep
+  promptIdx, setPromptIdx, step, setStep, onAskAI
 }) {
   function saveEntry() {
     const e = { id: "e" + Date.now(), date: new Date(), mood: newMood ?? 2, what_happened: newWhat, what_felt: newFelt, what_helped: newHelped, pattern_tags: newTags, insight: newInsight };
@@ -1207,6 +1718,7 @@ function JournalListAndEntry({ t = T.ru,
 
   if (view === "entry" && selected) {
     const e = selected;
+    const lang = t === T.en ? "en" : "ru";
     return (
       <div style={{ padding: "0 1.5rem 1.5rem" }}>
         <button onClick={() => setView("list")} style={{ background: "none", border: "none", color: C.muted, cursor: "pointer", fontSize: 13, padding: "0 0 1rem" }}>← Back</button>
@@ -1224,13 +1736,14 @@ function JournalListAndEntry({ t = T.ru,
           </div>
         ))}
         {e.pattern_tags?.length > 0 && (
-          <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 16, padding: "14px 16px", backdropFilter: "blur(8px)" }}>
+          <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 16, padding: "14px 16px", marginBottom: 10, backdropFilter: "blur(8px)" }}>
             <div style={{ fontSize: 11, color: C.muted, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 10 }}>Паттерны</div>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
               {e.pattern_tags.map(t => <span key={t} style={{ background: "rgba(177,156,163,0.2)", color: C.text, fontSize: 12, padding: "4px 12px", borderRadius: 20 }}>{t}</span>)}
             </div>
           </div>
         )}
+        <AskAIAboutEntryButton entry={e} lang={lang} onAskAI={onAskAI} />
       </div>
     );
   }
@@ -1620,6 +2133,7 @@ export default function App() {
   { id: "patterns",      icon: "🗺️", label: t.nav.patterns },
   { id: "reflection",   icon: "🌊", label: t.nav.reflection },
   { id: "letters",      icon: "💌", label: t.nav.letters },
+  { id: "chat",         icon: "💬", label: lang === "en" ? "Chat" : "Чат" },
 ];
   function toggleLang() {
     const next = lang === "ru" ? "en" : "ru";
@@ -1642,8 +2156,27 @@ export default function App() {
   const [screen, setScreen] = useState("home");
   const [mood, setMood] = useState(null);
   const [currentSound, setCurrentSound] = useState(SOUNDS[0]);
+  const [showAuth, setShowAuth] = useState(false);
+  const [chatSeed, setChatSeed] = useState(null);
+  function goToChat(seedText) {
+    setChatSeed(seedText);
+    setScreen("chat");
+  }
+  const [moonTrackId, setMoonTrackId] = useState(null);
+  function goToMoonTrack(trackId) {
+    setMoonTrackId(trackId);
+    setScreen("meditations");
+  }
+  function goToProInfo() {
+    setScreen("pro");
+  }
+  const { user, isPro } = useAuth();
 
-  const screenTitles = { home: getGreeting(t), sounds: t.nav.sounds, meditations: t.nav.practices, affirmations: t.nav.affirmations, journal: t.nav.journal, patterns: t.nav.patterns, reflection: t.nav.reflection, letters: t.nav.letters };
+  useEffect(() => {
+    if (user) migrateLocalDataIfNeeded(user.id);
+  }, [user]);
+
+  const screenTitles = { home: getGreeting(t), sounds: t.nav.sounds, meditations: t.nav.practices, affirmations: t.nav.affirmations, journal: t.nav.journal, patterns: t.nav.patterns, reflection: t.nav.reflection, letters: t.nav.letters, chat: lang === "en" ? "Chat" : "Чат" };
 
   if (splash) return <SplashScreen onStart={() => setSplash(false)} />;
 
@@ -1685,6 +2218,18 @@ export default function App() {
           </div>
         ))}
       </div>
+      <div style={{ background: "rgba(177,156,163,0.12)", border: `1px solid ${C.border}`, borderRadius: 16, padding: "14px 16px", marginBottom: 20, fontSize: 12, color: C.muted, lineHeight: 1.6 }}>
+        <div style={{ marginBottom: 6 }}>
+          OceanMind не заменяет профессиональную психологическую или медицинскую помощь.
+          Если тебе тяжело прямо сейчас — обратись к специалисту или на линию поддержки:
+          <b style={{ color: C.text }}> 8-800-100-49-94</b> (Россия, бесплатно, круглосуточно).
+        </div>
+        <div style={{ fontStyle: "italic" }}>
+          OceanMind is not a substitute for professional mental health or medical care.
+          If you're struggling right now, please reach out to a professional or a crisis line
+          (e.g. <b style={{ color: C.text }}>findahelpline.com</b> for international options).
+        </div>
+      </div>
       <button onClick={() => { localStorage.setItem("om_onboarded", "1"); setOnboarding(false); }}
         style={{ width: "100%", padding: "16px", background: C.accent, border: "none", borderRadius: 16, color: "#f1eef2", fontSize: 16, cursor: "pointer", fontFamily: "'Nunito', sans-serif" }}>
         Начать · Start 🌊
@@ -1710,20 +2255,32 @@ export default function App() {
           <button onClick={toggleLang} style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 20, padding: "4px 12px", fontSize: 12, color: C.text, cursor: "pointer", fontFamily: "'Nunito', sans-serif", backdropFilter: "blur(8px)" }}>
             {lang === "ru" ? "EN" : "RU"}
           </button>
+          <button onClick={() => user ? signOut() : setShowAuth(true)} title={user ? user.email : (lang === "ru" ? "Войти" : "Sign in")}
+            style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 20, padding: "4px 10px", fontSize: 14, color: C.text, cursor: "pointer", backdropFilter: "blur(8px)" }}>
+            {user ? "☁️" : "👤"}
+          </button>
           <div style={{ fontSize: 13, color: C.muted }}>{screenTitles[screen]}</div>
         </div>
       </div>
 
+      {showAuth && (
+        <div style={{ position: "fixed", inset: 0, background: C.bg, maxWidth: 430, margin: "0 auto", zIndex: 50, overflowY: "auto" }}>
+          <AuthScreen lang={lang} onClose={() => setShowAuth(false)} />
+        </div>
+      )}
+
       <div style={{ flex: 1, overflowY: "auto" }}>
-        {screen === "home"         && <HomeScreen mood={mood} setMood={setMood} currentSound={currentSound} setCurrentSound={setCurrentSound} onNavigate={setScreen} t={t} />}
+        {screen === "home"         && <HomeScreen mood={mood} setMood={setMood} currentSound={currentSound} setCurrentSound={setCurrentSound} onNavigate={setScreen} t={t} onListenMoonTrack={goToMoonTrack} isPro={isPro} onOpenProInfo={goToProInfo} />}
         {screen === "sounds"       && <SoundsScreen currentSound={currentSound} setCurrentSound={setCurrentSound} t={t} />}
-        {screen === "meditations"  && <MeditationsScreen t={t} />}
+        {screen === "meditations"  && <MeditationsScreen t={t} onAskAI={goToChat} autoplayTrackId={moonTrackId} onAutoplayConsumed={() => setMoonTrackId(null)} />}
 
         {screen === "affirmations" && <AffirmationsScreen t={t} />}
-        {screen === "journal"      && <JournalScreen key={lang} t={t} />}
+        {screen === "journal"      && <JournalScreen key={lang} t={t} onAskAI={goToChat} />}
         {screen === "patterns"     && <PatternMapScreen t={t} />}
         {screen === "reflection"   && <ReflectionScreen t={t} />}
         {screen === "letters"      && <FutureLetterScreen t={t} />}
+        {screen === "chat"         && <ChatAssistantScreen t={t} lang={lang} seed={chatSeed} onSeedConsumed={() => setChatSeed(null)} isPro={isPro} onOpenProInfo={goToProInfo} />}
+        {screen === "pro"          && <ProInfoScreen lang={lang} onBack={() => setScreen("home")} />}
       </div>
 
       <div style={{ display: "flex", justifyContent: "space-between", gap: 0, padding: "10px 4px 12px", borderTop: `1px solid ${C.border}`, flexShrink: 0, background: "rgba(82,93,107,0.92)", backdropFilter: "blur(10px)" }}>
