@@ -1508,6 +1508,11 @@ function AuthScreen({ lang, onClose }) {
           {lang === "en"
             ? `Check your inbox at ${email} — click the link to sign in.`
             : `Проверь почту ${email} — перейди по ссылке для входа.`}
+          <div style={{ fontSize: 12, color: C.muted, marginTop: 10 }}>
+            {lang === "en"
+              ? "Don't see it? Check your Spam folder — this is a new sender."
+              : "Не пришло? Загляни в папку «Спам» — это новый отправитель для твоей почты."}
+          </div>
         </div>
       )}
     </div>
