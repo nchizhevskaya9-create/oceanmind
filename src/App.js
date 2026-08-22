@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { chatWithAssistant } from "./lib/ai";
-import { useAuth, signInWithEmail, signOut } from "./lib/auth";
+import { useAuth, signOut } from "./lib/auth";
 import { migrateLocalDataIfNeeded } from "./lib/migrateLocalData";
 
 // ─── Data ──────────────────────────────────────────────────────────────────────
@@ -414,8 +414,6 @@ const FREQ_SCIENCE = {
   alpha: { hz: "8–10 Hz", name: "Alpha", science: "Альфа-волны — состояние спокойного бодрствования. Снижают уровень кортизола (гормона стресса), уменьшают тревогу и помогают восстановиться после нагрузки." },
   beta:  { hz: "18–20 Hz", name: "Beta", science: "Бета-волны доминируют при активной умственной деятельности. Улучшают концентрацию, ускоряют обработку информации и повышают продуктивность." },
   gamma: { hz: "40 Hz", name: "Gamma", science: "Гамма-волны связаны с пиковой концентрацией и состоянием потока. Исследования MIT показали что 40 Hz стимуляция замедляет развитие болезни Альцгеймера. Самая изученная частота в нейронауке." },
-  hz432: { hz: "432 Hz", name: "432 Hz", science: "Стандарт современной музыки — 440 Hz, принятый в 1953 году. 432 Hz — более древний натуральный строй который использовался веками. Этот строй использовали Верди, Моцарт и многие классические композиторы. Слушатели отмечают что музыка звучит теплее и вызывает более глубокое расслабление." },
-  hz528: { hz: "528 Hz", name: "528 Hz", science: "528 Hz входит в древнюю систему частот Солфеджио которая использовалась в gregorian chants средневековья. Биохимик Ли Лорензен исследовал влияние этой частоты на молекулярные процессы. Слушатели по всему миру отмечают глубокое ощущение покоя, внутренней гармонии и восстановления." },
 };
 
 const MUSIC_TRACKS = [
@@ -424,10 +422,6 @@ const MUSIC_TRACKS = [
   { id: "alpha", tag: "alpha", title: "Покой и расслабление",   duration: "30 мин", hz: "8–10 Hz",   file: "alpha.mp3",  photo: "https://images.unsplash.com/photo-1518241353330-0f7941c2d9b5?w=400&q=80", icon: "☁️", desc: "Снятие тревоги и стресса, восстановление" },
   { id: "beta",  tag: "beta",  title: "Фокус и концентрация",   duration: "30 мин", hz: "18–20 Hz",  file: "beta.mp3",   photo: "https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?w=400&q=80", icon: "⚡", desc: "Для работы и учёбы — ясность и продуктивность" },
   { id: "gamma", tag: "gamma", title: "Состояние потока",        duration: "25 мин", hz: "40 Hz",     file: "gamma.mp3",  photo: "https://images.unsplash.com/photo-1470252649378-9c29740c9fa8?w=400&q=80", icon: "✦", desc: "Пиковая концентрация — исследовано в MIT" },
-
-
-  { id: "hz432", tag: "hz432", title: "Натуральный строй", duration: "30 мин", hz: "432 Hz", file: "432.mp3", photo: "https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=400&q=80", icon: "♩", desc: "Теплее и мягче стандартного звука" },
-  { id: "hz528", tag: "hz528", title: "Частота резонанса", duration: "30 мин", hz: "528 Hz", file: "528.mp3", photo: "https://images.unsplash.com/photo-1501854140801-50d01698950b?w=400&q=80", icon: "◎", desc: "Для глубокого покоя и внутренней гармонии" },
 ];
 // ─── Fallback constants (used in components before t is available) ──────────────
 const AFFIRMATIONS = T.ru.affirmations;
@@ -607,13 +601,34 @@ const MOON_CONTENT = {
 };
 
 const MOON_TRACK_MAP = { new: "theta", waxing: "beta", full: "alpha", waning: "delta" };
+// Эксклюзивные Pro-треки под лунные фазы (отдельные от бесплатных 4 частот).
+const MOON_AUDIO_MAP = { new: "moon-theta.mp3", waxing: "moon-beta.mp3", full: "moon-alpha.mp3", waning: "moon-delta.mp3" };
 
-function MoonPhaseCard({ lang, onListen }) {
+function MoonPhaseCard({ lang, onListen, isPro = false, onOpenProInfo }) {
   const [expanded, setExpanded] = useState(false);
   const [note, setNote] = useState("");
   const [saved, setSaved] = useState(false);
+  const [exclusivePlaying, setExclusivePlaying] = useState(false);
+  const exclusiveAudioRef = useRef(null);
   const { phase } = getMoonPhase();
   const content = MOON_CONTENT[lang][phase];
+
+  useEffect(() => {
+    return () => { if (exclusiveAudioRef.current) { exclusiveAudioRef.current.destroy(); exclusiveAudioRef.current = null; } };
+  }, []);
+
+  function toggleExclusiveTrack() {
+    if (exclusivePlaying) {
+      exclusiveAudioRef.current?.pause();
+      setExclusivePlaying(false);
+      return;
+    }
+    if (exclusiveAudioRef.current) { exclusiveAudioRef.current.destroy(); exclusiveAudioRef.current = null; }
+    const player = createLoopingPlayer(`/audio/${MOON_AUDIO_MAP[phase]}`, 0.7);
+    player.play();
+    exclusiveAudioRef.current = player;
+    setExclusivePlaying(true);
+  }
 
   function handleSave() {
     if (!note.trim()) return;
@@ -659,13 +674,33 @@ function MoonPhaseCard({ lang, onListen }) {
               {lang === "en" ? "🎧 Listen to a matching frequency" : "🎧 Послушать подходящую частоту"}
             </button>
           )}
+
+          {isPro ? (
+            <button onClick={toggleExclusiveTrack} style={{
+              marginTop: 10, width: "100%", padding: "12px", background: exclusivePlaying ? C.accent : "rgba(177,156,163,0.18)",
+              border: `1px solid ${C.accent}`, borderRadius: 16, color: exclusivePlaying ? "#f1eef2" : C.text, fontSize: 13, cursor: "pointer"
+            }}>
+              {exclusivePlaying
+                ? (lang === "en" ? "⏸ Pause exclusive track" : "⏸ Пауза эксклюзивного трека")
+                : (lang === "en" ? "✦ Play exclusive Pro track" : "✦ Включить эксклюзивный трек")}
+            </button>
+          ) : (
+            <button onClick={onOpenProInfo} style={{
+              marginTop: 10, width: "100%", padding: "12px", background: "rgba(177,156,163,0.08)",
+              border: `1px dashed ${C.border}`, borderRadius: 16, color: C.muted, fontSize: 12, textAlign: "center", lineHeight: 1.5, cursor: onOpenProInfo ? "pointer" : "default"
+            }}>
+              {lang === "en"
+                ? "🔒 An exclusive track made for this phase is part of OceanMind Pro"
+                : "🔒 Эксклюзивный трек под эту фазу — часть OceanMind Pro"}
+            </button>
+          )}
         </div>
       )}
     </div>
   );
 }
 
-function HomeScreen({ mood, setMood, currentSound, setCurrentSound, onNavigate, t, onListenMoonTrack }) {
+function HomeScreen({ mood, setMood, currentSound, setCurrentSound, onNavigate, t, onListenMoonTrack, isPro, onOpenProInfo }) {
   const [clock, setClock] = useState(getClockStr());
   const [affIdx, setAffIdx] = useState(0);
   const [affFade, setAffFade] = useState(true);
@@ -719,7 +754,7 @@ function HomeScreen({ mood, setMood, currentSound, setCurrentSound, onNavigate, 
         </button>
       </div>
 
-      <MoonPhaseCard lang={lang} onListen={onListenMoonTrack} />
+      <MoonPhaseCard lang={lang} onListen={onListenMoonTrack} isPro={isPro} onOpenProInfo={onOpenProInfo} />
 
       {/* Donation-блок убран по решению Наташи (19.08.2026) */}
     </div>
@@ -1282,7 +1317,47 @@ function incrementFreeChatCount() {
   return next;
 }
 
-function ChatAssistantScreen({ t = T.ru, lang = "ru", seed = null, onSeedConsumed, isPro = false }) {
+// ─── Экран "О подписке Pro" — что входит (цена/оплата настраивается в App Store / Google Play) ──
+function ProInfoScreen({ lang, onBack }) {
+  return (
+    <div style={{ padding: "0 1.5rem 2rem" }}>
+      <button onClick={onBack} style={{ background: "none", border: "none", color: C.muted, cursor: "pointer", fontSize: 13, padding: "0 0 1rem" }}>
+        {lang === "en" ? "← Back" : "← Назад"}
+      </button>
+
+      <div style={{ textAlign: "center", marginBottom: 24 }}>
+        <div style={{ fontSize: 32, marginBottom: 8 }}>✦</div>
+        <div style={{ fontSize: 20, fontWeight: 500, color: C.text }}>OceanMind Pro</div>
+      </div>
+
+      <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 16, padding: "16px 18px", marginBottom: 20 }}>
+        <div style={{ fontSize: 12, color: C.muted, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 10 }}>
+          {lang === "en" ? "What's included" : "Что входит"}
+        </div>
+        {[
+          lang === "en" ? "Unlimited AI chat & reflection" : "Безлимитный чат и рефлексия с ИИ",
+          lang === "en" ? "Exclusive tracks for each moon phase" : "Эксклюзивные треки под каждую фазу луны",
+          lang === "en" ? "Cloud sync across devices" : "Синхронизация между устройствами",
+        ].map((item, i) => (
+          <div key={i} style={{ fontSize: 14, color: C.text, padding: "6px 0", display: "flex", gap: 8 }}>
+            <span style={{ color: C.accent }}>✓</span> {item}
+          </div>
+        ))}
+      </div>
+
+      <div style={{ background: "rgba(177,156,163,0.08)", border: `1px dashed ${C.border}`, borderRadius: 16, padding: "16px 18px", textAlign: "center" }}>
+        <div style={{ fontSize: 14, fontWeight: 500, color: C.text, marginBottom: 4 }}>
+          {lang === "en" ? "Coming soon" : "Скоро в приложении"}
+        </div>
+        <div style={{ fontSize: 12, color: C.muted, lineHeight: 1.6 }}>
+          {lang === "en" ? "Subscriptions will be available via the App Store and Google Play." : "Подписка появится через App Store и Google Play."}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ChatAssistantScreen({ t = T.ru, lang = "ru", seed = null, onSeedConsumed, isPro = false, onOpenProInfo }) {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
@@ -1372,16 +1447,24 @@ function ChatAssistantScreen({ t = T.ru, lang = "ru", seed = null, onSeedConsume
           <div style={{ fontSize: 14, fontWeight: 500, color: C.text, marginBottom: 6 }}>
             {lang === "en" ? `You've used your ${FREE_CHAT_LIMIT} free messages` : `Бесплатные ${FREE_CHAT_LIMIT} сообщений закончились`}
           </div>
-          <div style={{ fontSize: 12, color: C.muted, lineHeight: 1.6 }}>
-            {lang === "en" ? "Unlimited chat is part of OceanMind Pro. Subscriptions are coming soon." : "Безлимитный чат — часть OceanMind Pro. Подписка появится совсем скоро."}
+          <div style={{ fontSize: 12, color: C.muted, lineHeight: 1.6, marginBottom: 12 }}>
+            {lang === "en" ? "Unlimited chat is part of OceanMind Pro." : "Безлимитный чат — часть OceanMind Pro."}
           </div>
+          {onOpenProInfo && (
+            <button onClick={onOpenProInfo} style={{
+              padding: "10px 20px", background: C.accent, border: "none", borderRadius: 14,
+              color: "#f1eef2", fontSize: 13, cursor: "pointer"
+            }}>
+              {lang === "en" ? "See Pro options" : "Посмотреть варианты Pro"}
+            </button>
+          )}
         </div>
       ) : (
         <>
           <div style={{ fontSize: 10, color: C.muted, textAlign: "center", padding: "0 8px", lineHeight: 1.5 }}>
             {lang === "en"
-              ? <>Messages are sent to Anthropic (Claude AI) to generate replies. AI, not a therapist. In crisis — <b style={{ color: C.accent }}>findahelpline.com</b></>
-              : <>Сообщения передаются Anthropic (Claude) для ответа. Это ИИ, а не терапевт. При кризисе — <b style={{ color: C.accent }}>8-800-100-49-94</b></>}
+              ? <>Messages are processed by an AI service to generate replies. AI, not a therapist. In crisis — <b style={{ color: C.accent }}>findahelpline.com</b></>
+              : <>Сообщения обрабатываются ИИ-сервисом для ответа. Это ИИ, а не терапевт. При кризисе — <b style={{ color: C.accent }}>8-800-100-49-94</b></>}
           </div>
           {!isPro && (
             <div style={{ fontSize: 11, color: C.muted, textAlign: "center", padding: "4px 0 0" }}>
@@ -1418,25 +1501,6 @@ function ChatAssistantScreen({ t = T.ru, lang = "ru", seed = null, onSeedConsume
 
 // ─── Экран входа (необязательный, гостевой режим доступен без него) ────────────
 function AuthScreen({ lang, onClose }) {
-  const [email, setEmail] = useState("");
-  const [sent, setSent] = useState(false);
-  const [error, setError] = useState(null);
-  const [loading, setLoading] = useState(false);
-
-  async function handleSend() {
-    if (!email.trim()) return;
-    setLoading(true);
-    setError(null);
-    try {
-      await signInWithEmail(email.trim(), lang);
-      setSent(true);
-    } catch (err) {
-      setError(err.message || (lang === "en" ? "Something went wrong" : "Что-то пошло не так"));
-    } finally {
-      setLoading(false);
-    }
-  }
-
   return (
     <div style={{ padding: "1.5rem", display: "flex", flexDirection: "column", minHeight: "100%" }}>
       <button onClick={onClose} style={{ background: "none", border: "none", color: C.muted, cursor: "pointer", fontSize: 13, alignSelf: "flex-start", marginBottom: 20 }}>
@@ -1447,34 +1511,17 @@ function AuthScreen({ lang, onClose }) {
       </div>
       <div style={{ fontSize: 13, color: C.muted, marginBottom: 24, lineHeight: 1.6 }}>
         {lang === "en"
-          ? "Sign in with email to keep your journal safe across devices. Your entries stay private to you."
-          : "Войди по email, чтобы твой дневник сохранился и был доступен на всех устройствах. Записи видны только тебе."}
+          ? "Sign-in is getting an upgrade — soon you'll be able to sign in with Google or Apple in one tap."
+          : "Вход скоро станет удобнее — появится возможность входить в один тап через Google или Apple."}
       </div>
-      {!sent ? (
-        <>
-          <input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder={lang === "en" ? "your@email.com" : "твой@email.com"}
-            style={{ width: "100%", background: C.surface, border: `1px solid ${C.border}`, borderRadius: 14, padding: "13px 14px", color: C.text, fontSize: 14, marginBottom: 12, outline: "none", fontFamily: "'Nunito', sans-serif" }}
-          />
-          {error && <div style={{ fontSize: 12, color: "#c98080", marginBottom: 12 }}>{error}</div>}
-          <button onClick={handleSend} disabled={loading} style={{ width: "100%", padding: "14px", background: C.accent, border: "none", borderRadius: 16, color: "#f1eef2", fontSize: 15, cursor: loading ? "default" : "pointer" }}>
-            {loading ? (lang === "en" ? "Sending…" : "Отправляю…") : (lang === "en" ? "Send magic link" : "Отправить ссылку для входа")}
-          </button>
-          <a href="/privacy.html" target="_blank" rel="noopener noreferrer"
-            style={{ display: "block", textAlign: "center", marginTop: 16, fontSize: 11, color: C.muted }}>
-            {lang === "en" ? "Privacy Policy" : "Политика конфиденциальности"}
-          </a>
-        </>
-      ) : (
-        <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 16, padding: "16px", fontSize: 14, color: C.text, lineHeight: 1.6 }}>
-          {lang === "en"
-            ? `Check your inbox at ${email} — click the link to sign in.`
-            : `Проверь почту ${email} — перейди по ссылке для входа.`}
-        </div>
-      )}
+      <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 16, padding: "16px", fontSize: 14, color: C.text, lineHeight: 1.6, textAlign: "center" }}>
+        <div style={{ fontSize: 28, marginBottom: 10 }}>🚧</div>
+        {lang === "en" ? "Coming soon" : "Скоро здесь появится вход"}
+      </div>
+      <a href="/privacy.html" target="_blank" rel="noopener noreferrer"
+        style={{ display: "block", textAlign: "center", marginTop: 16, fontSize: 11, color: C.muted }}>
+        {lang === "en" ? "Privacy Policy" : "Политика конфиденциальности"}
+      </a>
     </div>
   );
 }
@@ -2033,6 +2080,9 @@ export default function App() {
     setMoonTrackId(trackId);
     setScreen("meditations");
   }
+  function goToProInfo() {
+    setScreen("pro");
+  }
   const { user, isPro } = useAuth();
 
   useEffect(() => {
@@ -2133,7 +2183,7 @@ export default function App() {
       )}
 
       <div style={{ flex: 1, overflowY: "auto" }}>
-        {screen === "home"         && <HomeScreen mood={mood} setMood={setMood} currentSound={currentSound} setCurrentSound={setCurrentSound} onNavigate={setScreen} t={t} onListenMoonTrack={goToMoonTrack} />}
+        {screen === "home"         && <HomeScreen mood={mood} setMood={setMood} currentSound={currentSound} setCurrentSound={setCurrentSound} onNavigate={setScreen} t={t} onListenMoonTrack={goToMoonTrack} isPro={isPro} onOpenProInfo={goToProInfo} />}
         {screen === "sounds"       && <SoundsScreen currentSound={currentSound} setCurrentSound={setCurrentSound} t={t} />}
         {screen === "meditations"  && <MeditationsScreen t={t} onAskAI={goToChat} autoplayTrackId={moonTrackId} onAutoplayConsumed={() => setMoonTrackId(null)} />}
 
@@ -2142,7 +2192,8 @@ export default function App() {
         {screen === "patterns"     && <PatternMapScreen t={t} />}
         {screen === "reflection"   && <ReflectionScreen t={t} />}
         {screen === "letters"      && <FutureLetterScreen t={t} />}
-        {screen === "chat"         && <ChatAssistantScreen t={t} lang={lang} seed={chatSeed} onSeedConsumed={() => setChatSeed(null)} isPro={isPro} />}
+        {screen === "chat"         && <ChatAssistantScreen t={t} lang={lang} seed={chatSeed} onSeedConsumed={() => setChatSeed(null)} isPro={isPro} onOpenProInfo={goToProInfo} />}
+        {screen === "pro"          && <ProInfoScreen lang={lang} onBack={() => setScreen("home")} />}
       </div>
 
       <div style={{ display: "flex", justifyContent: "space-between", gap: 0, padding: "10px 4px 12px", borderTop: `1px solid ${C.border}`, flexShrink: 0, background: "rgba(82,93,107,0.92)", backdropFilter: "blur(10px)" }}>
