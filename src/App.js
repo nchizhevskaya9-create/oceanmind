@@ -47,6 +47,8 @@ const T = {
         { id: "alpha", title: "Покой и расслабление",   duration: "30 мин", desc: "Снятие тревоги и стресса, восстановление" },
         { id: "beta",  title: "Фокус и концентрация",   duration: "30 мин", desc: "Для работы и учёбы — ясность и продуктивность" },
         { id: "gamma", title: "Состояние потока",        duration: "25 мин", desc: "Пиковая концентрация — исследовано в MIT" },
+        { id: "hz432", title: "Гармония 432 Hz",         duration: "60 мин", desc: "Альтернативный строй, популярный в звукотерапии для расслабления" },
+        { id: "hz528", title: "Частота 528 Hz",          duration: "60 мин", desc: "Одна из сольфеджио-частот, используется в практиках звукового расслабления" },
       ],
       science: {
         delta: "Дельта-волны доминируют во время глубокого сна без сновидений. Исследования показывают их связь с восстановлением организма, укреплением иммунитета и консолидацией памяти.",
@@ -54,6 +56,8 @@ const T = {
         alpha: "Альфа-волны — состояние спокойного бодрствования. Снижают уровень кортизола (гормона стресса), уменьшают тревогу и помогают восстановиться.",
         beta:  "Бета-волны доминируют при активной умственной деятельности. Улучшают концентрацию, ускоряют обработку информации и повышают продуктивность.",
         gamma: "Гамма-волны связаны с пиковой концентрацией и состоянием потока. Исследования MIT показали что 40 Hz стимуляция замедляет развитие болезни Альцгеймера.",
+        hz432: "432 Hz — альтернативный музыкальный строй, отличный от привычных 440 Hz. Многие описывают его как более мягкий и тёплый на слух. Строгих научных доказательств особого воздействия на мозг пока нет — это скорее вопрос личного восприятия и эстетики звука.",
+        hz528: "528 Hz — одна из так называемых сольфеджио-частот, популярных в звуковых практиках релаксации. Научных доказательств влияния именно этой частоты на организм нет, но многие используют её как приятный фон для медитации и отдыха.",
       },
     },
     // Affirmations
@@ -240,6 +244,8 @@ const T = {
         { id: "alpha", title: "Calm & relaxation",     duration: "30 min", desc: "Anxiety and stress relief, recovery" },
         { id: "beta",  title: "Focus & concentration", duration: "30 min", desc: "For work and study — clarity and productivity" },
         { id: "gamma", title: "Flow state",             duration: "25 min", desc: "Peak concentration — researched at MIT" },
+        { id: "hz432", title: "432 Hz Harmony",         duration: "60 min", desc: "An alternative tuning popular in sound therapy for relaxation" },
+        { id: "hz528", title: "528 Hz Frequency",       duration: "60 min", desc: "One of the solfeggio frequencies, used in sound relaxation practices" },
       ],
       science: {
         delta: "Delta waves dominate during deep dreamless sleep. Research links them to physical recovery, immune function, and memory consolidation.",
@@ -247,6 +253,8 @@ const T = {
         alpha: "Alpha waves represent relaxed, calm wakefulness. They lower cortisol levels, reduce anxiety, and help the body recover from stress.",
         beta:  "Beta waves dominate during active mental work. They improve concentration, accelerate information processing, and boost productivity.",
         gamma: "Gamma waves are linked to peak concentration and flow states. MIT research showed that 40 Hz stimulation may slow the progression of Alzheimer's disease.",
+        hz432: "432 Hz is an alternative musical tuning, different from the standard 440 Hz. Many describe it as softer and warmer to the ear. There's no strong scientific evidence of a special effect on the brain — it's more a matter of personal perception and sound aesthetics.",
+        hz528: "528 Hz is one of the so-called solfeggio frequencies, popular in sound relaxation practices. There's no scientific evidence of a specific effect from this frequency, but many use it as a pleasant backdrop for meditation and rest.",
       },
     },
     affirmations: [
@@ -422,6 +430,8 @@ const MUSIC_TRACKS = [
   { id: "alpha", tag: "alpha", title: "Покой и расслабление",   duration: "30 мин", hz: "8–10 Hz",   file: "alpha.mp3",  photo: "https://images.unsplash.com/photo-1518241353330-0f7941c2d9b5?w=400&q=80", icon: "☁️", desc: "Снятие тревоги и стресса, восстановление" },
   { id: "beta",  tag: "beta",  title: "Фокус и концентрация",   duration: "30 мин", hz: "18–20 Hz",  file: "beta.mp3",   photo: "https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?w=400&q=80", icon: "⚡", desc: "Для работы и учёбы — ясность и продуктивность" },
   { id: "gamma", tag: "gamma", title: "Состояние потока",        duration: "25 мин", hz: "40 Hz",     file: "gamma.mp3",  photo: "https://images.unsplash.com/photo-1470252649378-9c29740c9fa8?w=400&q=80", icon: "✦", desc: "Пиковая концентрация — исследовано в MIT" },
+  { id: "hz432", tag: "hz432", title: "Гармония 432 Hz",         duration: "60 мин", hz: "432 Hz",   file: "432.mp3",     photo: "https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?w=400&q=80", icon: "🍃", desc: "Альтернативный строй, популярный в звукотерапии для расслабления" },
+  { id: "hz528", tag: "hz528", title: "Частота 528 Hz",          duration: "60 мин", hz: "528 Hz",   file: "528.mp3",     photo: "https://images.unsplash.com/photo-1444927714506-8492d94b5ba0?w=400&q=80", icon: "🌻", desc: "Одна из сольфеджио-частот, используется в практиках звукового расслабления" },
 ];
 // ─── Fallback constants (used in components before t is available) ──────────────
 const AFFIRMATIONS = T.ru.affirmations;
